@@ -121,7 +121,7 @@ Recall that when the model was within-person, each person's true score was a con
 
 In moving to this population level model, we have to assume that each person for whom we have a score is a random sample from this population.
 
-![CTT Sampling Visualization](~/Dropbox/Courses/EDUC 8720/Images and Plots/CTT_Visualization.png)
+![CTT Sampling Visualization](CTT_Visualization.png)
 
 ## Back to the Vocabulary Test Example
 
@@ -253,7 +253,7 @@ In what follows, I want to focus on useful things you can do once you have an es
 
 It was this use that actually motivated Charles Spearman to first estimate a reliability coefficient in 1904. When two variables are measured with error, the correlation between them will be attenuated by measurement error (it will be lower than it would be if they were both measured without error). 
 
-![As More Error is Added, Correlation Decreases](~/Dropbox/Courses/EDUC 8720/Images and Plots/Spearman.png)
+![As More Error is Added, Correlation Decreases](Spearman.png)
 
 If we have estimates of reliability for each variable, then we can get a disattenuated estimate of the correlation. 
 
@@ -432,7 +432,7 @@ In other words, for tau equivalence to hold at the item level, it must be the ca
 
 Essential tau equivalence relaxes the assumption that pairs of items need to have the same difficulty, but does require them to have the same intercorrelation. When essential tau equivalence holds between all items on a test, the average correlation between items is the same thing as the correlation between *any* two items. When essential tau equivalence holds, $\alpha = \rho_{XX^\prime}$.
 
-![All loadings are the same](~/Dropbox/Courses/EDUC 8720/Images and Plots/Essentually_tau_equivalent.png)
+![All loadings are the same](Essentually_tau_equivalent.png)
 
 Of course, essential tau equivalence is a pretty restrictive assumption, but it is an assumption that is, in principle at least, testable through the specification of a confirmatory factor analysis (CFA) model, an approach favored by Green & Yang (2015) who show how $\alpha$ can be computed directly from the estimates of a one a factor CFA model with restrictions placed on all item loadings. In other words, this means a model in which there is a single factor and all items have the same loading on this factor.
 
@@ -490,7 +490,7 @@ So we get about the same estimate for reliability as we did using Cronbach's alp
 
 We can relax the assumption of essential tau equivalence and specify instead what is know as a *congeneric model*. This allows both the intercept and slope to vary for each item, but still assumes a one factor solution.
 
-![Loadings can vary](~/Dropbox/Courses/EDUC 8720/Images and Plots/Congeneric.png)
+![Loadings can vary](Congeneric.png)
 
 ```{r}
 con_mod <- '
