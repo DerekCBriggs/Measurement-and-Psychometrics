@@ -21,23 +21,23 @@ knitr::opts_chunk$set(warning=FALSE, message=FALSE,
 tidy.opts=list(width.cutoff=50))
 ```
 *****
-#Motivation for this Document
+# Motivation for this Document
 
 For many years now I've taught the concept of reliability to graduate students as part of an educational measurement sequence here at the University of Colorado. Beyond formal readings, the materials I've given students to help them study have typically consisted of powerpoint slides. While I think the content on those slides has gotten better and better over time, I think the R Markdown format is a far superior format because of the way it allows one to integrate narrative and empirical demonstrations in a single place. The other push came from a special focus article and commentaries on reliability I helped put together when I was still the editor of *Educational Measurement: Issues and Practice* in 2015.
 
 My hope is that the "learning module" that follows will build on these articles and thereby serve as a useful resource in developing a deep understanding of both the concept of reliability, and ways that this concept can be parameterized and estimated.
 
-#Introduction
+# Introduction
 
 Reliability is one of the most important concepts in measurement.  Let's start with the intuition behind reliability for measurements taken in the physical sciences.  The concept of reliability is premised on replication. It goes something like this: say I devise a measurement procedure.  By procedure, I mean a set of steps that need to be taken in order produce a measure of some attribute of interest for a given object of interest. The procedure culminates in a numeric value. When we ask about the reliability of the value, we are essentially asking how likely we would be to observe the same value if the measurement procedure were to be replicated. But this raises some thorny questions.  If we replicate the procedure, what stays fixed and what varies? Time, for instance, cannot be fixed, but can we treat the passage of time as irrelevant to the procedure? What about the instrument used to take the measure, is that fixed? What about the person operating the instrument? What about other conditions, such as the location where the measurement procedure is taking place? The object being measured? 
 
 You can see already that what it is we mean when we speak of "reliability" depends greatly on being clear about the conditions of measurement and, conceptually, what is and is not being replicated. This is certainly true in the context of physical measurement, and equally true in educational and psychological measurement. 
 
-The concept of reliability in psychometrics has it origins in what is known as *True Score Theory* (also referred to as *Classical Test Theory*). True score theory is really a means to an end: it provides a mathematical basis to operationalize the concept of reliability into a model parameter. This parameter is a reliability coefficient, something that can be estimated from data. In what follows I will try to take you through this derivation, but I'm going to take the liberty of borrowing from the conceptual toolbox of *Generalizability Theory* (Cronbach et al, 1972) so if you pay close attention you'll see that this derivation is a not exactly the same as the classic formulation found in Lord & Novick.
+The concept of reliability in psychometrics has it origins in what is known as *True Score Theory* (also referred to as *Classical Test Theory*). True score theory is really a means to an end: it provides a mathematical basis to operationalize the concept of reliability into a model parameter. This parameter is a reliability coefficient, something that can be estimated from data. In what follows I will try to take you through this derivation, but I'm going to take the liberty of borrowing from the conceptual toolbox of *Generalizability Theory* (Cronbach et al, 1972) so if you pay close attention you'll see that this derivation is not exactly the same as the classic formulation found in Lord & Novick.
 
-#True Score Theory
+# True Score Theory
 
-##Preliminaries
+## Preliminaries
 
 Let's start with a "test" score, $X$, associated with a test-taker, indexed by the subscript $j$. A test in this context consists of some fixed number of items, and the responses to these items are given ordinal scores. (In this sense we can also consider an attitudinal survey to be a type of test). So if we then let the subscript $i$ index a test item, then
 
@@ -46,7 +46,7 @@ where $n_i$ represents the total number of items on the test.
 
 In much of what you are going to see in the derivation of the classical test theory model, test items are going to disappear from view: the theory occurs at the level of a test score, where a test score is computed as either a sum or average across items. But in order to make sense of the concept of "measurement error", it's really important to be able to think of the existence of a hypothetical "universe" of items that *could* have been placed on the test. (This is an instance when I'm borrowing from Generalizability Theory.) In this sense, the $n_i$ that happen to be on a given test are just a random sample from a universe of $I$ items. We could just as easily have created a test comprised of $n^\prime_i$ items, and if we did, we'd expect the two tests to be *parallel* in the sense that they should be equally difficult, on average, and that the test scores should have the same variance, on average. So there are two sources of chance variability that influence the value we observe for $X_{ij}$: the sampling of test-takers from some population of test-takers, and the sampling of items from some universe of items. 
 
-##The Within-Person Model
+## The Within-Person Model
 
 For each test-taker, let's assume that an observed test score is a linear function of a "true score" and "error"
 
@@ -91,7 +91,7 @@ In words, for each case, variance in observed scores across replications of the 
 
 Let Derek represent case 1 $(j=1)$, and Ben represent case 2 $(j=2)$. In our hypothetical example, $\sigma_{e_1}>\sigma_{e_2}$, which means that not only is Derek's true score lower than Ben's true score, it is measured with more error than Ben's.
 
-##Conceptual Issues
+## Conceptual Issues
 
 This raises two questions. 
 
@@ -107,7 +107,7 @@ Well, what if measurement error is not independent of test-takers' true score as
 
 So the strategy we take in true score theory is to formulate a model at the population level, use this to compute a reliability coefficient, and then use this reliability coefficient to back out an estimate of average measurement error for a given measurement procedure.
 
-##The Between-Person Model
+## The Between-Person Model
 
 We are going to express the fundamental equation of true score theory for a population of test-takers as
 
@@ -117,13 +117,13 @@ This time, we are taking the variance not over replications within each individu
 $$\tag{5}\sigma^2_{X}=\sigma^2_{T}+\sigma^2_{E}$$
 Recall that when the model was within-person, each person's true score was a constant ($\tau_j$). But here, since we are taking variance *across* people, it is not. Also, $\sigma^2_{E}$ can be thought of as $E[\sigma^2_{e_j}]$
 
-##Conceptualizing the Sample as a Box Model
+## Conceptualizing the Sample as a Box Model
 
-In moving to this population level model, we have to assume that each person for whom we have a score is a random sample from this population.)
+In moving to this population level model, we have to assume that each person for whom we have a score is a random sample from this population.
 
 ![CTT Sampling Visualization](~/Dropbox/Courses/EDUC 8720/Images and Plots/CTT_Visualization.png)
 
-##Back to the Vocabulary Test Example
+## Back to the Vocabulary Test Example
 
 To be as concrete as I can here, let's go back to our hypothetical vocabulary test that Derek and Ben have taken. Derek and Ben were part of a sample of 100 students that took this test. The average score on this test was 6.4 with a standard deviation of 1.5.
 
@@ -138,7 +138,7 @@ hist(x,xlim=range(0,10),main="Distribution Across 100 Students",
 
 The variability we observe in these scores is caused by *both* true differences among students, and by measurement error. So this brings us--finally--to the concept of reliability.
 
-##The Concept of a Reliability Coefficient
+## The Concept of a Reliability Coefficient
 
 $$\tag{6}\rho^2_{XT}=\frac{\sigma^2_{T}}{\sigma^2_{X}}$$
 
@@ -146,7 +146,7 @@ In words, reliability is the proportion of observed score variance that is true 
 
 $$\rho^2_{XT}=\frac{\sigma^2_{XT}}{\sigma^2_{X}\sigma^2_{T}}=\frac{\sigma^2_{T}}{\sigma^2_{T}+\sigma^2_{E}}=1-\frac{\sigma^2_{E}}{\sigma^2_{X}}$$
 
-##Parallel Test Forms
+## Parallel Test Forms
 
 It is crucial to appreciate that so far what we have done is establish a model that relates observed test scores to true scores and error, and then used this relationship to formulate what it means to have a test that produces reliable scores. What we have at this point is to identify the parameter of interest, $\rho^2_{XT}$. What we need is a way to get a good estimate of this parameter, since we can't directly observe either $\sigma^2_{T}$ or $\sigma^2_{E}$. 
 
@@ -168,13 +168,13 @@ Now the covariance between true scores is just the variance of true scores, so $
 $$\tag{7}\rho_{XX^\prime}=\frac{\sigma^2_{T}}{\sigma^2_{X}}.$$
 Which is pretty nice, because it means that $\rho_{XX^\prime}=\rho^2_{XT}$. So if we could create parallel test forms and correlate them, this would be equivalent to computing the squared correlation between true scores and observed scores, which is also equivalent to finding the proportion of observed score variance that is true score variance. 
 
-##Technical Aside on Derivation of the Spearman-Brown "Prophecy" Formula (this can be skipped)
+## Technical Aside on Derivation of the Spearman-Brown "Prophecy" Formula (this can be skipped)
 
 If we have two random variables, ${Y_1}$ and ${Y_2}$ and then add them together to get a new variable $Y_3$, then $var(Y_3)=\sigma^2_{Y_1}+\sigma^2_{Y_2}+2\sigma_{Y_1 Y_2}$ 
 
 Remember that correlation is just a standardized version of covariance, where
 
-$$cor(Y_1,Y_2)=\rho_{Y_1 Y_2}\frac{\sigma(Y_1,Y_2)}{\sigma_{Y_1}\sigma_{Y_2}}$$
+$$\rho_{Y_1 Y_2}=\frac{\sigma(Y_1,Y_2)}{\sigma_{Y_1}\sigma_{Y_2}}$$
 In what follows it will be convenient to re-arrange terms such that
 $$\sigma(Y_1,Y_2) = \rho_{Y_1 Y_2}\sigma_{Y_1}\sigma_{Y_2}$$ 
 In words, the covariance of two random variables equals the correlation multiplied by product of each variable's standard deviation. OK, now let's get into the weeds.
@@ -199,7 +199,7 @@ $$\sigma^2_{T}=4\sigma^2_{T_1}$$
 $$\sigma^2_{E}=2\sigma^2_{E_1}$$
 Key Insight: If we double the test length, true score variance increases twice as much as error variance. 
 
-##The Spearman-Brown Formula
+## The Spearman-Brown Formula
 
 The Spearman-Brown "prophecy" formula can be use to predict the reliability of a test that consists of a composite from two smaller tests of the same length (i.e., same number of items). 
 
@@ -226,7 +226,7 @@ Here is the formula for the *generalized Spearman-Brown prophecy*:
 $$\tag{9}\rho_{XX^\prime}=\frac{k\rho_{YY^\prime}}{1+(k-1)\rho_{YY^\prime}}$$
 This formula indicates how reliability is predicted to increase for any factor $k$ increase in the number of items on the test. We'll come back to the relationship between number of items and reliability again in the next section.
 
-#Cronbach's Alpha
+# Cronbach's Alpha
 
 A problem with estimating reliability by splitting one test into two parallel forms is that it may not be obvious which split to use. Cronbach's alpha solves this problem by providing an estimate which can be interpreted as the average of all possible ways the test could be split into two forms and correlated, corrected for the restriction in test length. Here's the formula:
 
@@ -245,11 +245,11 @@ OK, let's unpack the equation for $\alpha$ by focusing first on the ratio inside
 
 So, when items on a test are all moderately to strongly correlated with each other, this is an indication of internal consistency. Since $\alpha$ has a functional relationship to item intercorrelations, it is often referred to as an estimate of the internal consistency of a test. Unfortunately, as we'll see in just a bit, this is a bit misleading, but let's first focus on things you can do with an estimate of reliability using $\alpha$.
 
-##Uses of Reliability Coefficients
+## Uses of Reliability Coefficients
 
 In what follows, I want to focus on useful things you can do once you have an estimate of reliability. I'm going to illustrate this for the case where your estimate for reliability is based on $\alpha$ as presented above, but all the same applications work if you have decided to use a different statistic as an estimator.
 
-###To Disattenuate a Correlation
+### To Disattenuate a Correlation
 
 It was this use that actually motivated Charles Spearman to first estimate a reliability coefficient in 1904. When two variables are measured with error, the correlation between them will be attenuated by measurement error (it will be lower than it would be if they were both measured without error). 
 
@@ -263,14 +263,14 @@ If we have $\rho(\hat{X},\hat{Y})$, and we also know $\alpha_X$ and $\alpha_Y$, 
 
 $$\rho(X,Y)=\frac{\rho(\hat{X},\hat{Y})}{\sqrt{{\alpha_X}{\alpha_Y}}}$$
 
-###To Estimate the Standard Error of Measurement
+### To Estimate the Standard Error of Measurement
 
 To a great extent, having a reliability coefficient is a means to an end--quantifying measurement error. Once you know the reliability of a sample of test scores (e.g., $\alpha$) along with the standard deviation of the test scores ($S_{X}$), you can easily compute the standard error of measurement:
 
 $$SEM_X=\sqrt{1-\alpha}*S_{X}$$
 You can play with this formula a bit, and if you do, you'll see that as $\alpha$ goes up, the SEM will go down and vice versa. For example, let's say you have a standardized test score variable with a mean of 0 and an SD of 1. If $\alpha=.9$, then $SEM=\sqrt{.1}=.32$. On the other hand, if $\alpha=.5$, then $SEM=\sqrt{.5}=.71$. 
 
-###To Estimate True Scores
+### To Estimate True Scores
 
 Let $x_j$ represent the test score for individual j and $\bar{x}$ represent the mean test score taken over all individual test-takers.  We can get an estimate of individual j's true score using the following expression
 
@@ -278,9 +278,9 @@ $$\tau_j={\alpha}{x_j}+({1-\alpha}){\bar{x}}$$
 This is known as *Kelley's Equation* after Truman Kelley who originated it. Notice how this works. If $\alpha$ is high, we place more weight on an individuals observed test score as an estimate of a person's true score. If $\alpha$ is low, we place more weight on the mean test score for the full sample of individuals (an estimate for the population mean) as an estimate of a person's true score. 
 
 
-##Common Misconceptions about Cronbach's Alpha
+## Common Misconceptions about Cronbach's Alpha
 
-###Alpha = internal consistency
+### Alpha = internal consistency
 
 Recall that when we unpacked the expression for $\alpha$ based on eqn 10, we came to appreciate that the total variance of a composite test score was being decomposed into two pieces, the sum of each unique item variance and the sum of all item covariances.  Just so you don't need to scroll back, here's that expression for eqn 10 once again:
 
@@ -290,7 +290,7 @@ If we just looked at the term in the parenthesis, then yes, it is reasonable to 
 
 To illustrate this, in their 2015 article, Davenport, Davison, Liu & Love (2015) [DDLL] make the simplifying assumption that all items have a variance of 1. When this is the case, it follows that $S^2_{X}=m+m(m-1)\bar{r}$. Where $\bar{r}$ represents the average correlation among items. 
 
-[Technical aside: What does the $m+m(m-1)\bar{r}$ represent? Well, remember, what we are doing is again based on the fact that the total variance of a sum of random variables is equal to the sum each variables variance and two time the covariance. Now, if all if all items have the same variance of 1, then the sum of of these variances will just equal $m$, the total number of items. And when all item variances are 1, then all interitem covariances can be expressed as interitem correlations. I can get the sum of these by multiplying the average interitem correlation $\bar{r}$ by the total number of off-diagonal elements in the $m$ by $m$ variance-covariance matrix, which equals $m+m(m-1)$.]
+[Technical aside: What does the $m+m(m-1)\bar{r}$ represent? Well, remember, what we are doing is again based on the fact that the total variance of a sum of random variables is equal to the sum each variables variance and two time the covariance. Now, if all items have the same variance of 1, then the sum of of these variances will just equal $m$, the total number of items. And when all item variances are 1, then all interitem covariances can be expressed as interitem correlations. I can get the sum of these by multiplying the average interitem correlation $\bar{r}$ by the total number of off-diagonal elements in the $m$ by $m$ variance-covariance matrix, which equals $m+m(m-1)$.]
 
 Now we see another way to write $\alpha$ that is mathematically equivalent to eqn 10 (under the assumption that all items have a variance of 1):
 
@@ -304,7 +304,7 @@ where $\alpha_{d}$ stands for "desired" alpha.
 
 Again, the important thing to appreciate from this is that reliability, as estimated using $\alpha$ is not solely a function of internal consistency. 
 
-###Alpha as an index of unidimensionality
+### Alpha as an index of unidimensionality
 
 Another common misconception about $\alpha$ is that it can be used as an index of unidimensionality. Before we see why this is a misconception, let's recall a key ingredient we typically use to assess the dimensionality of some set of indicator variables in a principal component analysis, eigenvalues. In this case test items = indicator variables. Given some set of $m$ items, we use eigenvalues to re-express the total variance in our $m$ by $m$ correlation matrix into $m$ orthogonal variables such that each successive eigenvalue explains only variance that could not be explained by the previous eigenvalue. When performing a principal components analysis, we analyze the observed correlation matrix, so each item has a variance of 1 along the main diagonal. The total variance is an orthogonal re-expression of the correlation matrix, and will be equivalent to the total number of indicator variables, $m$. Let $\lambda_1$ represent the first eigenvalue extracted from a PCA. The proportion of total test score variance explained by the first eigenvalue is
 
@@ -315,7 +315,7 @@ DDLL, citing a result from Friedman & Weisberg (1981), note that $\lambda_1$ is 
 $$\tag{12}\alpha \approx \frac{\bar{r}}{V}$$
 What this implies is that it is possible for $\alpha$ to be close to 1 so long as $\bar{r}$ is about the same as $V$. DDLL provide three made-up examples where $\alpha$ would provide misleading information if used as an index of unidimensionality. In two cases, $\alpha$ is large (.91, .81) even though the data is clearly multidimensional; in another case, $\alpha$ is small (.09) even though there is evidence of one (albeit weak) common factor.
 
-###Alpha as an indication of stability
+### Alpha as an indication of stability
 
 This is a part of this guide that I'm still working on bolstering, but in short, $\alpha$ gives some indication of the consistency of the score we would observe from a person taking a different version of the test, it does not indicate the stability of scores if the same test were taken twice.
 
@@ -329,7 +329,7 @@ This is a part of this guide that I'm still working on bolstering, but in short,
 
 It is in this sense that $\alpha$ might actually provide an *overestimate* of reliability if test performance is very sensitive to the occasion of measurement, as opposed to the choice of items included in the test. This is something that Cronbach appreciated early on, ironically enough, and it is why he and colleagues developed what is known as *Generalizability Theory* as a means of clarifying this distinction. 
 
-##Estimating Alpha: An Empirical Example
+## Estimating Alpha: An Empirical Example
 
 For this example I'm going to use data from a test I give to first year doctoral students in the University of Colorado's School of Education that attempts to measure the construct of 80s Music Fluency. I have data on 46 students who took my 20 item test. Each item consists of the first 30 seconds of a song that was a top 10 hit from the 1980s. An item is scored as correct (1) if the student can name the title of the song or the artist. Otherwise it is scored as incorrect (0).
 
@@ -420,7 +420,7 @@ It's important to understand that $\alpha$, something we can compute, is not nec
 
 This raises an obvious question: when will $\alpha = \rho_{XX^\prime}$?
 
-##Essential Tau Equivalence
+## Essential Tau Equivalence
 
 To answer this question, Novick & Lewis (1967) first introduced the concept of *essential tau equivalence*. To express this mathematically, consider any two test items, $X_g$ and $X_h$. The items in each form have been sampled from the same universe of items eligible for inclusion on the test in question.  For each item, we posit that the fundamental equation of classical test theory holds, so we can write $X_g = T_g + E_g$ and $X_h = T_h + E_h$. Now consider expressing the true score for one item as a linear function of the other:
 
@@ -443,7 +443,7 @@ where $J$ = number of test items, and $\lambda$ represents a common factor loadi
 
 The denominator, $\sigma^2_{X}$ represents total variance of test scores. But we in taking a model-based approach we don't get an estimate for this by finding the variance of the observed total score after summing over the $J$ items. Instead, we get this from our specification of the factor analytic model, such that $\hat{\sigma}^2_X = J^2\lambda^2 + Je$, where $e=1-\lambda^2$.
 
-##Continuing Empirical Example using CFA
+## Continuing Empirical Example using CFA
 
 Let's return to estimation of the reliability of our 80s test. Instead of estimating $\alpha$ using equation 10 and observed item scores, we can instead fit the essential tau equivalence model using the function cfa from the R package lavaan, and then compute equation 13. 
 
@@ -486,7 +486,7 @@ So we get about the same estimate for reliability as we did using Cronbach's alp
 * The RMSEA is `r fitmeasures(taumod)["rmsea"]`.
 * The CFI is `r fitmeasures(taumod)["cfi"]`.
 
-##A Congeneric Model
+## A Congeneric Model
 
 We can relax the assumption of essential tau equivalence and specify instead what is know as a *congeneric model*. This allows both the intercept and slope to vary for each item, but still assumes a one factor solution.
 
@@ -526,13 +526,13 @@ round(sumT/sumX, 3)
 ```
 So fitting the congeneric model doesn't significantly change the interpretation one gets about the reliability of these test scores.
 
-#Summing Up: Takeaway Lessons
+# Summing Up: Takeaway Lessons
 
-##1. Reliability = consistency of results across replications of a measurement procedure
+## 1. Reliability = consistency of results across replications of a measurement procedure
 
 It's important to appreciate the difference between what people out in the world have in mind when they speak of reliability vs. the quantity that gets estimated using (most commonly) Cronbach's alpha. What people mean by reliability is that I will get very close to the same results if I step off and on a scale on my bathroom floor over and over again. What we need to check this are independent replications of the same measuring procedure. This is much harder to realize in educational and psychological measurement contexts.
 
-##2. A reliability coefficient is a means to an end  
+## 2. A reliability coefficient is a means to an end  
 
 Classical Test Theory (CTT) was born from Charles Spearman's insight that when two variables have each been measured with error, the correlation between the two variables will be attenuated (weaker than it would have been if the variables were measured without error). Spearman derived a disattenuation formula that required estimates of each variable's reliability coefficient before it could be employed. That formula is
 
@@ -542,11 +542,11 @@ In addition, as test scores were increasingly being used to make inferences abou
 $$SEM_X=\sqrt{1-\sigma^2_{XT}}*S_{X}$$
 Notice that the two formulas above have a subtle difference from the versions I presented earlier. That is, here I use $\sigma^2_{XT}$ and $\sigma^2_{YT}$ instead of $\alpha_X$ and $\alpha_Y$. The former represent the statistical parameter of interest, the latter represent a specific approach taken to estimate the parameter of interest (i.e., Cronbach's alpha).
 
-##3. CTT depends on the premise of a within-person thought experiment
+## 3. CTT depends on the premise of a within-person thought experiment
 
 Originally, this was cast as follows: what would happen if we could administer the same test to the same person over and over again, brainwashing the person in between each testing to forget the previous testing experience? I have altered the thought experiment just slightly such that upon each replication the composition of the test itself can vary because it is comprised of a random sample of items from a universe of admissable items. But either way, the idea is that the observed distribution of scores would vary over replications, and the SD of this distribution would serve to quantify the uncertainty about each person's true score, defined as the average score across infinite replications. It is easy to lose sight of this thought experiment because the CTT model seems to focus attention on variability in test scores across people, not within each person. What we would really love to know is the standard error of measurement for each person: $\sigma_{e_j}$. This very likely is not the same value for each person!
 
-##4. The CTT population level model is $X = T + E$
+## 4. The CTT population level model is $X = T + E$
 
 There is no way to estimate $\sigma_{e_j}$ so we seek to estimate $\sigma_{E}$, where the latter represents the *average* of person-specific error variances for a defined population of test-takers. This is what brings us to the expression
 
@@ -554,37 +554,37 @@ $$\rho^2_{XT}=\frac{\sigma^2_{T}}{\sigma^2_{X}}$$
 
 Remember that in the within-person thought experiment, it makes no sense to think of variability in true scores, as for each person the true score is a constant. It is only sensible to speak of this after have a sample or population of test-takers, each with their own true score.
 
-##5. The estimation of $\rho^2_{XT}$ depends on the availability of a parallel test
+## 5. The estimation of $\rho^2_{XT}$ depends on the availability of a parallel test
 
 If you have two parallel versions of the same test, it can be shown that
 
 $$\rho_{XX^\prime}=\frac{\sigma^2_{T}}{\sigma^2_{X}}$$
 which, in words, means that the correlation between two parallel tests is equivalent to the proportion of observed score variance that is true score variance.
 
-##6. It is really hard to create and administer independent parallel tests 
+## 6. It is really hard to create and administer independent parallel tests 
 
 So what people tend to do instead is to look for parallel subtests within an existing test administration.
 
-##7. Cronbach's alpha is one popular way to estimate a reliability coefficient 
+## 7. Cronbach's alpha is one popular way to estimate a reliability coefficient 
 
 It ultimately rests on the assumption that the set of items on a test can be conceptualized as a random sample from a universe of possible test items. If so, alpha gives an estimate of the average intercorrelation, corrected for restriction of range, that one can expect for randomly parallel tests. It is easy to compute.
 
 $$ \alpha =  \frac{m}{m-1} \left(1-\frac{\sum_{i=1}^{m}S^2_{X_i}}{S^2_{X}} \right) $$
 
-##8.  It is really easy to misinterpret alpha
+## 8. It is really easy to misinterpret alpha
 
 Alpha has a functional relationship with test length and item intercorrelations. So if it is high, this could either be because the test was long, the item intercorrelations are high, or some combination of the two. By itself it doesn't reveal whether a test is "internally consistent" and honestly, that concept itself is a bit vague. For alpha to give an unbiased estimate of the correlation we would get from two parallel tests, all the items on a test from which alpha is estimated need to have the same intercorrelation. So if this is what we mean by internally consistent, we should just check the correlation matrix of item responses, something best accomplished as part of a factor analysis. If internally consistent means that the correlations are high, that's a different thing to look for. Either way, you can't get this information just from looking at the value computed for alpha. It also doesn't indicate much about dimensionality (factor structure of a test).
 
-##9. Alpha is a lower bound estimate of reliability: consistency of rankings based on a test
+## 9. Alpha is a lower bound estimate of reliability: consistency of rankings based on a test
 
 Alpha provides a relatively conservative (lower bound) estimate of how consistent our ranking of individuals would be across replications of a test/survey procedure. It can be interpreted as an estimate of the proportion of observed score variance that is not attributable to chance error.
 
-##10. Error comes from facets of measurement that vary across replications and interact with the people taking the test
+## 10. Error comes from facets of measurement that vary across replications and interact with the people taking the test
 
 According to our within-person thought experiment, chance error comes from any facet in the procedure that could conceivably vary across replications and thereby interact with the ability of a person to answer a question correctly. But this ultimately depends upon how the investigator is conceptualizing the meaning of a replication. What stays fixed, what is random, and what is ignorable? Generalizability Theory was developed to articulate this more clearly. 
 
 
-#References
+# References
 
 Cronbach, L. J. (1951). Coefficient alpha and the internal structure of tests. Psychometrika, 15, 297-334.
 
@@ -606,7 +606,7 @@ Novick, M. R., & Lewis, C. (1967). Coefficient alpha and the reliability of comp
 
 Sijtsma, K. (2015). Delimiting coefficient alpha from internal consistency and unidimensionality. Educational Measurement: Issues & Practice. Vol. 34, No. 4, pp. 10-13.
 
-#Further Resources
+# Further Resources
 
 Brennan, R. (2001). Generalizability Theory. New York: Springer-Verlag.
 
