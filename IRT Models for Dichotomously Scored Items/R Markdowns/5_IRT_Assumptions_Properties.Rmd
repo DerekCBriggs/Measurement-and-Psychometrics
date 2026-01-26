@@ -14,6 +14,11 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+# 3PL probability function (used throughout document)
+calc_prob <- function(theta, a, b, c) {
+  c + (1 - c) * exp(a * (theta - b)) / (1 + exp(a * (theta - b)))
+}
 ```
 
 ## Overview
@@ -49,29 +54,22 @@ $$P(X_1, X_2, \ldots, X_I | \theta) = \prod_{i=1}^{I} P(X_i | \theta)$$
 
 This is the same assumption made in factor analysis. For multidimensional IRT, we assume item responses are independent conditional on **all** dimensions of $\theta$ included in the model.
 
-### Demonstration
+### Quick Aside: Useful Probability Rules
 
-```{r local-independence-demo}
-# 3PL probability function
-calc_prob <- function(theta, a, b, c) {
-  c + (1 - c) * exp(a * (theta - b)) / (1 + exp(a * (theta - b)))
-}
+These rules are essential for understanding IRT:
 
-# Two items
-a <- c(1.5, 1.2)
-b <- c(-0.5, 0.5)
-c <- c(0.2, 0.15)
+1. **Complement Rule**: $P(A) = 1 - P(\neg A)$
+   - Probability of A is 1 minus the probability of A not happening
 
-# For a person with theta = 0
-theta <- 0
-p1 <- calc_prob(theta, a[1], b[1], c[1])
-p2 <- calc_prob(theta, a[2], b[2], c[2])
+2. **Multiplication Rule (Independence)**: $P(A \text{ and } B) = P(A) \times P(B)$
+   - When A and B are independent
+   - This is the **joint probability** of A and B occurring
+   - Local independence allows us to use this for item responses
 
-cat("P(X1 = 1 | theta = 0) =", round(p1, 3), "\n")
-cat("P(X2 = 1 | theta = 0) =", round(p2, 3), "\n")
-cat("\nUnder local independence:\n")
-cat("P(X1 = 1 AND X2 = 1 | theta = 0) =", round(p1 * p2, 3), "\n")
-```
+3. **Conditional Probability**: $P(A|B) = \frac{P(A \text{ and } B)}{P(B)}$
+   - Probability of A given that B happened
+
+4. **Bayes' Rule**: $P(A|B) = \frac{P(B|A) \times P(A)}{P(B)}$
 
 ### What Causes Violations of Local Independence?
 
@@ -115,44 +113,6 @@ ggplot(ld_df, aes(x = factor(Item1), y = factor(Item2), fill = LD)) +
 ```
 
 Large positive values suggest items may be locally dependent.
-
----
-
-## Quick Aside: Useful Probability Rules
-
-These rules are essential for understanding IRT:
-
-1. **Complement Rule**: $P(A) = 1 - P(\neg A)$
-   - Probability of A is 1 minus the probability of A not happening
-
-2. **Multiplication Rule (Independence)**: $P(A \text{ and } B) = P(A) \times P(B)$
-   - When A and B are independent
-   - This is the **joint probability** of A and B occurring
-   - Local independence allows us to use this for item responses
-
-3. **Conditional Probability**: $P(A|B) = \frac{P(A \text{ and } B)}{P(B)}$
-   - Probability of A given that B happened
-
-4. **Bayes' Rule**: $P(A|B) = \frac{P(B|A) \times P(A)}{P(B)}$
-
-### Application to Response Patterns
-
-```{r prob-rules-demo}
-# Calculate probability of response pattern (1, 0, 1) for theta = 0.5
-theta <- 0.5
-items <- data.frame(a = c(1, 1.5, 1.2), b = c(-1, 0, 1), c = c(0.2, 0.2, 0.15))
-
-probs <- sapply(1:3, function(i) calc_prob(theta, items$a[i], items$b[i], items$c[i]))
-
-cat("Item probabilities at theta = 0.5:\n")
-cat("P(X1 = 1) =", round(probs[1], 3), "\n")
-cat("P(X2 = 1) =", round(probs[2], 3), "\n")
-cat("P(X3 = 1) =", round(probs[3], 3), "\n")
-
-# Pattern (1, 0, 1)
-pattern_prob <- probs[1] * (1 - probs[2]) * probs[3]
-cat("\nP(X1=1, X2=0, X3=1 | theta=0.5) =", round(pattern_prob, 4), "\n")
-```
 
 ---
 
@@ -258,7 +218,7 @@ par(mfrow = c(1, 3))
 
 # Check item fit for 3 items
 for (item in 1:3) {
-  itemfit(mod, group.bins = 10, empirical.plot = item)
+  print(itemfit(mod, group.bins = 10, empirical.plot = item))
 }
 
 par(mfrow = c(1, 1))
