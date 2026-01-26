@@ -1,0 +1,224 @@
+\documentclass[12pt,]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={The Normal Ogive},
+            pdfauthor={Derek Briggs},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{The Normal Ogive}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Derek Briggs}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{2/1/2020}
+
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\subsection{Background}\label{background}
+
+\subsubsection{Random Variables and Probability
+Functions}\label{random-variables-and-probability-functions}
+
+A random variable can be somehwat loosely defined as a quantity that can
+have more than one realized value such that the possible values can be
+assigned to a probability function.
+
+The convention is to denote Random variables using upper case (usually
+italicized) Roman letters. Examples: \(X\), \(Y\), \(Z\). The realized
+or observed values of random variables are denoted using lower case
+(usually italicized) Roman letters. Example: \(x\), \(y\), \(z\).
+Putting the two together, if we write \(P(X=x)=.5\), this expression
+says, the probability that random variable \(X\) is equal to the value
+\(x\) is \(.5\).
+
+There are two kinds of random variables, those that are \emph{discrete},
+and those that are \emph{continuous}. A probability function provides
+information about the distribution of a given random variable. When the
+variable is discrete, we call this function a probability
+\emph{distribution} function. When the variable is continuous, we call
+this a probability \emph{density} function. In either case, the
+shorthand acronym for this is \textbf{pdf}.
+
+A pdf can be used to tell us the probability of observing a specific
+value when the variable is discrete, or values within some defined range
+when the variable is continuous.
+
+In contrast, a cumulative distribution function, \textbf{cdf} for short,
+means the same thing whether we are dealing with a discrete or
+continuous. It tells us \(P(X\leq x)\).
+
+\paragraph{pdf of a Discrete Random
+Variable}\label{pdf-of-a-discrete-random-variable}
+
+\[p(x)=P(X=x)\]\\
+where\\
+1. \(p(x)\geq 0\) (the probability needs to be greater than 0)\\
+2. \(\sum_{x} p(x)=1\) (the probabilities of all discrete values must
+sum to 1)
+
+\paragraph{cdf of a Discrete Random
+Variable}\label{cdf-of-a-discrete-random-variable}
+
+\(F(x)=P(X\leq x)=\sum_{t|t\leq x} p(t)=1\)
+
+\paragraph{pdf of a Continuous Random
+Variable}\label{pdf-of-a-continuous-random-variable}
+
+These are a bit more complicated. The Khan Academy actually has a nice
+\href{http://www.youtube.com/watch?v=Fvi9A_tEmXQ}{video} I would
+recommend.
+
+We represent the pdf as a function \(f(x)\)\\
+where\\
+\[P(a\leq X \leq b) = \int_{a}^{b}f(x) \; dx\] 1. \(a, b\) are real
+numbers and \(a\leq b\)\\
+2. \(f(x)\geq 0\) for \(-\infty < 0 < +\infty\)\\
+3. \(\int_{-\infty}^{ +\infty} f(x) \; dx=1\)\\
+4. \(P(X=c)=0\)
+
+\paragraph{cdf of a Continuous Random
+Variable}\label{cdf-of-a-continuous-random-variable}
+
+\[F(x)=P(X\leq x)=\int_{-\infty}^{x}f(t) \; dt \]
+
+\paragraph{From cdf to pdf}\label{from-cdf-to-pdf}
+
+\begin{itemize}
+\tightlist
+\item
+  As is evident from the last expression, to go from a pdf to a cdf for
+  a continuous random variable we need to take a definite integral.\\
+\item
+  To go in the other direction, from a cdf to a pdf for a continuous
+  random variable take the first derivative of the cdf with respect to
+  \(x\)
+\end{itemize}
+
+\[f(x)=\frac{dF(x)}{dx}\]
+
+\subsubsection{Possible Examples of Random
+Variables}\label{possible-examples-of-random-variables}
+
+\textbf{Discrete}\\
+* The flip of a coin * The color of an M\&M I pull out of in a newly
+purchased bag.\\
+* The answer of a respondent to a multiple-choice test item.\\
+* The answer of a respondent to a Likert-style survey item.\\
+\textbf{Continuous}\\
+* Age, Height, Weight\\
+* Latent Ability \((\theta)\)
+
+What makes these variables random? The belief that the observed values
+are governed by a chance process.
+
+\subsubsection{Expected Value of a Random
+Variable}\label{expected-value-of-a-random-variable}
+
+If \(X\) is a discrete random variable with pdf \(p(x)\)
+
+\[E(X)=\mu=\sum_{x} x \; p(x)\] If \(X\) is a continuous random variable
+with pdf \(f(x)\)
+
+\[E(X)=\mu=\int_{-\infty}^{x}x\; f(x) \; dx\]
+
+\subsubsection{Variance of a Random
+Variable}\label{variance-of-a-random-variable}
+
+\[
+\begin{align}
+\sigma^2 &  = E(X-E(X))^2 \\
+         &  = E(X-\mu)^2
+\end{align}
+\] \#\# The Normal (Gaussian) Distribution
+
+The pdf of the normal distribution is\\
+\[f(x)=\frac{1}{\sqrt{2\pi}\sigma}exp\left({\frac{-(x-\mu)^2}{2\sigma^2}}\right)\]
+The get the cdf, we need to find a specific area of the normal pdf. We
+do this by taking a definite integral\\
+\[
+\begin{align}
+P(X\leq x)=F(x) &=\int_{-\infty}^{x} f(t) \; dt \\
+                &=\frac{1}{\sqrt{2\pi}\sigma}\int_{-\infty}^{x} exp\left({\frac{-(t-\mu)^2}{2\sigma^2}}\right) \; dt  
+\end{align}  
+\]
+
+
+\end{document}

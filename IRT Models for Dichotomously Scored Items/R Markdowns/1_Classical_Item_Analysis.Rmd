@@ -1,0 +1,152 @@
+---
+title: "Classical Item Analysis Prior to IRT Model Specification"
+author: "Derek Briggs"
+date: "EDUC 8720"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Introduction
+
+Before fitting an IRT model to test data, it is important to first examine the data using classical item analysis techniques. This activity walks you through the process of conducting classical item analyses to inform decisions about IRT model specification.
+
+## Some Motivating Data
+
+A test developer is attempting to create an **algebra readiness test** that teachers can administer near the beginning of the year to make inferences about students' preparation for learning algebra.
+
+Each form consists of a series of short algebra problems that are open-ended. Students need to simplify expressions, re-arrange terms, or solve equations. Each response on each form is scored correct (1) or incorrect (0).
+
+Here are two sample items from one of the forms:
+
+- **Solve:** $7 + 3 \times 4 - 5 \times 2$
+- **Simplify:** $5a^3 + b$
+
+Two test forms ("A" and "B") were administered in a pilot test. Each form actually had 40 items, but we will only focus here on the first 15 from Form A. The sample size is N = 1,958.
+
+## Setup
+
+First, let's load the required packages.
+
+```{r load-packages}
+library(CTT)
+library(psych)
+```
+
+## Import the Data
+
+```{r import-data}
+# Import data
+forma <- read.csv("../Data/pset1_formA.csv")
+
+# Preview the data
+head(forma)
+
+# We will only use first 15 items
+forma <- forma[, 1:15]
+
+# Check dimensions
+dim(forma)
+```
+
+## Activity 1: Classical Item Statistics
+
+Always start with descriptive statistics before doing anything fancy. In this context, descriptive stats are classical item statistics. We'll use the `alpha` function from the `psych` package.
+
+```{r classical-stats}
+alpha(forma)
+```
+
+### Questions to Consider
+
+1. What is Cronbach's alpha for this 15-item test? What does this suggest about the internal consistency reliability?
+
+2. Look at the item statistics. Which items have the highest and lowest item-total correlations (`r.drop`)? What might this indicate?
+
+3. Are there any items that, if dropped, would substantially improve alpha (`raw_alpha` column)?
+
+## Activity 2: Empirical Item Characteristic Curves
+
+We can use the function `cttICC` from the `CTT` package to create empirical ICC plots based on observed total scores. These plots show the relationship between total score and the probability of getting each item correct.
+
+### Single Item Example
+
+Let's start by looking at a single item:
+
+```{r single-icc}
+cttICC(scores = apply(forma, 1, sum),
+       itemVector = forma[, 1],
+       plotTitle = "Item 1")
+```
+
+### All 15 Items
+
+Now let's create ICC plots for all 15 items:
+
+```{r all-iccs, fig.width=10, fig.height=12}
+par(mfrow = c(5, 3))  # Sets graphics parameter to show plots in a 5x3 grid
+
+for (i in 0:4) {      # Outer loop to run this 5 times
+  for (j in 1:3) {    # Inner loop to produce plots in sets of 3
+    cttICC(scores = apply(forma, 1, sum),
+           itemVector = forma[, paste0("V", 3*i + j)],
+           plotTitle = paste0("Item ", 3*i + j))
+  }
+}
+
+par(mfrow = c(1, 1))  # Reset graphics parameter
+```
+
+### Questions to Consider
+
+1. What do you notice about the shape of the empirical ICCs?
+
+2. Are there any items that look problematic (e.g., non-monotonic, very flat, etc.)?
+
+3. Do the items appear to have similar discrimination (slopes), or do some items discriminate better than others?
+
+## Activity 3: Examining Dimensionality
+
+Before fitting an IRT model, we should check whether the assumption of unidimensionality is reasonable. One simple approach is to examine the eigenvalues of the correlation matrix.
+
+```{r dimensionality, fig.width=8, fig.height=5}
+# Calculate and plot eigenvalues
+eigenvalues <- eigen(cor(forma))$values
+plot(eigenvalues,
+     type = "b",
+     las = 1,
+     xlab = "Component Number",
+     ylab = "Eigenvalue",
+     main = "Scree Plot for Form A Items")
+abline(h = 1, lty = 2, col = "red")
+```
+
+### Questions to Consider
+
+1. What does the scree plot suggest about the dimensionality of these data?
+
+2. How many eigenvalues are greater than 1? What might this indicate?
+
+3. Is there evidence of a dominant first factor?
+
+## Summary Question
+
+Based on your analyses above:
+
+**Do you think an IRT model will fit these data? If so, which one (1PL, 2PL, or 3PL) and why? If not, why not?**
+
+Consider:
+
+- What did the classical item statistics reveal about item quality?
+- What did the empirical ICCs suggest about discrimination parameters?
+- What did the dimensionality analysis suggest about the unidimensionality assumption?
+
+---
+
+*This activity is Part 1 of the IRT modeling sequence. In the next activity, we will fit IRT models to these data.*

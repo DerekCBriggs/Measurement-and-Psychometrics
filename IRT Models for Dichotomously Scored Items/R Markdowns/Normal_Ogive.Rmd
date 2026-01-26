@@ -1,0 +1,110 @@
+---
+title: "The Normal Ogive"
+author: "Derek Briggs"
+date: "2/1/2020"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+  pdf_document:
+    toc: yes
+  word_document:
+    toc: yes
+fontsize: 12pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background  
+  
+### Random Variables and Probability Functions  
+  
+A random variable can be somehwat loosely defined as a quantity that can have more than one realized value such that the possible values can be assigned to a probability function.   
+  
+The convention is to denote Random variables using upper case (usually italicized) Roman letters. Examples: $X$, $Y$, $Z$. The realized or observed values of random variables are denoted using lower case (usually italicized) Roman letters. Example: $x$, $y$, $z$. Putting the two together, if we write $P(X=x)=.5$, this expression says, the probability that random variable $X$ is equal to the value $x$ is $.5$.   
+  
+There are two kinds of random variables, those that are *discrete*, and those that are *continuous*. A probability function provides information about the distribution of a given random variable. When the variable is discrete, we call this function a probability *distribution* function. When the variable is continuous, we call this a probability *density* function. In either case, the shorthand acronym for this is **pdf**.
+  
+A pdf can be used to tell us the probability of observing  a specific value when the variable is discrete, or values within some defined range when the variable is continuous.
+  
+In contrast, a cumulative distribution function, **cdf** for short, means the same thing whether we are dealing with a discrete or continuous. It tells us $P(X\leq x)$.
+  
+#### pdf of a Discrete Random Variable   
+  
+$$p(x)=P(X=x)$$  
+where  
+1. $p(x)\geq 0$  (the probability needs to be greater than 0)  
+2. $\sum_{x} p(x)=1$ (the probabilities of all discrete values must sum to 1)
+
+#### cdf of a Discrete Random Variable 
+
+$F(x)=P(X\leq x)=\sum_{t|t\leq x} p(t)=1$ 
+
+#### pdf of a Continuous Random Variable
+
+These are a bit more complicated. The Khan Academy actually has a nice [video](http://www.youtube.com/watch?v=Fvi9A_tEmXQ) I would recommend.
+
+We represent the pdf as a function $f(x)$   
+where  
+$$P(a\leq X \leq b) = \int_{a}^{b}f(x) \; dx$$
+1. $a, b$ are real numbers and $a\leq b$  
+2. $f(x)\geq 0$ for $-\infty < 0 < +\infty$  
+3. $\int_{-\infty}^{ +\infty} f(x) \; dx=1$  
+4. $P(X=c)=0$  
+
+#### cdf of a Continuous Random Variable    
+  
+$$F(x)=P(X\leq x)=\int_{-\infty}^{x}f(t) \; dt $$
+
+#### From cdf to pdf  
+
+- As is evident from the last expression, to go from a pdf to a cdf for a continuous random variable we need to take a definite integral.    
+- To go in the other direction, from a cdf to a pdf for a continuous random variable take the first derivative of the cdf with respect to $x$
+
+$$f(x)=\frac{dF(x)}{dx}$$
+
+### Possible Examples of Random Variables  
+  
+**Discrete**  
+* The flip of a coin
+* The color of an M&M I pull out of in a newly purchased bag.  
+* The answer of a respondent to a multiple-choice test item.  
+* The answer of a respondent to a Likert-style survey item.  
+**Continuous**  
+* Age, Height, Weight  
+* Latent Ability $(\theta)$  
+   
+What makes these variables random? The belief that the observed values are governed by a chance process.  
+
+### Expected Value of a Random Variable  
+
+If $X$ is a discrete random variable with pdf $p(x)$  
+  
+$$E(X)=\mu=\sum_{x} x \; p(x)$$
+If $X$ is a continuous random variable with pdf $f(x)$  
+  
+$$E(X)=\mu=\int_{-\infty}^{x}x\; f(x) \; dx$$
+
+### Variance of a Random Variable  
+$$
+\begin{align}
+\sigma^2 &  = E(X-E(X))^2 \\
+         &  = E(X-\mu)^2
+\end{align}
+$$ 
+## The Normal (Gaussian) Distribution
+
+The pdf of the normal distribution is  
+$$f(x)=\frac{1}{\sqrt{2\pi}\sigma}exp\left({\frac{-(x-\mu)^2}{2\sigma^2}}\right)$$
+The get the cdf, we need to find a specific area of the normal pdf. We do this by taking a definite integral  
+$$
+\begin{align}
+P(X\leq x)=F(x) &=\int_{-\infty}^{x} f(t) \; dt \\
+                &=\frac{1}{\sqrt{2\pi}\sigma}\int_{-\infty}^{x} exp\left({\frac{-(t-\mu)^2}{2\sigma^2}}\right) \; dt  
+\end{align}  
+$$
