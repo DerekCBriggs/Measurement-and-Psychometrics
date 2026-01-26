@@ -94,7 +94,8 @@ forma <- forma[, 1:15]
 mod <- mirt(forma, 1, itemtype = "2PL", verbose = FALSE)
 
 # Residual correlations can indicate local dependence
-residuals_ld <- residuals(mod, type = "LD")
+# (suppress printed output - just keep the visualization)
+residuals_ld <- suppressMessages(residuals(mod, type = "LD", verbose = FALSE))
 
 # Visualize (upper triangle of matrix)
 library(ggplot2)
@@ -323,53 +324,6 @@ cat("Low group: slope =", round(coef(lm(y[low_group] ~ x[low_group]))[2], 3), "\
 cat("High group: slope =", round(coef(lm(y[high_group] ~ x[high_group]))[2], 3), "\n")
 ```
 
-### Checking Parameter Invariance in IRT
-
-```{r check-invariance}
-# Split sample by total score
-total_scores <- rowSums(forma)
-median_score <- median(total_scores)
-
-low_ability <- forma[total_scores <= median_score, ]
-high_ability <- forma[total_scores > median_score, ]
-
-cat("Low ability group: n =", nrow(low_ability), "\n")
-cat("High ability group: n =", nrow(high_ability), "\n")
-```
-
-```{r fit-groups, results='hide'}
-# Fit models separately (note: this is for illustration - real invariance testing is more complex)
-mod_low <- mirt(low_ability, 1, itemtype = "2PL", verbose = FALSE)
-mod_high <- mirt(high_ability, 1, itemtype = "2PL", verbose = FALSE)
-```
-
-```{r compare-params, fig.width=10, fig.height=5}
-# Extract parameters
-coef_low <- coef(mod_low, simplify = TRUE, IRTpars = TRUE)$items
-coef_high <- coef(mod_high, simplify = TRUE, IRTpars = TRUE)$items
-
-par(mfrow = c(1, 2))
-
-# Compare discrimination parameters
-plot(coef_low[, 1], coef_high[, 1], pch = 19,
-     xlab = "a (Low Ability Group)", ylab = "a (High Ability Group)",
-     main = "Discrimination Parameter Comparison")
-abline(0, 1, col = "red", lty = 2)
-
-# Compare difficulty parameters
-plot(coef_low[, 2], coef_high[, 2], pch = 19,
-     xlab = "b (Low Ability Group)", ylab = "b (High Ability Group)",
-     main = "Difficulty Parameter Comparison")
-abline(0, 1, col = "red", lty = 2)
-
-par(mfrow = c(1, 1))
-```
-
-**Note:** Perfect invariance is rarely achieved in practice due to:
-- Sampling error
-- Scale differences between groups
-- Potential model misfit
-
 ---
 
 ## Property 2: Scale Indeterminacy
@@ -389,36 +343,6 @@ Now define new values:
 
 It will be true that: $a_i(\theta_p - b_i) = a_i^*(\theta_p^* - b_i^*)$
 
-**So which set of parameters should we use?**
-
-### Demonstration
-
-```{r scale-indet-demo}
-# Original parameters
-a <- 1.5
-b <- 0.5
-theta <- 1.0
-
-# Original value
-original <- a * (theta - b)
-cat("Original: a*(theta - b) =", a, "* (", theta, "-", b, ") =", original, "\n\n")
-
-# Transform with k1 = 1, k2 = 2
-k1 <- 1
-k2 <- 2
-
-a_star <- k2 * a
-b_star <- (b + k1) / k2
-theta_star <- (theta + k1) / k2
-
-transformed <- a_star * (theta_star - b_star)
-cat("Transformed parameters:\n")
-cat("a* =", a_star, "\n")
-cat("b* =", b_star, "\n")
-cat("theta* =", theta_star, "\n")
-cat("a**(theta* - b*) =", a_star, "* (", theta_star, "-", b_star, ") =", transformed, "\n")
-```
-
 ### Resolving Scale Indeterminacy
 
 There are two main approaches:
@@ -434,25 +358,6 @@ There are two main approaches:
 - Fix distribution of $\theta$ to have mean = 0 and SD = 1
 - Freely estimate item parameters
 - More common in US and in achievement testing
-
-```{r anchoring-demo}
-# Example: Different software may use different anchoring
-# mirt uses person-side anchoring by default
-
-# Get theta estimates
-theta_estimates <- fscores(mod, method = "EAP")
-
-cat("Theta distribution (person-side anchored):\n")
-cat("Mean:", round(mean(theta_estimates), 3), "\n")
-cat("SD:", round(sd(theta_estimates), 3), "\n")
-
-# Get item parameters
-item_params <- coef(mod, simplify = TRUE, IRTpars = TRUE)$items
-
-cat("\nItem difficulty (b) distribution:\n")
-cat("Mean b:", round(mean(item_params[, 2]), 3), "\n")
-cat("SD of b:", round(sd(item_params[, 2]), 3), "\n")
-```
 
 ### Practical Implications
 
