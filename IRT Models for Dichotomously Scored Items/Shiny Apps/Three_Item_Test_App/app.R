@@ -209,7 +209,7 @@ ui <- fluidPage(
                  )
         ),
 
-        # Tab 4: Comparison Questions
+        # Tab 4: Practice Questions (without answers)
         tabPanel("Practice Questions",
                  br(),
 
@@ -220,11 +220,7 @@ ui <- fluidPage(
                        tags$li("Item 1: a = 1, b = -1.5, c = 0.2"),
                        tags$li("Item 2: a = 1, b = 0, c = 0.2")
                      ),
-                     p(strong("Which item is easier? Why?")),
-                     hr(),
-                     p("Answer: Item 1 is easier because it has a lower b parameter.
-                       Since both items have the same discrimination (a = 1) and guessing (c = 0.2),
-                       the item with the lower b value is easier at all ability levels.")
+                     p(strong("Which item is easier? Why?"))
                  ),
 
                  br(),
@@ -236,9 +232,34 @@ ui <- fluidPage(
                        tags$li("Item 2: a = 1, b = 0, c = 0.2"),
                        tags$li("Item 3: a = 2, b = 0.2, c = 0.3")
                      ),
-                     p(strong("Which item is easier? Is it the same at all ability levels?")),
-                     hr(),
-                     p("Answer: This comparison is more complex because the items have different
+                     p(strong("Which item is easier? Is it the same at all ability levels?"))
+                 ),
+
+                 br(),
+
+                 div(class = "info-box",
+                     h4("Question 3: The Effect of Discrimination"),
+                     p("Try changing Item 3's discrimination (a) from 2 to 0.5."),
+                     p(strong("What happens to the ICC? What does this mean for measurement?"))
+                 )
+        ),
+
+        # Tab 5: Answers
+        tabPanel("Answers",
+                 br(),
+
+                 div(class = "result-box",
+                     h4("Answer 1: Compare Item 1 vs. Item 2"),
+                     p("Item 1 is easier because it has a lower b parameter.
+                       Since both items have the same discrimination (a = 1) and guessing (c = 0.2),
+                       the item with the lower b value is easier at all ability levels.")
+                 ),
+
+                 br(),
+
+                 div(class = "result-box",
+                     h4("Answer 2: Compare Item 2 vs. Item 3"),
+                     p("This comparison is more complex because the items have different
                        discrimination and guessing parameters. The ICCs cross, meaning:"),
                      tags$ul(
                        tags$li("At low ability, Item 3 appears easier (higher c parameter)"),
@@ -249,12 +270,9 @@ ui <- fluidPage(
 
                  br(),
 
-                 div(class = "info-box",
-                     h4("Question 3: The Effect of Discrimination"),
-                     p("Try changing Item 3's discrimination (a) from 2 to 0.5."),
-                     p(strong("What happens to the ICC? What does this mean for measurement?")),
-                     hr(),
-                     p("Answer: Lower discrimination means a flatter ICC. This means:"),
+                 div(class = "result-box",
+                     h4("Answer 3: The Effect of Discrimination"),
+                     p("Lower discrimination means a flatter ICC. This means:"),
                      tags$ul(
                        tags$li("The item doesn't differentiate well between ability levels"),
                        tags$li("The probability changes slowly as theta changes"),
