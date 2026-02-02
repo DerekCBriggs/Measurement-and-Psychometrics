@@ -1,0 +1,242 @@
+---
+title: "Basic mirt Commands: A Reference Guide"
+author: "Derek Briggs"
+date: "EDUC 8720"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+  pdf_document:
+    toc: true
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Introduction
+
+This document is a reference guide for using the `mirt` package in R to fit IRT models to dichotomously scored item response data. It covers the essential workflow from classical item analysis through model fitting, parameter extraction, and plotting. Use this as a resource when working with different data sets to complete class assignments.
+
+### Required Packages
+
+```{r load-packages}
+library(mirt)
+```
+
+### Loading Data
+
+For this guide we use a 15-item data set (`pset1_formA.csv`). When working with your own data, update the file path accordingly.
+
+```{r load-data}
+data_path <- "../IRT Models for Dichotomously Scored Items/Data/"
+forma <- read.csv(paste0(data_path, "pset1_formA.csv"))
+forma <- forma[, 1:15]  # Use first 15 items
+head(forma)
+```
+
+---
+
+## Part 1: Classical Item Analysis
+
+Always start with descriptive statistics before doing anything fancy. In this context, descriptive stats are classical item statistics.
+
+### Item Statistics using `mirt:itemstats`
+
+```{r alpha-stats}
+itemstats(forma)
+```
+
+## Part 2: Fitting IRT Models with `mirt`
+
+### Estimating the 1PL, 2PL, and 3PL Models
+
+The `mirt` function is used to fit unidimensional IRT models. The key arguments are:
+
+- `model = 1` specifies a unidimensional model
+- `itemtype` specifies the model type: `"Rasch"`, `"2PL"`, or `"3PL"`
+- `method = "EM"` specifies the EM algorithm for estimation (this is the default)
+
+```{r fit-models, results='hide'}
+mirt_1pl <- mirt(forma, model = 1, itemtype = "Rasch", method = "EM")
+mirt_2pl <- mirt(forma, model = 1, itemtype = "2PL", method = "EM")
+mirt_3pl <- mirt(forma, model = 1, itemtype = "3PL", method = "EM")
+```
+
+### Extracting Item Parameter Estimates
+
+By default, `mirt` parameterizes models in **slope-intercept form**: $a_i(\theta_p + d_i)$. To get the traditional IRT parameterization $a_i(\theta_p - b_i)$, use `IRTpars = TRUE`.
+
+```{r coef-default}
+# Slope-intercept form (default)
+coef(mirt_2pl, simplify = TRUE)
+```
+
+```{r coef-irt}
+# Traditional IRT form
+coef(mirt_2pl, simplify = TRUE, IRTpars = TRUE)
+```
+
+Note the relationship between the two parameterizations: $b = -d/a$.
+
+### Saving and Working with Parameter Estimates
+
+```{r extract-params}
+coef_1pl <- coef(mirt_1pl, simplify = TRUE, IRTpars = TRUE)
+coef_2pl <- coef(mirt_2pl, simplify = TRUE, IRTpars = TRUE)
+coef_3pl <- coef(mirt_3pl, simplify = TRUE, IRTpars = TRUE)
+
+# Extract just the a and b columns for the 2PL
+coef_2pl$items[, 1:2]
+```
+
+The `g` and `u` columns in the output represent the lower asymptote (guessing) and upper asymptote parameters. These are only estimated in the 3PL (and a hypothetical 4PL) model.
+
+### Comparing Parameters Across Models
+
+```{r compare-models}
+round(data.frame(
+  coef_1pl$items[, 1:2],
+  coef_2pl$items[, 1:2],
+  coef_3pl$items[, 1:3]
+), 3)
+```
+
+Note that the 1PL estimates are on a **different scale** than the 2PL and 3PL estimates (see the companion document on scale constraints for details). But the $b$-values are highly correlated across models---the differences are up to a linear transformation due to scale.
+
+```{r compare-b-values, fig.width=6, fig.height=5}
+plot(coef_2pl$items[, 2], coef_1pl$items[, 2],
+     pch = 19, xlab = "b (2PL)", ylab = "b (1PL)",
+     main = "Difficulty Estimates: 1PL vs. 2PL")
+abline(lm(coef_1pl$items[, 2] ~ coef_2pl$items[, 2]), col = "red", lty = 2)
+```
+
+---
+
+## Part 3: Plotting with `mirt`
+
+The `mirt` package has a powerful built-in `plot` function with many options. Use `help('plot-method')` to see all available plot types.
+
+### Item Response Functions (ICCs)
+
+```{r plot-iccs, fig.width=10, fig.height=8}
+# All items
+plot(mirt_2pl, type = 'trace',theta_lim = c(-3, 3))
+```
+
+```{r plot-iccs-select, fig.width=10, fig.height=4}
+# Specific items
+plot(mirt_2pl, which.items = c(1, 3, 8), type = 'trace',theta_lim = c(-3, 3))
+```
+
+```{r one-plot, fig.width=10, fig.height=5}
+# Overlay specific ICCs on a single plot
+plot(mirt_2pl,
+     type = "trace",
+     which.items = c(1, 3, 8),
+     theta_lim = c(-3, 3),
+     facet_items = FALSE)
+```
+
+### Observed vs. Predicted (Item Fit)
+
+The `itemfit` function with `empirical.plot` overlays observed response proportions on the model-implied ICC. This is useful for diagnosing item misfit.
+
+```{r item-fit, fig.width=6, fig.height=5}
+itemfit(mirt_2pl, group.bins = 15, empirical.plot = 1,theta_lim = c(-3, 3))
+```
+
+---
+
+## Part 4: Test Characteristic Curve and Information Functions
+
+### Test Characteristic Curve (TCC)
+
+The TCC shows the expected number of correct answers (out of 15) at each ability level.
+
+```{r tcc, fig.width=8, fig.height=5}
+plot(mirt_2pl,theta_lim = c(-3, 3))
+```
+
+### Item Information Functions
+
+Each item provides a certain amount of "information" about ability at different points on the theta scale.
+
+```{r item-info, fig.width=10, fig.height=4}
+plot(mirt_2pl, type = 'infotrace', which.items = c(1:3),theta_lim = c(-3, 3))
+```
+
+### Test Information Function
+
+The test information function is the sum of all item information functions.
+
+```{r test-info, fig.width=8, fig.height=5}
+plot(mirt_2pl, type = 'info',theta_lim = c(-3, 3))
+```
+
+### Test Information and Standard Error of Measurement
+
+This combined plot shows both the test information function and the SEM on the same graph. The SEM is the inverse of the square root of the information: $SEM(\theta) = 1/\sqrt{I(\theta)}$.
+
+```{r info-sem, fig.width=8, fig.height=5}
+plot(mirt_2pl, type = 'infoSE', theta_lim = c(-3, 3))
+```
+
+### Comparing Custom Test Information Functions
+
+Say we create two test forms, form A with items 1-7, and form B with items 8-14. Let's compare test info by form
+
+```{r custom-info, fig.width=8, fig.height=5}
+A<-c(1:7)
+B<-c(8:14)
+A.info <- testinfo(mirt_2pl, which.items = A, Theta = matrix(seq(-3,3,by=0.1)))
+B.info <- testinfo(mirt_2pl, which.items = B, Theta = matrix(seq(-3,3,by=0.1)))
+ymax <- round(max(max(A.info), max(B.info)), 0) + 1  # Top end of y-axis
+# Plotting information without using the mirt plot function
+Theta <- seq(-3, 3, by = 0.1)
+plot(Theta, A.info, type = "l", ylim = c(0, ymax), col = "blue",
+     ylab = "Information", main = "Blue = Form A, Black = Form B")
+lines(Theta, B.info, col = "black")
+```
+
+---
+
+## Quick Reference Summary
+
+### Classical Item Analysis
+
+| Task | Command |
+|:-----|:--------|
+| Classical item stats | `itemstats(data)` |
+
+### Model Fitting
+
+| Task | Command |
+|:-----|:--------|
+| Fit Rasch model | `mirt(data, 1, itemtype = "Rasch")` |
+| Fit 2PL model | `mirt(data, 1, itemtype = "2PL")` |
+| Fit 3PL model | `mirt(data, 1, itemtype = "3PL")` |
+
+### Extracting Parameters
+
+| Task | Command |
+|:-----|:--------|
+| Get IRT parameters | `coef(mod, simplify = TRUE, IRTpars = TRUE)` |
+| Get slope-intercept form | `coef(mod, simplify = TRUE)` |
+| EAP ability estimates | `fscores(mod, method = "EAP")` |
+
+### Plotting
+
+| Task | Command |
+|:-----|:--------|
+| Plot all ICCs (faceted) | `plot(mod, type = 'trace', theta_lim = c(-3, 3))` |
+| Plot specific item ICCs | `plot(mod, which.items = c(1, 3), type = 'trace', theta_lim = c(-3, 3))` |
+| Overlay ICCs on one plot | `plot(mod, which.items = c(1, 3), type = 'trace', facet_items = FALSE)` |
+| Plot TCC | `plot(mod, theta_lim = c(-3, 3))` |
+| Plot item information | `plot(mod, type = 'infotrace', which.items = 1:3, theta_lim = c(-3, 3))` |
+| Plot test information | `plot(mod, type = 'info', theta_lim = c(-3, 3))` |
+| Plot info + SEM | `plot(mod, type = 'infoSE', theta_lim = c(-3, 3))` |
+| Custom test info by form | `testinfo(mod, which.items = c(1:7), Theta = matrix(seq(-3, 3, by = 0.1)))` |
+| Check item fit | `itemfit(mod, group.bins = 15, empirical.plot = 1, theta_lim = c(-3, 3))` |
