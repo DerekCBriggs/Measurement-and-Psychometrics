@@ -583,6 +583,5 @@ legend("topright",
 
 # References
 
-- de Ayala, R. J. (2009). *The Theory and Practice of Item Response Theory*. Guilford Press.
 - Embretson, S. E., & Reise, S. P. (2000). *Item Response Theory for Psychologists*. Lawrence Erlbaum Associates.
 - Thissen, D., & Orlando, M. (2001). Item response theory for items scored in two categories. In D. Thissen & H. Wainer (Eds.), *Test Scoring* (pp. 73-140). Lawrence Erlbaum Associates.
