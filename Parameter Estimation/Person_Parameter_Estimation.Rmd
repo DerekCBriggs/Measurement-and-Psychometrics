@@ -98,34 +98,34 @@ q2 <- 1 - p2
 
 Thor gets the first item correct and the second item incorrect.
 
-```{r thor-likelihood, fig.height=6}
+```{r thor-likelihood, fig.height=7}
 # Likelihood for pattern (1,0)
 L_thor <- p1 * q2
 
-# Plot
-par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
-
-plot(theta_range, p1, type = "l", col = "blue", lwd = 2,
-     xlab = expression(theta), ylab = "Probability",
-     main = "P(Item 1 Correct)", las = 1)
-
-plot(theta_range, q2, type = "l", col = "red", lwd = 2,
-     xlab = expression(theta), ylab = "Probability",
-     main = "P(Item 2 Incorrect)", las = 1)
-
-plot(theta_range, L_thor, type = "l", col = "purple", lwd = 2,
-     xlab = expression(theta), ylab = "Likelihood",
-     main = "Likelihood Function (1,0)", las = 1)
-abline(v = theta_range[which.max(L_thor)], lty = 2)
-
 # MLE estimate
 mle_thor <- theta_range[which.max(L_thor)]
+
+# Plot
+par(mfrow = c(2, 1), mar = c(4, 4, 3, 1))
+
+# Top panel: Both probability curves on same plot
+plot(theta_range, p1, type = "l", col = "blue", lwd = 2,
+     xlab = expression(theta), ylab = "Probability",
+     main = "Thor (1-0): Probability Functions for Each Item",
+     ylim = c(0, 1), las = 1)
+lines(theta_range, q2, col = "red", lwd = 2)
+legend("right", legend = c(expression(P[1](theta)~"= P(Item 1 Correct)"),
+                           expression(Q[2](theta)~"= P(Item 2 Incorrect)")),
+       col = c("blue", "red"), lwd = 2, cex = 0.9, bty = "n")
+
+# Bottom panel: Likelihood function
+plot(theta_range, L_thor, type = "l", col = "purple", lwd = 2,
+     xlab = expression(theta), ylab = "Likelihood",
+     main = expression("Likelihood: "*L(theta)*" = "*P[1](theta) %*% Q[2](theta)),
+     las = 1)
+abline(v = mle_thor, lty = 2, col = "gray40")
 text(mle_thor + 0.5, max(L_thor) * 0.9,
      paste("MLE =", round(mle_thor, 2)), cex = 0.9)
-
-plot.new()
-legend("center", legend = c("P(correct)", "P(incorrect)", "Likelihood"),
-       col = c("blue", "red", "purple"), lwd = 2, cex = 1.2, bty = "n")
 ```
 
 The MLE for Thor is approximately $\hat{\theta} = `r round(mle_thor, 2)`$.
@@ -134,18 +134,34 @@ The MLE for Thor is approximately $\hat{\theta} = `r round(mle_thor, 2)`$.
 
 Storm gets the first item incorrect and the second item correct.
 
-```{r storm-likelihood}
+```{r storm-likelihood, fig.height=7}
 # Likelihood for pattern (0,1)
 L_storm <- q1 * p2
 
-par(mfrow = c(1, 1))
+# MLE estimate
+mle_storm <- theta_range[which.max(L_storm)]
+
+# Plot
+par(mfrow = c(2, 1), mar = c(4, 4, 3, 1))
+
+# Top panel: Both probability curves on same plot
+plot(theta_range, q1, type = "l", col = "blue", lwd = 2,
+     xlab = expression(theta), ylab = "Probability",
+     main = "Storm (0-1): Probability Functions for Each Item",
+     ylim = c(0, 1), las = 1)
+lines(theta_range, p2, col = "red", lwd = 2)
+legend("right", legend = c(expression(Q[1](theta)~"= P(Item 1 Incorrect)"),
+                           expression(P[2](theta)~"= P(Item 2 Correct)")),
+       col = c("blue", "red"), lwd = 2, cex = 0.9, bty = "n")
+
+# Bottom panel: Likelihood function
 plot(theta_range, L_storm, type = "l", col = "purple", lwd = 2,
      xlab = expression(theta), ylab = "Likelihood",
-     main = "Likelihood Function for Storm (0,1)", las = 1)
-mle_storm <- theta_range[which.max(L_storm)]
-abline(v = mle_storm, lty = 2)
+     main = expression("Likelihood: "*L(theta)*" = "*Q[1](theta) %*% P[2](theta)),
+     las = 1)
+abline(v = mle_storm, lty = 2, col = "gray40")
 text(mle_storm + 0.5, max(L_storm) * 0.9,
-     paste("MLE =", round(mle_storm, 2)))
+     paste("MLE =", round(mle_storm, 2)), cex = 0.9)
 ```
 
 **Key insight**: Under the 2PL, Thor and Storm have the same raw score (1 out of 2) but different theta estimates! Storm receives more "credit" for getting the more discriminating item correct. This is a fundamental difference between IRT scoring and classical test theory scoring.
@@ -154,13 +170,29 @@ text(mle_storm + 0.5, max(L_storm) * 0.9,
 
 Wonder Woman gets both items correct.
 
-```{r wonder-woman-likelihood}
+```{r wonder-woman-likelihood, fig.height=7}
 # Likelihood for pattern (1,1)
 L_ww <- p1 * p2
 
+# Plot
+par(mfrow = c(2, 1), mar = c(4, 4, 3, 1))
+
+# Top panel: Both probability curves on same plot
+plot(theta_range, p1, type = "l", col = "blue", lwd = 2,
+     xlab = expression(theta), ylab = "Probability",
+     main = "Wonder Woman (1-1): Probability Functions for Each Item",
+     ylim = c(0, 1), las = 1)
+lines(theta_range, p2, col = "red", lwd = 2)
+legend("right", legend = c(expression(P[1](theta)~"= P(Item 1 Correct)"),
+                           expression(P[2](theta)~"= P(Item 2 Correct)")),
+       col = c("blue", "red"), lwd = 2, cex = 0.9, bty = "n")
+
+# Bottom panel: Likelihood function
 plot(theta_range, L_ww, type = "l", col = "purple", lwd = 2,
      xlab = expression(theta), ylab = "Likelihood",
-     main = "Likelihood Function for Wonder Woman (1,1)", las = 1)
+     main = expression("Likelihood: "*L(theta)*" = "*P[1](theta) %*% P[2](theta)),
+     las = 1)
+text(2, max(L_ww) * 0.7, "No maximum!\nLikelihood increases\nas θ → ∞", cex = 0.9)
 ```
 
 **Problem**: No maximum likelihood estimate exists! The likelihood keeps increasing as theta approaches positive infinity. This is a fundamental limitation of MLE scoring for perfect response patterns.
@@ -169,13 +201,29 @@ plot(theta_range, L_ww, type = "l", col = "purple", lwd = 2,
 
 Hulk gets both items incorrect.
 
-```{r hulk-likelihood}
+```{r hulk-likelihood, fig.height=7}
 # Likelihood for pattern (0,0)
 L_hulk <- q1 * q2
 
+# Plot
+par(mfrow = c(2, 1), mar = c(4, 4, 3, 1))
+
+# Top panel: Both probability curves on same plot
+plot(theta_range, q1, type = "l", col = "blue", lwd = 2,
+     xlab = expression(theta), ylab = "Probability",
+     main = "Hulk (0-0): Probability Functions for Each Item",
+     ylim = c(0, 1), las = 1)
+lines(theta_range, q2, col = "red", lwd = 2)
+legend("topright", legend = c(expression(Q[1](theta)~"= P(Item 1 Incorrect)"),
+                              expression(Q[2](theta)~"= P(Item 2 Incorrect)")),
+       col = c("blue", "red"), lwd = 2, cex = 0.9, bty = "n")
+
+# Bottom panel: Likelihood function
 plot(theta_range, L_hulk, type = "l", col = "purple", lwd = 2,
      xlab = expression(theta), ylab = "Likelihood",
-     main = "Likelihood Function for Hulk (0,0)", las = 1)
+     main = expression("Likelihood: "*L(theta)*" = "*Q[1](theta) %*% Q[2](theta)),
+     las = 1)
+text(-2, max(L_hulk) * 0.7, "No maximum!\nLikelihood increases\nas θ → -∞", cex = 0.9)
 ```
 
 **Same problem**: No maximum exists. The likelihood keeps increasing as theta approaches negative infinity.
@@ -236,38 +284,46 @@ $$\hat{\theta}_{EAP} = \frac{\int \theta \cdot L(\mathbf{u} | \theta) \cdot f(\t
 
 ## Revisiting Wonder Woman with Bayesian Estimation
 
-```{r ww-bayesian, fig.height=6}
+```{r ww-bayesian, fig.height=9}
 # Prior: standard normal
 prior <- dnorm(theta_range, mean = 0, sd = 1)
 
 # Posterior (unnormalized) for Wonder Woman
 posterior_ww <- L_ww * prior
 
-par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+# MAP estimate
+map_ww <- theta_range[which.max(posterior_ww)]
 
-plot(theta_range, prior, type = "l", col = "blue", lwd = 2,
+# Three vertically stacked plots
+par(mfrow = c(3, 1), mar = c(4, 4, 3, 1))
+
+# Panel 1: Both ICCs on same plot (the likelihood components)
+plot(theta_range, p1, type = "l", col = "blue", lwd = 2,
+     xlab = expression(theta), ylab = "Probability",
+     main = "Wonder Woman (1-1): Probability Functions for Each Item",
+     ylim = c(0, 1), las = 1)
+lines(theta_range, p2, col = "red", lwd = 2)
+legend("right", legend = c(expression(P[1](theta)~"= P(Item 1 Correct)"),
+                           expression(P[2](theta)~"= P(Item 2 Correct)")),
+       col = c("blue", "red"), lwd = 2, cex = 0.9, bty = "n")
+
+# Panel 2: Prior distribution (population ability distribution)
+plot(theta_range, prior, type = "l", col = "forestgreen", lwd = 2,
      xlab = expression(theta), ylab = "Density",
-     main = "Prior Distribution", las = 1)
+     main = expression("Prior Distribution: "*f(theta)*" = N(0, 1)"),
+     las = 1)
 
-plot(theta_range, L_ww, type = "l", col = "red", lwd = 2,
-     xlab = expression(theta), ylab = "Likelihood",
-     main = "Likelihood (1,1)", las = 1)
-
+# Panel 3: Posterior distribution (product of likelihood and prior)
 plot(theta_range, posterior_ww, type = "l", col = "purple", lwd = 2,
      xlab = expression(theta), ylab = "Posterior (unnormalized)",
-     main = "Posterior Distribution", las = 1)
-map_ww <- theta_range[which.max(posterior_ww)]
-abline(v = map_ww, lty = 2)
-text(map_ww - 0.8, max(posterior_ww) * 0.9,
-     paste("MAP =", round(map_ww, 2)))
-
-plot.new()
-legend("center",
-       legend = c("Prior N(0,1)", "Likelihood", "Posterior"),
-       col = c("blue", "red", "purple"), lwd = 2, cex = 1.2, bty = "n")
+     main = expression("Posterior: "*g(theta)*" "*proportional*" "*P[1](theta) %*% P[2](theta) %*% f(theta)),
+     las = 1)
+abline(v = map_ww, lty = 2, col = "gray40")
+text(map_ww + 0.5, max(posterior_ww) * 0.9,
+     paste("MAP =", round(map_ww, 2)), cex = 0.9)
 ```
 
-**Key insight**: By incorporating prior information, we now have a finite estimate for Wonder Woman! The prior distribution "pulls" the estimate back toward the population mean.
+**Key insight**: By incorporating prior information, we now have a finite estimate for Wonder Woman! The prior distribution "pulls" the estimate back toward the population mean. Compare this to Case 3 above, where the likelihood alone had no maximum. The posterior is the product of the likelihood (from the ICCs) and the prior distribution—this multiplication creates a curve with a well-defined peak.
 
 # Application with Real Data
 
