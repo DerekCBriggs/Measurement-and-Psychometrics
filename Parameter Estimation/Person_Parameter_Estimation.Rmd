@@ -1,0 +1,532 @@
+---
+title: "Person Parameter Estimation in IRT"
+subtitle: "Scoring with MLE, MAP, and EAP"
+author: "Derek Briggs"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+    theme: flatly
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5)
+```
+
+# Introduction
+
+In Item Response Theory (IRT), once we have estimated item parameters, we need a method to estimate person parameters (theta, $\theta$). This process is often called "scoring." This document covers three primary approaches:
+
+1. **Maximum Likelihood Estimation (MLE)** - finds the theta that maximizes the likelihood of the observed response pattern
+2. **Maximum A Posteriori (MAP)** - incorporates prior information about the population distribution
+3. **Expected A Posteriori (EAP)** - computes the expected value of theta given the posterior distribution
+
+We'll use data from 31 multiple-choice mathematics items administered as part of a Colorado state achievement test.
+
+```{r load-packages}
+library(mirt)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+```
+
+```{r load-data}
+cde <- read.csv("cde_subsample_math.csv")
+dim(cde)
+```
+
+We have `r nrow(cde)` students and `r ncol(cde)` dichotomously scored items.
+
+# Likelihood Functions
+
+## What is a Likelihood?
+
+The likelihood expresses the probability of observing the data, conditional on a particular model and its parameters. For IRT:
+
+- The likelihood tells us how probable our observed response pattern is for different possible values of theta
+- We often work with the **log-likelihood** function (the natural logarithm of the likelihood) for computational convenience
+- The goal is to find the theta value that maximizes this likelihood
+
+## Response Vector Likelihood
+
+For a test with $J$ items, where the response to item $j$ is $u_j$ (either 0 or 1), the likelihood of a response vector is:
+
+$$L(\theta | \mathbf{u}) = \prod_{j=1}^{J} P_j(\theta)^{u_j} Q_j(\theta)^{1-u_j}$$
+
+Where:
+
+- $P_j(\theta)$ is the probability of a correct response to item $j$
+- $Q_j(\theta) = 1 - P_j(\theta)$ is the probability of an incorrect response
+
+The log-likelihood is:
+
+$$\ell(\theta | \mathbf{u}) = \sum_{j=1}^{J} \left[ u_j \ln P_j(\theta) + (1-u_j) \ln Q_j(\theta) \right]$$
+
+## A Two-Item Example
+
+Let's illustrate with a simple two-item test using the 2PL model. Suppose:
+
+- Item 1: $a_1 = 1$, $b_1 = 0$
+- Item 2: $a_2 = 2$, $b_2 = 2$
+
+```{r two-item-setup}
+# 2PL probability function
+p_2pl <- function(theta, a, b) {
+  1 / (1 + exp(-a * (theta - b)))
+}
+
+# Item parameters
+a1 <- 1; b1 <- 0
+a2 <- 2; b2 <- 2
+
+# Create theta range
+theta_range <- seq(-4, 4, by = 0.01)
+
+# Calculate probabilities for each item
+p1 <- p_2pl(theta_range, a1, b1)
+p2 <- p_2pl(theta_range, a2, b2)
+q1 <- 1 - p1
+q2 <- 1 - p2
+```
+
+### Case 1: Thor (Response Pattern 1-0)
+
+Thor gets the first item correct and the second item incorrect.
+
+```{r thor-likelihood, fig.height=6}
+# Likelihood for pattern (1,0)
+L_thor <- p1 * q2
+
+# Plot
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+
+plot(theta_range, p1, type = "l", col = "blue", lwd = 2,
+     xlab = expression(theta), ylab = "Probability",
+     main = "P(Item 1 Correct)", las = 1)
+
+plot(theta_range, q2, type = "l", col = "red", lwd = 2,
+     xlab = expression(theta), ylab = "Probability",
+     main = "P(Item 2 Incorrect)", las = 1)
+
+plot(theta_range, L_thor, type = "l", col = "purple", lwd = 2,
+     xlab = expression(theta), ylab = "Likelihood",
+     main = "Likelihood Function (1,0)", las = 1)
+abline(v = theta_range[which.max(L_thor)], lty = 2)
+
+# MLE estimate
+mle_thor <- theta_range[which.max(L_thor)]
+text(mle_thor + 0.5, max(L_thor) * 0.9,
+     paste("MLE =", round(mle_thor, 2)), cex = 0.9)
+
+plot.new()
+legend("center", legend = c("P(correct)", "P(incorrect)", "Likelihood"),
+       col = c("blue", "red", "purple"), lwd = 2, cex = 1.2, bty = "n")
+```
+
+The MLE for Thor is approximately $\hat{\theta} = `r round(mle_thor, 2)`$.
+
+### Case 2: Storm (Response Pattern 0-1)
+
+Storm gets the first item incorrect and the second item correct.
+
+```{r storm-likelihood}
+# Likelihood for pattern (0,1)
+L_storm <- q1 * p2
+
+par(mfrow = c(1, 1))
+plot(theta_range, L_storm, type = "l", col = "purple", lwd = 2,
+     xlab = expression(theta), ylab = "Likelihood",
+     main = "Likelihood Function for Storm (0,1)", las = 1)
+mle_storm <- theta_range[which.max(L_storm)]
+abline(v = mle_storm, lty = 2)
+text(mle_storm + 0.5, max(L_storm) * 0.9,
+     paste("MLE =", round(mle_storm, 2)))
+```
+
+**Key insight**: Under the 2PL, Thor and Storm have the same raw score (1 out of 2) but different theta estimates! Storm receives more "credit" for getting the more discriminating item correct. This is a fundamental difference between IRT scoring and classical test theory scoring.
+
+### Case 3: Wonder Woman (Response Pattern 1-1)
+
+Wonder Woman gets both items correct.
+
+```{r wonder-woman-likelihood}
+# Likelihood for pattern (1,1)
+L_ww <- p1 * p2
+
+plot(theta_range, L_ww, type = "l", col = "purple", lwd = 2,
+     xlab = expression(theta), ylab = "Likelihood",
+     main = "Likelihood Function for Wonder Woman (1,1)", las = 1)
+```
+
+**Problem**: No maximum likelihood estimate exists! The likelihood keeps increasing as theta approaches positive infinity. This is a fundamental limitation of MLE scoring for perfect response patterns.
+
+### Case 4: Hulk (Response Pattern 0-0)
+
+Hulk gets both items incorrect.
+
+```{r hulk-likelihood}
+# Likelihood for pattern (0,0)
+L_hulk <- q1 * q2
+
+plot(theta_range, L_hulk, type = "l", col = "purple", lwd = 2,
+     xlab = expression(theta), ylab = "Likelihood",
+     main = "Likelihood Function for Hulk (0,0)", las = 1)
+```
+
+**Same problem**: No maximum exists. The likelihood keeps increasing as theta approaches negative infinity.
+
+# Maximum Likelihood Estimation
+
+## The Newton-Raphson Algorithm
+
+In practice, we don't find the MLE graphically. Instead, we use iterative numerical methods. The Newton-Raphson algorithm is commonly used:
+
+$$\theta^{(t+1)} = \theta^{(t)} - \frac{\ell'(\theta^{(t)})}{\ell''(\theta^{(t)})}$$
+
+Where:
+
+- $\ell'(\theta)$ is the first derivative of the log-likelihood (the score function)
+- $\ell''(\theta)$ is the second derivative
+
+For the 2PL model:
+
+$$\ell'(\theta) = \sum_{j=1}^{J} a_j (u_j - P_j(\theta))$$
+
+$$\ell''(\theta) = -\sum_{j=1}^{J} a_j^2 P_j(\theta) Q_j(\theta)$$
+
+## Standard Error of the MLE
+
+The standard error of the MLE is derived from the Fisher information:
+
+$$SE(\hat{\theta}) = \frac{1}{\sqrt{I(\hat{\theta})}}$$
+
+Where the information function is:
+
+$$I(\theta) = \sum_{j=1}^{J} a_j^2 P_j(\theta) Q_j(\theta)$$
+
+# Bayesian Estimation: MAP and EAP
+
+## The Prior Distribution
+
+Before observing any responses, what is our best guess about a test-taker's theta? Under MLE, we have no way to answer this. However, if we assume test-takers are sampled from a population with a known distribution (typically standard normal), we can incorporate this information.
+
+## Bayes' Theorem Applied
+
+The posterior distribution combines the prior and the likelihood:
+
+$$g(\theta | \mathbf{u}) = \frac{L(\mathbf{u} | \theta) \cdot f(\theta)}{\int L(\mathbf{u} | \theta) \cdot f(\theta) \, d\theta}$$
+
+Where:
+
+- $L(\mathbf{u} | \theta)$ is the likelihood
+- $f(\theta)$ is the prior distribution (typically $N(0, 1)$)
+- $g(\theta | \mathbf{u})$ is the posterior distribution
+
+## MAP vs. EAP
+
+- **MAP (Maximum A Posteriori)**: The mode of the posterior distribution
+- **EAP (Expected A Posteriori)**: The mean of the posterior distribution
+
+$$\hat{\theta}_{EAP} = \frac{\int \theta \cdot L(\mathbf{u} | \theta) \cdot f(\theta) \, d\theta}{\int L(\mathbf{u} | \theta) \cdot f(\theta) \, d\theta}$$
+
+## Revisiting Wonder Woman with Bayesian Estimation
+
+```{r ww-bayesian, fig.height=6}
+# Prior: standard normal
+prior <- dnorm(theta_range, mean = 0, sd = 1)
+
+# Posterior (unnormalized) for Wonder Woman
+posterior_ww <- L_ww * prior
+
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+
+plot(theta_range, prior, type = "l", col = "blue", lwd = 2,
+     xlab = expression(theta), ylab = "Density",
+     main = "Prior Distribution", las = 1)
+
+plot(theta_range, L_ww, type = "l", col = "red", lwd = 2,
+     xlab = expression(theta), ylab = "Likelihood",
+     main = "Likelihood (1,1)", las = 1)
+
+plot(theta_range, posterior_ww, type = "l", col = "purple", lwd = 2,
+     xlab = expression(theta), ylab = "Posterior (unnormalized)",
+     main = "Posterior Distribution", las = 1)
+map_ww <- theta_range[which.max(posterior_ww)]
+abline(v = map_ww, lty = 2)
+text(map_ww - 0.8, max(posterior_ww) * 0.9,
+     paste("MAP =", round(map_ww, 2)))
+
+plot.new()
+legend("center",
+       legend = c("Prior N(0,1)", "Likelihood", "Posterior"),
+       col = c("blue", "red", "purple"), lwd = 2, cex = 1.2, bty = "n")
+```
+
+**Key insight**: By incorporating prior information, we now have a finite estimate for Wonder Woman! The prior distribution "pulls" the estimate back toward the population mean.
+
+# Application with Real Data
+
+## Fitting the 2PL Model
+
+```{r fit-2pl}
+# Fit 2PL model
+m2 <- mirt(cde, 1, itemtype = "2PL", verbose = FALSE)
+
+# View item parameters
+coef(m2, simplify = TRUE, IRTpars = TRUE)$items
+```
+
+## Checking for Perfect and Zero Scores
+
+```{r check-extreme-scores}
+# Calculate total scores
+tot <- apply(cde, 1, sum)
+
+# Summary
+cat("Total Score Distribution:\n")
+summary(tot)
+
+# Check for extreme scores
+cat("\nNumber with score = 0:", sum(tot == 0))
+cat("\nNumber with perfect score (31):", sum(tot == 31))
+```
+
+```{r score-histogram}
+hist(tot, breaks = 30, col = "steelblue", border = "white",
+     main = "Distribution of Raw Scores",
+     xlab = "Total Score (out of 31)", las = 1)
+```
+
+## Estimating Theta with Different Methods
+
+```{r estimate-thetas}
+# MLE estimates
+theta_mle <- fscores(m2, method = "ML", full.scores.SE = TRUE)
+
+# EAP estimates
+theta_eap <- fscores(m2, method = "EAP", full.scores.SE = TRUE)
+
+# MAP estimates
+theta_map <- fscores(m2, method = "MAP", full.scores.SE = TRUE)
+
+# Combine into data frame
+theta_df <- data.frame(
+  raw_score = tot,
+  mle = theta_mle[, 1],
+  mle_se = theta_mle[, 2],
+  eap = theta_eap[, 1],
+  eap_se = theta_eap[, 2],
+  map = theta_map[, 1],
+  map_se = theta_map[, 2]
+)
+```
+
+## MLE Issues with Extreme Scores
+
+```{r mle-summary}
+summary(theta_df$mle)
+```
+
+Notice the `Inf` and `-Inf` values for students with perfect and zero scores. This is a fundamental limitation of MLE.
+
+## Comparing Theta Distributions
+
+```{r theta-distributions, fig.height=8}
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+
+# Raw scores
+hist(tot, breaks = 30, col = "steelblue", border = "white",
+     main = "Raw Scores", xlab = "Total Score", las = 1)
+
+# MLE (excluding infinite values)
+mle_finite <- theta_df$mle[is.finite(theta_df$mle)]
+hist(mle_finite, breaks = 30, col = "coral", border = "white",
+     main = "MLE Theta Estimates", xlab = expression(theta), las = 1)
+
+# EAP
+hist(theta_df$eap, breaks = 30, col = "forestgreen", border = "white",
+     main = "EAP Theta Estimates", xlab = expression(theta), las = 1)
+
+# MAP
+hist(theta_df$map, breaks = 30, col = "purple", border = "white",
+     main = "MAP Theta Estimates", xlab = expression(theta), las = 1)
+```
+
+## MLE vs. EAP Comparison
+
+```{r mle-eap-comparison}
+# Filter to finite MLE values
+finite_idx <- is.finite(theta_df$mle)
+
+# Standard deviations
+cat("SD of MLE estimates:", round(sd(theta_df$mle[finite_idx]), 4), "\n")
+cat("SD of EAP estimates:", round(sd(theta_df$eap[finite_idx]), 4), "\n")
+```
+
+The EAP estimates have less variability because they are "shrunk" toward the prior mean of 0.
+
+```{r mle-eap-correlation}
+# Correlation
+cat("Correlation between MLE and EAP:",
+    round(cor(theta_df$mle[finite_idx], theta_df$eap[finite_idx]), 4))
+```
+
+```{r mle-eap-scatterplot}
+ggplot(theta_df[finite_idx, ], aes(x = mle, y = eap)) +
+  geom_point(alpha = 0.5, color = "steelblue") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+  labs(x = "MLE Theta", y = "EAP Theta",
+       title = "MLE vs. EAP Theta Estimates",
+       subtitle = "Dashed line shows y = x") +
+  theme_minimal() +
+  coord_equal()
+```
+
+Note the non-linearity at the tails: EAP estimates are pulled toward the mean relative to MLE, especially for extreme scores.
+
+## Standard Errors Comparison
+
+```{r se-comparison}
+ggplot(theta_df[finite_idx, ], aes(x = mle, y = mle_se)) +
+  geom_point(alpha = 0.5, color = "red") +
+  geom_point(aes(x = eap, y = eap_se), alpha = 0.5, color = "blue") +
+  labs(x = expression(theta), y = "Standard Error",
+       title = "Standard Errors: MLE (red) vs. EAP (blue)") +
+  theme_minimal() +
+  ylim(0.3, 0.8)
+```
+
+EAP standard errors tend to be slightly smaller than MLE standard errors.
+
+# Item and Test Information
+
+## Item Information Function
+
+For the 2PL model, the item information function is:
+
+$$I_j(\theta) = a_j^2 P_j(\theta) Q_j(\theta)$$
+
+Key properties:
+
+- Information is maximized near the item difficulty ($b_j$)
+- Higher discrimination ($a_j$) leads to more information
+- Information is highest where the item is most useful for distinguishing between test-takers
+
+```{r item-information}
+# Extract item parameters
+item_pars <- coef(m2, simplify = TRUE, IRTpars = TRUE)$items
+
+# Calculate information for each item
+theta_seq <- seq(-4, 4, by = 0.1)
+info_matrix <- matrix(NA, nrow = length(theta_seq), ncol = nrow(item_pars))
+
+for (j in 1:nrow(item_pars)) {
+  a <- item_pars[j, "a"]
+  b <- item_pars[j, "b"]
+  p <- p_2pl(theta_seq, a, b)
+  q <- 1 - p
+  info_matrix[, j] <- a^2 * p * q
+}
+
+# Plot a few items
+plot(theta_seq, info_matrix[, 1], type = "l", col = 1, lwd = 2,
+     xlab = expression(theta), ylab = "Information",
+     main = "Item Information Functions (Selected Items)",
+     ylim = c(0, max(info_matrix)), las = 1)
+for (j in c(5, 10, 15, 20, 25, 31)) {
+  lines(theta_seq, info_matrix[, j], col = j, lwd = 2)
+}
+legend("topright", legend = paste("Item", c(1, 5, 10, 15, 20, 25, 31)),
+       col = c(1, 5, 10, 15, 20, 25, 31), lwd = 2, cex = 0.8)
+```
+
+## Test Information Function
+
+The test information function is simply the sum of item information functions:
+
+$$I(\theta) = \sum_{j=1}^{J} I_j(\theta)$$
+
+```{r test-information}
+# Test information
+test_info <- rowSums(info_matrix)
+
+# Plot
+plot(theta_seq, test_info, type = "l", col = "darkblue", lwd = 3,
+     xlab = expression(theta), ylab = "Information",
+     main = "Test Information Function (2PL)", las = 1)
+abline(v = theta_seq[which.max(test_info)], lty = 2, col = "red")
+text(theta_seq[which.max(test_info)] + 0.5, max(test_info) * 0.95,
+     paste("Max at θ =", round(theta_seq[which.max(test_info)], 2)))
+```
+
+This test provides the most information for individuals scoring slightly below average.
+
+## Relationship Between Information and Standard Error
+
+The standard error of measurement (SEM) is inversely related to information:
+
+$$SEM(\theta) = \frac{1}{\sqrt{I(\theta)}}$$
+
+```{r info-sem-relationship}
+# Theoretical SEM
+sem_theoretical <- 1 / sqrt(test_info)
+
+par(mfrow = c(1, 2))
+
+# Information
+plot(theta_seq, test_info, type = "l", col = "darkblue", lwd = 2,
+     xlab = expression(theta), ylab = "Information",
+     main = "Test Information", las = 1)
+
+# SEM
+plot(theta_seq, sem_theoretical, type = "l", col = "darkred", lwd = 2,
+     xlab = expression(theta), ylab = "SEM",
+     main = "Standard Error of Measurement", las = 1)
+```
+
+## Theoretical vs. Empirical SEM
+
+```{r sem-comparison-plot}
+par(mfrow = c(1, 1))
+
+# Plot theoretical SEM
+plot(theta_seq, sem_theoretical, type = "l", col = "blue", lwd = 2,
+     xlab = expression(theta), ylab = "SEM",
+     main = "Theoretical vs. Empirical SEM",
+     ylim = c(0.2, 0.8), las = 1)
+
+# Add empirical EAP SEs
+points(theta_df$eap, theta_df$eap_se, col = "red", pch = 16, cex = 0.5)
+
+legend("topright",
+       legend = c("Theoretical (1/√I)", "Empirical (EAP posterior SD)"),
+       col = c("blue", "red"), lwd = c(2, NA), pch = c(NA, 16))
+```
+
+# Summary
+
+| Method | Advantages | Disadvantages |
+|--------|------------|---------------|
+| **MLE** | Unbiased; no prior assumptions required | Undefined for perfect/zero scores; larger variance |
+| **MAP** | Handles extreme scores; mode of posterior | Requires prior specification |
+| **EAP** | Handles extreme scores; minimum MSE; most commonly used | Requires prior specification; shrinkage toward mean |
+
+## Key Takeaways
+
+1. **Likelihood functions** express the probability of observed data as a function of theta
+2. **MLE** finds the theta that maximizes the likelihood, but fails for perfect/zero scores
+3. **Bayesian methods (MAP, EAP)** incorporate prior information and handle all response patterns
+4. **EAP** estimates have smaller variance but are "shrunk" toward the population mean
+5. **Information functions** tell us where on the theta scale the test provides the most precise measurement
+6. **Standard errors** are inversely related to information—more information means more precise estimates
+
+# References
+
+- de Ayala, R. J. (2009). *The Theory and Practice of Item Response Theory*. Guilford Press.
+- Embretson, S. E., & Reise, S. P. (2000). *Item Response Theory for Psychologists*. Lawrence Erlbaum Associates.
+- Thissen, D., & Orlando, M. (2001). Item response theory for items scored in two categories. In D. Thissen & H. Wainer (Eds.), *Test Scoring* (pp. 73-140). Lawrence Erlbaum Associates.
