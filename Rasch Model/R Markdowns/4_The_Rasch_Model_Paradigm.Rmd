@@ -367,7 +367,7 @@ knitr::kable(build_table(high, items_rasch), caption = "Rasch: Celia vs. Temple"
 
 **Look at the logit differences:**
 
-- **2PL Model**: The logit differences **vary** depending on which item is used and where on the ability scale the students are located
+- **2PL Model**: The logit differences **vary** depending on which item is used
 - **Rasch Model**: The logit differences are **constant** regardless of which item is used or where on the ability scale the students are located
 
 ### Why Does This Happen?
