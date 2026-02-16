@@ -1,0 +1,414 @@
+---
+title: "The EM Algorithm for MMLE, Step by Step"
+subtitle: "EDUC 8720: Item Parameter Estimation"
+author: "Derek Briggs"
+date: "`r Sys.Date()`"
+output:
+  ioslides_presentation:
+    widescreen: true
+    smaller: false
+    css: null
+    self_contained: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      fig.width = 7, fig.height = 4, fig.align = "center")
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(mirt)
+```
+
+```{r helper-functions, include=FALSE}
+# 2PL with difficulty/discrimination parameterization (for plots)
+p_2pl <- function(theta, a, b) {
+  1 / (1 + exp(-a * (theta - b)))
+}
+
+# 2PL with intercept/slope parameterization (for EM)
+P_icc <- function(theta, d, a) {
+  1 / (1 + exp(-(d + a * theta)))
+}
+
+# Compute L_l(X_k) matrix
+compute_L_matrix <- function(patterns, X_k, d, a) {
+  n_pat <- nrow(patterns)
+  q <- length(X_k)
+  L <- matrix(1, nrow = n_pat, ncol = q)
+  for (k in 1:q) {
+    for (i in 1:ncol(patterns)) {
+      p <- P_icc(X_k[k], d[i], a[i])
+      L[, k] <- L[, k] * ifelse(patterns[, i] == 1, p, 1 - p)
+    }
+  }
+  return(L)
+}
+
+# Compute artificial data
+compute_artificial_data <- function(patterns, freq, posterior, n_items, q) {
+  n_bar <- colSums(freq * posterior)
+  r_bar <- matrix(0, nrow = n_items, ncol = q)
+  for (i in 1:n_items) {
+    r_bar[i, ] <- colSums(patterns[, i] * freq * posterior)
+  }
+  list(n_bar = n_bar, r_bar = r_bar)
+}
+
+# M-step for one item
+m_step_item <- function(X_k, n_bar, r_bar_i, d_init, a_init, max_iter = 6, tol = 0.05) {
+  d <- d_init; a <- a_init
+  for (iter in 1:max_iter) {
+    P_hat <- P_icc(X_k, d, a)
+    W <- P_hat * (1 - P_hat)
+    p_obs <- r_bar_i / n_bar
+    p_obs[n_bar == 0] <- 0
+    V <- (p_obs - P_hat) / W
+    V[W < 1e-7] <- 0
+    nW <- n_bar * W; nWV <- n_bar * W * V; nWX <- n_bar * W * X_k
+    nWXV <- n_bar * W * V * X_k; nWX2 <- n_bar * W * X_k^2
+    SNW <- sum(nW); SNWV <- sum(nWV); SNWX <- sum(nWX)
+    SNWXV <- sum(nWXV); SNWX2 <- sum(nWX2)
+    denom <- SNW * SNWX2 - SNWX^2
+    if (abs(denom) < 1e-4) break
+    delta_d <- (SNWV * SNWX2 - SNWXV * SNWX) / denom
+    delta_a <- (SNW * SNWXV - SNWX * SNWV) / denom
+    d <- d + delta_d; a <- a + delta_a
+    if (abs(delta_d) <= tol & abs(delta_a) <= tol) break
+    if (abs(d) > 30 | abs(a) > 20) break
+  }
+  return(c(d = d, a = a))
+}
+
+# Full EM algorithm
+run_em <- function(patterns, freq, X_k, A_k, n_items, max_cycles = 100, tol = 1e-4) {
+  N <- sum(freq); q <- length(X_k); n_patterns <- nrow(patterns)
+  d <- rep(0, n_items); a <- rep(1, n_items)
+  history <- data.frame()
+  for (cycle in 1:max_cycles) {
+    L_mat <- compute_L_matrix(patterns, X_k, d, a)
+    P_l <- L_mat %*% A_k
+    posterior <- L_mat * matrix(A_k, nrow = n_patterns, ncol = q, byrow = TRUE)
+    posterior <- posterior / as.vector(P_l)
+    art <- compute_artificial_data(patterns, freq, posterior, n_items, q)
+    loglik <- sum(freq * log(pmax(P_l, 1e-300)))
+    d_old <- d; a_old <- a
+    for (i in 1:n_items) {
+      result <- m_step_item(X_k, art$n_bar, art$r_bar[i, ], d[i], a[i])
+      d[i] <- result["d"]; a[i] <- result["a"]
+    }
+    for (i in 1:n_items) {
+      history <- rbind(history, data.frame(Cycle = cycle, Item = i,
+        d = d[i], a = a[i], b = -d[i]/a[i], LogLik = loglik))
+    }
+    max_change <- max(abs(c(d - d_old, a - a_old)))
+    if (max_change < tol & cycle > 5) break
+  }
+  list(d = d, a = a, b = -d/a, history = history, n_cycles = cycle)
+}
+```
+
+```{r data-setup, include=FALSE}
+# LSAT-6 data
+patterns <- as.matrix(expand.grid(rep(list(0:1), 5))[, 5:1])
+colnames(patterns) <- paste0("Item", 1:5)
+freq <- c(3, 6, 2, 11, 1, 1, 3, 4, 1, 8, 0, 16, 0, 3, 2, 15,
+          10, 29, 14, 81, 3, 28, 15, 80, 16, 56, 21, 173, 11, 61, 28, 298)
+N <- sum(freq)
+n_items <- 5
+n_patterns <- nrow(patterns)
+
+# Quadrature
+q <- 10
+X_k <- c(-4.0, -3.1111, -2.2222, -1.3333, -0.4444,
+          0.4444,  1.3333,  2.2222,  3.1111,  4.0)
+A_k <- c(0.000119, 0.002805, 0.03002, 0.1458, 0.3213,
+         0.3213,   0.1458,   0.03002, 0.002805, 0.000119)
+
+# Initial estimates
+d_est <- rep(0, n_items)
+a_est <- rep(1, n_items)
+```
+
+## The EM Algorithm: Overview
+
+The EM algorithm alternates between two steps:
+
+| Step | What it does | Analogy |
+|------|-------------|---------|
+| **E-step** | Uses current item parameter guesses to figure out how examinees are distributed across the ability scale | "If these were the true item parameters, where would each examinee likely fall?" |
+| **M-step** | Uses that ability distribution to re-estimate item parameters | "Given where we think examinees fall, what item parameters best fit the responses?" |
+
+We repeat until the estimates stop changing.
+
+## The Data: LSAT-6
+
+- **1000 examinees**, **5 dichotomous items**, **32 unique response patterns**
+
+```{r show-top-patterns, echo=FALSE}
+df_patterns <- data.frame(patterns, Freq = freq)
+df_patterns$Pattern <- apply(patterns, 1, paste, collapse = "")
+df_patterns <- df_patterns[order(-df_patterns$Freq), ]
+kable(head(df_patterns[, c("Pattern", "Freq")], 8), row.names = FALSE,
+      caption = "8 Most Common Response Patterns")
+```
+
+## Initial Setup
+
+**2PL model** with intercept/slope parameterization:
+
+$$P_i(\theta) = \frac{1}{1 + \exp(-(d_i + a_i\theta))}$$
+
+**Starting values:** all intercepts $d_i = 0$, all slopes $a_i = 1$
+
+**Quadrature:** 10 nodes from $-4$ to $+4$ with weights from the standard normal
+
+These starting values treat all items as identical — the *data* will differentiate them.
+
+## E-Step 1: Likelihood at Each Node
+
+For each response pattern $l$ at each quadrature node $X_k$:
+
+$$L_l(X_k) = \prod_{i=1}^{n} P_i(X_k)^{u_{li}} Q_i(X_k)^{1-u_{li}}$$
+
+"How probable is this response pattern if the examinee's ability were exactly $X_k$?"
+
+```{r e1-compute, echo=FALSE}
+L_mat <- compute_L_matrix(patterns, X_k, d_est, a_est)
+l <- 22
+```
+
+```{r e1-example, echo=FALSE}
+df_lik <- data.frame(X_k = X_k, `L_l(X_k)` = L_mat[l, ], check.names = FALSE)
+kable(df_lik, digits = 8, align = "c",
+      caption = paste0("Pattern ", l, " {1,0,1,0,1}: Likelihood at each node"))
+```
+
+## E-Step 2: Marginal Probability
+
+Sum over nodes, weighted by quadrature weights:
+
+$$P_l = \sum_{k=1}^{q} L_l(X_k) \cdot A(X_k)$$
+
+This is the **marginal likelihood** of pattern $l$ — the probability of seeing that pattern averaged across all ability levels.
+
+```{r e2-compute, echo=FALSE}
+P_l <- L_mat %*% A_k
+top8_idx <- order(-freq)[1:8]
+df_marg <- data.frame(
+  Pattern = apply(patterns[top8_idx, ], 1, paste, collapse = ""),
+  Freq = freq[top8_idx],
+  P_l = round(as.numeric(P_l[top8_idx]), 8)
+)
+kable(df_marg, row.names = FALSE,
+      col.names = c("Pattern", "Freq", "Marginal Prob"))
+```
+
+## E-Step 3: Posterior Probabilities
+
+Apply Bayes' theorem at each node:
+
+$$P(X_k \mid \mathbf{u}_l) = \frac{L_l(X_k) \cdot A(X_k)}{P_l}$$
+
+```{r e3-compute, echo=FALSE}
+posterior <- L_mat * matrix(A_k, nrow = n_patterns, ncol = q, byrow = TRUE)
+posterior <- posterior / as.vector(P_l)
+```
+
+```{r e3-table, echo=FALSE}
+df_post <- data.frame(
+  X_k = X_k,
+  `L_l(X_k)` = L_mat[l, ],
+  `A(X_k)` = A_k,
+  `L x A` = L_mat[l, ] * A_k,
+  Posterior = posterior[l, ],
+  check.names = FALSE
+)
+kable(df_post, digits = 8, align = "c",
+      col.names = c("$X_k$", "$L_l(X_k)$", "$A(X_k)$", "$L \\times A$", "Posterior"),
+      caption = paste0("Pattern ", l, " {1,0,1,0,1}; $P_l$ = ",
+                       format(round(P_l[l], 8), scientific = FALSE)))
+```
+
+## E-Step 3: Posterior (Visual)
+
+```{r e3-plot, echo=FALSE, fig.height=4.5}
+df_post_plot <- data.frame(X_k = X_k, Posterior = posterior[l, ])
+ggplot(df_post_plot, aes(x = X_k, y = Posterior)) +
+  geom_col(fill = "purple", alpha = 0.7, width = 0.7) +
+  labs(title = paste0("Posterior for Pattern ", l, " {1,0,1,0,1}"),
+       subtitle = "Where is this examinee most likely on the ability scale?",
+       x = expression(theta), y = "Posterior Probability") +
+  theme_minimal(base_size = 14)
+```
+
+## E-Step 4: The "Artificial Data"
+
+Aggregate across all examinees (weighted by pattern frequency $f_l$):
+
+$$\bar{n}_k = \sum_{l=1}^{s} f_l \cdot P(X_k \mid \mathbf{u}_l) \quad \text{(expected examinees at node } k\text{)}$$
+
+$$\bar{r}_{ik} = \sum_{l=1}^{s} u_{li} \cdot f_l \cdot P(X_k \mid \mathbf{u}_l) \quad \text{(expected correct on item } i \text{ at node } k\text{)}$$
+
+These play the same role as the observed frequencies in the JMLE estimation equations.
+
+## E-Step 4: Artificial Data Table
+
+```{r e4-compute, echo=FALSE}
+art_data <- compute_artificial_data(patterns, freq, posterior, n_items, q)
+df_art <- data.frame(
+  X_k = X_k,
+  n_bar = round(art_data$n_bar, 1)
+)
+for (i in 1:n_items) {
+  df_art[[paste0("r", i)]] <- round(art_data$r_bar[i, ], 1)
+}
+kable(df_art, align = "c",
+      col.names = c("$X_k$", "$\\bar{n}_k$",
+                     paste0("$\\bar{r}_{", 1:5, "k}$")),
+      caption = "Artificial data from E-Step (Cycle 1)")
+```
+
+## Why Do the $\bar{r}_{ik}$ Columns Differ?
+
+We started with **identical** parameters for all 5 items, yet the $\bar{r}_{ik}$ values differ.
+
+- $\bar{n}_k$ depends only on the posterior — **same for all items**
+- $\bar{r}_{ik}$ multiplies by $u_{li}$ (the actual response) — only correct responses contribute
+
+**The raw data break the symmetry:**
+
+```{r p-correct, echo=FALSE}
+p_correct <- colSums(patterns * freq) / N
+cat(paste0("  Item ", 1:5, ": ", round(p_correct, 3), " proportion correct\n"))
+```
+
+Items with higher proportion correct $\rightarrow$ larger $\bar{r}_{ik}$ values.
+
+## The M-Step: Estimating Item Parameters
+
+Treat the artificial data as known and solve (one item at a time):
+
+$$\sum_{k=1}^{q} \bar{n}_k \left[\frac{\bar{r}_{ik}}{\bar{n}_k} - P_i(X_k)\right] = 0 \quad \text{(for } d_i\text{)}$$
+
+$$\sum_{k=1}^{q} \bar{n}_k \left[\frac{\bar{r}_{ik}}{\bar{n}_k} - P_i(X_k)\right] X_k = 0 \quad \text{(for } a_i\text{)}$$
+
+**Logic:** Find the $d_i$ and $a_i$ that make the residuals (observed $-$ expected) sum to zero. The $X_k$ multiplier in the second equation captures the *trend* across ability (slope).
+
+Solve iteratively using **Newton-Raphson** (same as in JMLE).
+
+## M-Step: Results After Cycle 1
+
+```{r m-step-run, echo=FALSE}
+d_new <- numeric(n_items)
+a_new <- numeric(n_items)
+for (i in 1:n_items) {
+  result <- m_step_item(X_k, art_data$n_bar, art_data$r_bar[i, ], d_est[i], a_est[i])
+  d_new[i] <- result["d"]; a_new[i] <- result["a"]
+}
+b_new <- -d_new / a_new
+
+kable(data.frame(
+  Item = 1:5,
+  d = round(d_new, 4),
+  a = round(a_new, 4),
+  b = round(b_new, 4)
+), row.names = FALSE, align = "c",
+col.names = c("Item", "Intercept ($d_i$)", "Slope ($a_i$)", "Difficulty ($b_i$)"),
+caption = "Item Parameter Estimates After 1 EM Cycle")
+```
+
+Already, the items have differentiated! Items with higher proportion correct get larger (more negative) difficulty estimates.
+
+## The Full EM Loop
+
+Now iterate: use these new estimates as input to the next E-step, repeat.
+
+```{r em-run, echo=FALSE}
+em_result <- run_em(patterns, freq, X_k, A_k, n_items, max_cycles = 100)
+```
+
+```{r em-final, echo=FALSE}
+kable(data.frame(
+  Item = 1:5,
+  d = round(em_result$d, 4),
+  a = round(em_result$a, 4),
+  b = round(em_result$b, 4)
+), row.names = FALSE, align = "c",
+col.names = c("Item", "Intercept ($d_i$)", "Slope ($a_i$)", "Difficulty ($b_i$)"),
+caption = paste0("Final Estimates After ", em_result$n_cycles, " EM Cycles"))
+```
+
+## Watching EM Converge
+
+```{r convergence-d, echo=FALSE, fig.height=4.5}
+hist_df <- em_result$history
+hist_df$Item <- factor(hist_df$Item, labels = paste("Item", 1:5))
+ggplot(hist_df, aes(x = Cycle, y = d, color = Item)) +
+  geom_line(linewidth = 1) +
+  labs(title = "Intercept (d) Estimates Across EM Cycles", y = "Intercept (d)") +
+  theme_minimal(base_size = 14) + theme(legend.position = "right")
+```
+
+## Watching EM Converge (cont.)
+
+```{r convergence-a, echo=FALSE, fig.height=4.5}
+ggplot(hist_df, aes(x = Cycle, y = a, color = Item)) +
+  geom_line(linewidth = 1) +
+  labs(title = "Slope (a) Estimates Across EM Cycles", y = "Slope (a)") +
+  theme_minimal(base_size = 14) + theme(legend.position = "right")
+```
+
+EM converges **slowly** — parameters change rapidly early, then creep toward final values.
+
+## Comparison with `mirt`
+
+```{r mirt-compare, echo=FALSE}
+resp_matrix <- patterns[rep(1:n_patterns, freq), ]
+colnames(resp_matrix) <- paste0("Item", 1:5)
+mod_2pl <- mirt(data.frame(resp_matrix), model = 1, itemtype = "2PL",
+                method = "EM", verbose = FALSE)
+mirt_pars <- coef(mod_2pl, IRTpars = FALSE, simplify = TRUE)$items
+mirt_irt <- coef(mod_2pl, IRTpars = TRUE, simplify = TRUE)$items
+
+comp_df <- data.frame(
+  Item = 1:5,
+  Our_a = round(em_result$a, 3),
+  mirt_a = round(mirt_pars[, "a1"], 3),
+  Our_b = round(em_result$b, 3),
+  mirt_b = round(mirt_irt[, "b"], 3)
+)
+kable(comp_df, row.names = FALSE, align = "c",
+      col.names = c("Item", "Our $a$", "mirt $a$", "Our $b$", "mirt $b$"),
+      caption = "Our MMLE/EM vs. mirt Package")
+```
+
+Small differences reflect implementation details: `mirt` uses 61 quadrature points (vs. our 10) and Bock-Aitkin acceleration.
+
+## EM Algorithm Summary
+
+```
+1. INITIALIZE: Starting values for all item parameters
+
+2. E-STEP:
+   → Compute likelihood at each node for each response pattern
+   → Apply Bayes' theorem to get posterior at each node
+   → Aggregate into "artificial data" (n-bar, r-bar)
+
+3. M-STEP:
+   → For each item separately:
+     Treat artificial data as known, solve for d and a
+     using Newton-Raphson
+
+4. CONVERGED? If yes → stop. If no → go to step 2.
+```
+
+## Key Takeaways
+
+- **JMLE** estimates every person's $\theta$ along with item parameters $\rightarrow$ inconsistent estimates (Neyman-Scott problem)
+
+- **MMLE** integrates out $\theta$ by assuming a population distribution $\rightarrow$ consistent item parameter estimates
+
+- **EM** handles the circular dependency: the E-step infers the ability distribution, the M-step re-estimates item parameters, repeat
+
+- MMLE produces **item parameters only** — person $\theta$ estimates require a separate step (MLE, MAP, or EAP)
