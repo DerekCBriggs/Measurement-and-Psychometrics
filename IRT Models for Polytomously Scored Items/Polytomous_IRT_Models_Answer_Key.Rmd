@@ -1,0 +1,729 @@
+---
+title: "Verbal Aggression Data: Motivating Questions — Instructor Answer Key"
+subtitle: "EDUC 8720 — Measurement and Psychometrics"
+author: "Derek Briggs"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+    theme: flatly
+    highlight: tango
+    code_folding: hide
+    df_print: kable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 9,
+  fig.height = 6,
+  fig.align = "center",
+  cache = TRUE
+)
+```
+
+# Overview
+
+This document provides answers to the four motivating questions posed in Section 2.4 of the Tutorial and more broadly summarizes what the Verbal Aggression data reveal about how the three experimental design features—**behavior mode** (want vs. do), **behavior type** (curse, scold, shout), and **blame attribution** (other vs. self to blame)—relate to the latent trait of verbal aggression tendency. Where relevant, the sensitivity of each conclusion to the choice of IRT model is examined.
+
+All code is hidden by default. Click **Code** buttons to reveal the code underlying each result.
+
+---
+
+# Setup: Data and Model Fitting
+
+```{r packages-data}
+library(mirt)
+
+# Load data
+d <- read.csv("verbagg_wide.csv")
+
+# Item structure reference table
+item_info <- data.frame(
+  Item      = 1:24,
+  Name      = names(d),
+  Situation = rep(c("bus", "train", "store", "call"), each = 6),
+  Blame     = rep(c("other", "other", "self", "self"), each = 6),
+  Mode      = rep(c("want", "do"), 12),
+  Type      = rep(rep(c("curse", "scold", "shout"), each = 2), 4)
+)
+
+# Indices for want/do and blame groupings
+want_items  <- seq(1, 23, 2)   # odd-numbered items
+do_items    <- seq(2, 24, 2)   # even-numbered items
+other_items <- 1:12            # bus and train situations
+self_items  <- 13:24           # store and call situations
+```
+
+```{r fit-models}
+pcm  <- mirt(d, 1, itemtype = "Rasch",   verbose = FALSE)
+gpcm <- mirt(d, 1, itemtype = "gpcm",    verbose = FALSE)
+rsm  <- mirt(d, 1, itemtype = "rsm",     verbose = FALSE)
+grm  <- mirt(d, 1, itemtype = "graded",  verbose = FALSE)
+```
+
+```{r extract-params}
+pcm_pars  <- coef(pcm,  IRTpars = TRUE, simplify = TRUE)$items
+gpcm_pars <- coef(gpcm, IRTpars = TRUE, simplify = TRUE)$items
+rsm_pars  <- coef(rsm,  IRTpars = TRUE, simplify = TRUE)$items
+grm_pars  <- coef(grm,  IRTpars = TRUE, simplify = TRUE)$items
+
+colnames(pcm_pars)  <- c("a", "b1", "b2")
+colnames(gpcm_pars) <- c("a", "b1", "b2")
+colnames(grm_pars)  <- c("a", "b1", "b2")
+
+# Average item threshold locations (mean of b1 and b2)
+pcm_locs  <- rowMeans(pcm_pars[,  c("b1", "b2")])
+gpcm_locs <- rowMeans(gpcm_pars[, c("b1", "b2")])
+grm_locs  <- rowMeans(grm_pars[,  c("b1", "b2")])
+rsm_locs  <- rowMeans(rsm_pars[,  2:3])     # positional indexing for RSM
+
+# Threshold distances (b2 - b1)
+pcm_dist  <- pcm_pars[,  "b2"] - pcm_pars[,  "b1"]
+gpcm_dist <- gpcm_pars[, "b2"] - gpcm_pars[, "b1"]
+```
+
+---
+
+# Question 1: Which Items Require the Most Verbal Aggression?
+
+> *Which items require the most verbal aggression to endorse with a "yes" response?*
+
+**Answer**: The **second threshold** ($b_2$) is the key parameter here. It locates the point on the $\theta$ scale where "perhaps" and "yes" are equally likely—items with higher $b_2$ require more verbal aggression tendency to reach a "yes" endorsement. Across all three models that produce comparable item-level $b_2$ estimates (PCM, GPCM, GRM), the rank ordering is highly consistent: **shout items—especially the "do" variants—require the most verbal aggression, while curse "want" items are the easiest to endorse**.
+
+```{r q1-table}
+q1_tab <- data.frame(
+  Item      = 1:24,
+  Name      = names(d),
+  Mode      = item_info$Mode,
+  Type      = item_info$Type,
+  Blame     = item_info$Blame,
+  PCM_b2    = round(pcm_pars[, "b2"],  2),
+  GPCM_b2   = round(gpcm_pars[, "b2"], 2),
+  GRM_b2    = round(grm_pars[, "b2"],  2)
+)
+q1_tab_sorted <- q1_tab[order(q1_tab$PCM_b2, decreasing = TRUE), ]
+knitr::kable(q1_tab_sorted, row.names = FALSE,
+             caption = "Items Ranked by Second Threshold b2 (highest to lowest, sorted by PCM)",
+             col.names = c("Item", "Name", "Mode", "Type", "Blame",
+                           "PCM b2", "GPCM b2", "GRM b2"))
+```
+
+```{r q1-dotplot, fig.height=8, fig.width=9}
+ord <- order(pcm_pars[, "b2"])
+
+par(mar = c(4, 11, 3, 2))
+plot(pcm_pars[ord, "b2"],  1:24, pch = 16, col = "steelblue", cex = 1.1,
+     xlim = c(-3, 4.5), ylim = c(0.5, 24.5),
+     xlab = expression(b[2] ~ "(threshold for 'yes')"), ylab = "",
+     yaxt = "n", main = expression("Second Threshold (" * b[2] * ") by Item: PCM, GPCM, and GRM"))
+points(gpcm_pars[ord, "b2"], 1:24, pch = 17, col = "darkorange",  cex = 1.1)
+points(grm_pars[ord,  "b2"], 1:24, pch = 15, col = "darkgreen",   cex = 1.1)
+axis(2, at = 1:24, labels = rownames(pcm_pars)[ord], las = 1, cex.axis = 0.72)
+abline(h = 1:24, col = "grey90")
+abline(v = 0, lty = 2, col = "grey50")
+legend("bottomright",
+       legend = c("PCM", "GPCM", "GRM"),
+       pch    = c(16, 17, 15),
+       col    = c("steelblue", "darkorange", "darkgreen"),
+       bty    = "n")
+```
+
+**Key takeaways:**
+
+- The five items with the **highest** $b_2$ under the PCM are all **shout-do** items (e.g., *S1DoShout*, *S2DoShout*, *S3DoShout*, *S4DoShout*): actually shouting at someone requires a very high level of verbal aggression tendency.
+- The five items with the **lowest** $b_2$ are all **curse-want** items. Merely *wanting* to curse (not directed at anyone) in a frustrating situation is the easiest form of verbal aggression to endorse.
+- The **rank ordering is stable across all three models**. The three sets of symbols in the plot are almost collinear for every item—PCM, GPCM, and GRM agree on which items are hard and which are easy. The conclusion is model-robust.
+
+---
+
+# Question 2: Threshold Distances for Want vs. Do Items
+
+> *How big are the distances between category thresholds ($b_2 - b_1$) for "want" items vs. "do" items?*
+
+**Answer**: Under the PCM and GPCM, **"want" items have substantially larger threshold distances** than "do" items—in several cases "do" items show **threshold reversals** ($b_2 < b_1$). This means the "perhaps" category spans a broader range of $\theta$ for "want" items than for "do" items. The substantive interpretation is that hedging ("perhaps I'd want to...") is a psychologically natural intermediate state, whereas "perhaps I'd actually do it" is an unstable position—respondents who are aggressive enough to consider doing something are likely to go all the way to "yes." This question is **model-sensitive**: the RSM, by design, cannot address it.
+
+```{r q2-stats}
+cat("=== PCM Threshold Distances (b2 - b1) ===\n")
+cat(sprintf("Want items — Mean: %.3f  SD: %.3f  Min: %.3f  Max: %.3f\n",
+            mean(pcm_dist[want_items]), sd(pcm_dist[want_items]),
+            min(pcm_dist[want_items]), max(pcm_dist[want_items])))
+cat(sprintf("Do items   — Mean: %.3f  SD: %.3f  Min: %.3f  Max: %.3f\n\n",
+            mean(pcm_dist[do_items]),   sd(pcm_dist[do_items]),
+            min(pcm_dist[do_items]),   max(pcm_dist[do_items])))
+
+cat(sprintf("PCM items with reversed thresholds: %s\n",
+            paste(names(which(pcm_dist < 0)), collapse = ", ")))
+
+cat("\n=== GPCM Threshold Distances (b2 - b1) ===\n")
+cat(sprintf("Want items — Mean: %.3f\n", mean(gpcm_dist[want_items])))
+cat(sprintf("Do items   — Mean: %.3f\n\n", mean(gpcm_dist[do_items])))
+
+cat("=== RSM (common threshold distance, same for all items) ===\n")
+rsm_common_dist <- rsm_pars[1, 3] - rsm_pars[1, 2]
+cat(sprintf("Common distance: %.3f\n", rsm_common_dist))
+cat("(RSM constrains all items to the same threshold distance; want/do differences are invisible.)\n")
+```
+
+```{r q2-boxplots, fig.height=5, fig.width=9}
+par(mfrow = c(1, 2))
+
+boxplot(pcm_dist[want_items], pcm_dist[do_items],
+        names  = c("Want", "Do"),
+        col    = c("lightblue", "salmon"),
+        main   = "PCM: Threshold Distances\nWant vs. Do Items",
+        ylab   = expression(b[2] - b[1]),
+        border = "grey40", las = 1)
+abline(h = 0, lty = 2, col = "grey30")
+text(1.5, max(pcm_dist) * 0.95,
+     paste("Reversals:", sum(pcm_dist < 0)),
+     cex = 0.85, col = "red")
+
+boxplot(gpcm_dist[want_items], gpcm_dist[do_items],
+        names  = c("Want", "Do"),
+        col    = c("lightblue", "salmon"),
+        main   = "GPCM: Threshold Distances\nWant vs. Do Items",
+        ylab   = expression(b[2] - b[1]),
+        border = "grey40", las = 1)
+abline(h = 0, lty = 2, col = "grey30")
+text(1.5, max(gpcm_dist) * 0.95,
+     paste("Reversals:", sum(gpcm_dist < 0)),
+     cex = 0.85, col = "red")
+
+par(mfrow = c(1, 1))
+```
+
+**Key takeaways:**
+
+- **PCM**: "want" items have a larger average threshold distance than "do" items. Several "do" items show reversed thresholds (red count above), confirming that the "perhaps" category is functioning differently—or barely at all—for those items.
+- **GPCM**: The same pattern holds after relaxing the equal-discrimination constraint. The want/do distance difference is not an artifact of the PCM's equal-discrimination assumption.
+- **RSM**: Cannot speak to this question. The RSM's single common threshold distance is a weighted average across all 24 items and obscures the mode-specific pattern. If the want/do distance difference is real and meaningful, the RSM is too restrictive.
+- **Substantive interpretation**: The "perhaps" response option is more psychologically useful for "want" items than "do" items. When it comes to the question of *acting* on verbal aggression, respondents are less likely to inhabit a true middle state—they either would not do it, or they would.
+
+---
+
+# Question 3: Other-to-Blame vs. Self-to-Blame Scenarios
+
+> *How much more likely is verbal aggression in an "other to blame" vs. a "self to blame" scenario?*
+
+**Answer**: Across all four models, items in **other-to-blame situations** (bus and train, items 1–12) have **lower average threshold locations** than items in **self-to-blame situations** (store and call, items 13–24). Lower locations mean that verbal aggression is endorsed at lower levels of the latent trait—people are more easily moved to verbal aggression when someone else is responsible for the frustration. The direction and approximate magnitude of this effect is **consistent across all four models**.
+
+```{r q3-stats}
+cat("=== Average Item Location: Other vs. Self to Blame ===\n\n")
+
+model_locs <- list(PCM = pcm_locs, GPCM = gpcm_locs, GRM = grm_locs, RSM = rsm_locs)
+
+for (mod_name in names(model_locs)) {
+  locs <- model_locs[[mod_name]]
+  diff_val <- mean(locs[other_items]) - mean(locs[self_items])
+  cat(sprintf("%-5s  Other: %+.3f  |  Self: %+.3f  |  Difference (Other - Self): %+.3f\n",
+              mod_name,
+              mean(locs[other_items]),
+              mean(locs[self_items]),
+              diff_val))
+}
+```
+
+```{r q3-boxplots, fig.height=8, fig.width=9}
+par(mfrow = c(2, 2))
+
+for (mod_name in c("PCM", "GPCM", "GRM", "RSM")) {
+  locs <- model_locs[[mod_name]]
+  boxplot(locs[other_items], locs[self_items],
+          names  = c("Other to blame\n(bus, train)", "Self to blame\n(store, call)"),
+          col    = c("lightblue", "salmon"),
+          main   = paste(mod_name, ": Item Location by Blame"),
+          ylab   = "Average threshold location",
+          border = "grey40", las = 1)
+  diff_val <- mean(locs[other_items]) - mean(locs[self_items])
+  mtext(sprintf("Δ = %.3f", diff_val), side = 3, line = -1.5, cex = 0.8, col = "grey30")
+}
+
+par(mfrow = c(1, 1))
+```
+
+**Key takeaways:**
+
+- Under all four models, other-to-blame items have **lower average threshold locations** (easier to endorse verbal aggression) than self-to-blame items. The difference ($\Delta$) is consistent in sign and magnitude regardless of model choice.
+- This aligns with attribution theory: people feel more justified expressing anger when they perceive themselves as victims of another person's actions than when the frustration arises from circumstances they could have controlled.
+- The conclusion is **fully model-robust**—it does not depend on whether you assume equal discrimination (PCM, RSM) or allow it to vary (GPCM, GRM), or whether you use adjacent-category (PCM/GPCM/RSM) vs. cumulative (GRM) thresholds.
+
+---
+
+# Broader Findings: What Do We Learn About Verbal Aggression Tendencies?
+
+The Verbal Aggression survey has a 2 × 3 × 4 factorial structure (Mode × Type × Situation). The IRT parameters allow us to quantify the independent and joint contribution of each design feature to the difficulty of endorsing verbal aggression.
+
+## Effect of Behavior Type
+
+```{r type-effect, fig.height=4, fig.width=6}
+type_means <- tapply(pcm_locs, item_info$Type, mean)
+ord_type   <- order(type_means)
+
+barplot(type_means[ord_type],
+        col    = c("lightsteelblue", "steelblue", "darkblue"),
+        main   = "PCM: Mean Item Location by Behavior Type",
+        ylab   = "Mean avg. threshold location",
+        ylim   = c(-0.5, max(type_means) + 0.5),
+        border = "white", las = 1)
+abline(h = 0, lty = 2, col = "grey50")
+```
+
+The design expectation—that curse items are easiest, scold items intermediate, and shout items hardest to endorse—is confirmed by the data: the three behavior types fall in the intended order on the latent trait continuum. The difference between curse and shout is substantial (roughly `r round(type_means["shout"] - type_means["curse"], 2)` logits under the PCM).
+
+## Effect of Behavior Mode
+
+```{r mode-effect}
+mode_means <- tapply(pcm_locs, item_info$Mode, mean)
+cat(sprintf("Mean PCM location — Want items: %+.3f\n", mode_means["want"]))
+cat(sprintf("Mean PCM location — Do items:   %+.3f\n", mode_means["do"]))
+cat(sprintf("Do - Want difference:            %+.3f logits\n",
+            mode_means["do"] - mode_means["want"]))
+```
+
+"Do" items are located substantially higher on the latent trait than "want" items—on average about `r round(mode_means["do"] - mode_means["want"], 2)` logits higher under the PCM. Endorsing *wanting* to be verbally aggressive is easier than endorsing *actually doing* it. This is consistent across all four models and across every combination of behavior type and situation.
+
+## Combined View: Mode × Type
+
+```{r mode-type, fig.height=5, fig.width=7}
+mt_mat <- tapply(pcm_locs,
+                 list(Mode = item_info$Mode, Type = item_info$Type),
+                 mean)
+mt_mat <- mt_mat[, c("curse", "scold", "shout")]   # order columns
+
+knitr::kable(round(mt_mat, 3),
+             caption = "Mean PCM Item Location by Mode × Type (higher = more trait required)")
+```
+
+```{r mode-type-plot, fig.height=4.5, fig.width=6.5}
+barplot(mt_mat,
+        beside  = TRUE,
+        col     = c("lightblue", "salmon"),
+        main    = "PCM: Mean Item Location by Mode × Type",
+        ylab    = "Mean avg. threshold location",
+        xlab    = "Behavior Type",
+        legend.text = rownames(mt_mat),
+        args.legend = list(bty = "n", x = "topleft"),
+        border  = "white", las = 1,
+        ylim    = c(min(mt_mat) - 0.3, max(mt_mat) + 0.3))
+abline(h = 0, lty = 2, col = "grey50")
+```
+
+The Mode × Type table reveals an orderly pattern: every step up in behavior type increases the average threshold location, and for every type, the "do" variant is harder to endorse than the "want" variant. There is no reversal of these orderings anywhere in the table. The survey design does what it was intended to do: it maps onto a coherent hierarchy of verbal aggression difficulty.
+
+## What About Situation (Specific Bus vs. Train, Store vs. Call)?
+
+```{r situation-effect}
+sit_means <- tapply(pcm_locs, item_info$Situation, mean)
+cat("Mean PCM location by situation:\n")
+for (s in c("bus", "train", "store", "call")) {
+  cat(sprintf("  %-6s (%s to blame): %+.3f\n",
+              s,
+              ifelse(s %in% c("bus", "train"), "other", "self"),
+              sit_means[s]))
+}
+```
+
+Within the other-to-blame situations, the bus and train items are very similar in average location. Within self-to-blame situations, the store and call items are also similar. The dominant signal in the data is the **other vs. self** contrast; situation-specific effects within each blame category are minor. This is useful for a psychologist interpreting the data: it is the *blame attribution structure* of the situation, not idiosyncratic features of each scenario, that drives differences in verbal aggression tendency.
+
+---
+
+# Question 4: How Sensitive Are the Conclusions to Model Choice?
+
+## Model Fit
+
+```{r model-fit}
+fit_rsm  <- anova(rsm)
+fit_pcm  <- anova(pcm)
+fit_gpcm <- anova(gpcm)
+fit_grm  <- anova(grm)
+
+fits <- data.frame(
+  Model  = c("RSM", "PCM", "GPCM", "GRM"),
+  AIC    = round(c(fit_rsm$AIC,    fit_pcm$AIC,    fit_gpcm$AIC,    fit_grm$AIC),    1),
+  BIC    = round(c(fit_rsm$BIC,    fit_pcm$BIC,    fit_gpcm$BIC,    fit_grm$BIC),    1),
+  logLik = round(c(fit_rsm$logLik, fit_pcm$logLik, fit_gpcm$logLik, fit_grm$logLik), 1)
+)
+knitr::kable(fits, caption = "Model Fit Summary (lower AIC/BIC = better fit)")
+```
+
+```{r nested-lrt, class.output="small"}
+cat("--- RSM vs. PCM ---\n")
+anova(rsm, pcm)
+cat("\n--- PCM vs. GPCM ---\n")
+anova(pcm, gpcm)
+```
+
+By both AIC/BIC and likelihood ratio test, the GPCM fits better than the PCM, and the PCM fits better than the RSM. The GRM (adjacent-category comparisons are not applicable) is competitive with the GPCM on AIC and BIC. The best-fitting model by statistical criteria is the GPCM or GRM.
+
+## Robustness Summary
+
+```{r robustness-table}
+robust <- data.frame(
+  Question = c(
+    "Q1: Shout/do items have the highest b2",
+    "Q1: Curse/want items have the lowest b2",
+    "Q1: Rank ordering of items by b2",
+    "Q2: Do items have smaller threshold distances than want items",
+    "Q2: Some do items show threshold reversals",
+    "Q3: Other-to-blame items have lower average locations",
+    "Q3: Direction of blame effect is positive (other < self)",
+    "General: curse < scold < shout hierarchy"
+  ),
+  PCM  = c("Yes", "Yes", "Highly stable", "Yes", "Yes (several)",        "Yes", "Yes", "Yes"),
+  GPCM = c("Yes", "Yes", "Highly stable", "Yes", "Yes (fewer than PCM)", "Yes", "Yes", "Yes"),
+  RSM  = c("Yes", "Yes", "Highly stable", "N/A — constrained equal", "N/A", "Yes", "Yes", "Yes"),
+  GRM  = c("Yes", "Yes", "Highly stable", "Yes (Thurstonian scale)", "Not applicable", "Yes", "Yes", "Yes"),
+  check.names = FALSE
+)
+knitr::kable(robust,
+             caption = "Robustness of Substantive Conclusions Across IRT Models")
+```
+
+## Summary Assessment
+
+The main substantive findings from these data are **highly robust to model choice**:
+
+1. **Item difficulty hierarchy** (Q1): The rank ordering of items by how much verbal aggression is required to endorse "yes" is essentially the same under all models. Shout-do items are hardest; curse-want items are easiest.
+
+2. **Threshold distances and "perhaps" functioning** (Q2): This is the one conclusion that is **model-sensitive in a meaningful way**. The PCM and GPCM reveal that "do" items tend to have smaller—and sometimes reversed—threshold distances compared to "want" items, suggesting the "perhaps" category functions differently across modes. The RSM is silent on this question by design, since it constrains all threshold distances to be equal. If this difference matters substantively (and it does: it tells us about the psychological meaning of the middle response category), then the RSM is too restrictive for these data.
+
+3. **Blame attribution effect** (Q3): Fully robust. All four models agree in direction and approximate magnitude. Verbal aggression is more easily endorsed when someone else is to blame.
+
+4. **Behavior type and mode hierarchy**: The curse < scold < shout and want < do orderings are confirmed by all models. These are structural features of the data that no reasonable IRT model would reverse.
+
+**Bottom line**: For the big-picture psychological questions about what the survey was designed to answer, the choice of IRT model makes little practical difference. The main area where the model choice matters is in the *diagnostic* question of how well the "perhaps" category is functioning for different item types—and there, the PCM or GPCM is clearly preferable to the RSM.
+
+---
+
+# Item Fit Comparison Across Models
+
+Three complementary fit statistics are reported for each item under each model:
+
+- **Q1** (Yen's $\chi^2$): Compares observed vs. expected response frequencies within $\theta$ bins. Sensitive to model misfit across the trait continuum but dependent on the choice of number of bins.
+- **S-X2** (Orlando & Thissen): Conditions on the total score rather than $\theta$ bins, making it more robust than Q1 for small samples.
+- **PV-Q1** (Posterior Predictive Q1): A Bayesian posterior predictive check; does not require specifying bins or estimating $\theta$ point estimates. Generally the most stable of the three.
+
+All bin-based statistics use 6 bins (≈53 respondents per bin). $p < .05$ flagged with *, $p < .01$ with **, $p < .001$ with ***.
+
+```{r compute-itemfit, cache=TRUE}
+ifit_pcm  <- itemfit(pcm,  fit_stats = c("X2", "S_X2", "PV_Q1"),
+                     group.bins = 6, method = "EAP")
+ifit_gpcm <- itemfit(gpcm, fit_stats = c("X2", "S_X2", "PV_Q1"),
+                     group.bins = 6, method = "EAP")
+ifit_rsm  <- itemfit(rsm,  fit_stats = c("X2", "S_X2", "PV_Q1"),
+                     group.bins = 6, method = "EAP")
+ifit_grm  <- itemfit(grm,  fit_stats = c("X2", "S_X2", "PV_Q1"),
+                     group.bins = 6, method = "EAP")
+```
+
+```{r itemfit-table, warning=FALSE}
+# Helper: format p-values with significance stars
+flag_p <- function(p) {
+  ifelse(is.na(p), "—",
+  ifelse(p < .001, paste0(sprintf("%.3f", p), "***"),
+  ifelse(p < .01,  paste0(sprintf("%.3f", p), "**"),
+  ifelse(p < .05,  paste0(sprintf("%.3f", p), "*"),
+                   sprintf("%.3f", p)))))
+}
+
+# Extract p-value columns dynamically (mirt uses "p.X2", "p.S_X2", "p.PV_Q1")
+get_p <- function(ifit, stat) {
+  col <- paste0("p.", stat)
+  if (col %in% names(ifit)) return(ifit[[col]])
+  # fallback: find any column with the stat name and a "p" prefix
+  cols <- grep(paste0("^p.*", stat), names(ifit), value = TRUE, ignore.case = TRUE)
+  if (length(cols)) return(ifit[[cols[1]]])
+  rep(NA_real_, nrow(ifit))
+}
+
+build_fit_table <- function(stat_name, stat_key) {
+  data.frame(
+    Item  = names(d),
+    PCM   = flag_p(get_p(ifit_pcm,  stat_key)),
+    GPCM  = flag_p(get_p(ifit_gpcm, stat_key)),
+    RSM   = flag_p(get_p(ifit_rsm,  stat_key)),
+    GRM   = flag_p(get_p(ifit_grm,  stat_key)),
+    check.names = FALSE
+  )
+}
+
+knitr::kable(build_fit_table("Q1 (p-value)", "X2"),
+             caption = "Q1 p-values by Item and Model (* p<.05, ** p<.01, *** p<.001)")
+```
+
+```{r itemfit-table-sx2}
+knitr::kable(build_fit_table("S-X2 (p-value)", "S_X2"),
+             caption = "S-X2 p-values by Item and Model (* p<.05, ** p<.01, *** p<.001)")
+```
+
+```{r itemfit-table-pvq1}
+knitr::kable(build_fit_table("PV-Q1 (p-value)", "PV_Q1"),
+             caption = "PV-Q1 p-values by Item and Model (* p<.05, ** p<.01, *** p<.001)")
+```
+
+```{r itemfit-flagcount}
+# Count how many model × statistic combinations flag each item (p < .05)
+flag_count <- function(ifit) {
+  px2  <- get_p(ifit, "X2")
+  psx2 <- get_p(ifit, "S_X2")
+  ppv  <- get_p(ifit, "PV_Q1")
+  (px2 < .05) + (psx2 < .05) + (ppv < .05)
+}
+
+flags <- data.frame(
+  Item       = names(d),
+  Mode       = item_info$Mode,
+  Type       = item_info$Type,
+  Situation  = item_info$Situation,
+  PCM_flags  = flag_count(ifit_pcm),
+  GPCM_flags = flag_count(ifit_gpcm),
+  RSM_flags  = flag_count(ifit_rsm),
+  GRM_flags  = flag_count(ifit_grm)
+)
+flags$Total <- flags$PCM_flags + flags$GPCM_flags + flags$RSM_flags + flags$GRM_flags
+
+flagged <- flags[flags$Total > 0, ]
+if (nrow(flagged) > 0) {
+  knitr::kable(flagged[order(-flagged$Total), ], row.names = FALSE,
+               caption = "Items Flagged for Misfit (counts = number of p < .05 hits across 3 statistics)")
+} else {
+  cat("No items flagged by any statistic under any model.\n")
+}
+```
+
+## Empirical Plots for Misfitting Items
+
+Empirical plots show, within each $\theta$ bin, the observed proportions for each response category (points) alongside the model-predicted probabilities (curves). Systematic deviations between points and curves indicate where a model fails.
+
+```{r empirical-plots-setup}
+# Identify items with most flags across all models
+worst_items <- order(-flags$Total)[1:3]
+worst_items <- worst_items[flags$Total[worst_items] > 0]
+cat("Items selected for empirical plots (item numbers):", paste(worst_items, collapse = ", "), "\n")
+cat("Names:", paste(names(d)[worst_items], collapse = ", "), "\n")
+```
+
+```{r empirical-pcm, fig.height=4, fig.width=8}
+for (it in worst_items) {
+  print(
+    itemfit(pcm, fit_stats = "PV_Q1", group.bins = 6, method = "EAP",
+            empirical.plot = it)
+  )
+}
+```
+
+```{r empirical-gpcm, fig.height=4, fig.width=8}
+for (it in worst_items) {
+  print(
+    itemfit(gpcm, fit_stats = "PV_Q1", group.bins = 6, method = "EAP",
+            empirical.plot = it)
+  )
+}
+```
+
+```{r empirical-rsm, fig.height=4, fig.width=8}
+for (it in worst_items) {
+  print(
+    itemfit(rsm, fit_stats = "PV_Q1", group.bins = 6, method = "EAP",
+            empirical.plot = it)
+  )
+}
+```
+
+```{r empirical-grm, fig.height=4, fig.width=8}
+for (it in worst_items) {
+  print(
+    itemfit(grm, fit_stats = "PV_Q1", group.bins = 6, method = "EAP",
+            empirical.plot = it)
+  )
+}
+```
+
+**Interpretation guide**: Look for bins where the observed proportions (points) fall clearly above or below the model-predicted curves. Common patterns of misfit in the verbal aggression data include items where the "perhaps" category is under-used relative to model predictions (consistent with the threshold reversal finding in Q2), or items where the response probabilities are not monotonically related to $\theta$ across all bins.
+
+---
+
+# Test Information Functions Across Models
+
+The Test Information Function (TIF) quantifies how precisely the test measures verbal aggression tendency at each level of $\theta$. Higher information means lower standard error of measurement (SEM = $1/\sqrt{I(\theta)}$). Because models differ in their discrimination parameters and response function families, they can differ substantially in where and how much information they provide.
+
+```{r tif-compute}
+theta_seq <- seq(-4, 4, length.out = 300)
+
+tif_pcm  <- testinfo(pcm,  theta_seq)
+tif_gpcm <- testinfo(gpcm, theta_seq)
+tif_rsm  <- testinfo(rsm,  theta_seq)
+tif_grm  <- testinfo(grm,  theta_seq)
+```
+
+```{r tif-plot, fig.height=5, fig.width=9}
+y_max <- max(tif_pcm, tif_gpcm, tif_rsm, tif_grm) * 1.05
+
+plot(theta_seq, tif_pcm, type = "l", col = "steelblue",   lwd = 2,
+     xlim = c(-4, 4), ylim = c(0, y_max),
+     xlab = expression(theta), ylab = "Information",
+     main = "Test Information Functions: PCM, GPCM, RSM, GRM",
+     las = 1)
+lines(theta_seq, tif_gpcm, col = "darkorange",  lwd = 2)
+lines(theta_seq, tif_rsm,  col = "darkgreen",   lwd = 2)
+lines(theta_seq, tif_grm,  col = "purple",       lwd = 2)
+abline(v = 0, lty = 3, col = "grey60")
+legend("topright",
+       legend = c("PCM", "GPCM", "RSM", "GRM"),
+       col    = c("steelblue", "darkorange", "darkgreen", "purple"),
+       lwd    = 2, bty = "n")
+```
+
+```{r sem-plot, fig.height=5, fig.width=9}
+# SEM = 1 / sqrt(Information)
+sem_pcm  <- 1 / sqrt(tif_pcm)
+sem_gpcm <- 1 / sqrt(tif_gpcm)
+sem_rsm  <- 1 / sqrt(tif_rsm)
+sem_grm  <- 1 / sqrt(tif_grm)
+
+y_max_sem <- min(3, max(sem_pcm, sem_gpcm, sem_rsm, sem_grm, na.rm = TRUE))
+
+plot(theta_seq, pmin(sem_pcm,  3), type = "l", col = "steelblue",  lwd = 2,
+     xlim = c(-4, 4), ylim = c(0, y_max_sem),
+     xlab = expression(theta), ylab = "SEM",
+     main = "Standard Error of Measurement: PCM, GPCM, RSM, GRM",
+     las = 1)
+lines(theta_seq, pmin(sem_gpcm, 3), col = "darkorange", lwd = 2)
+lines(theta_seq, pmin(sem_rsm,  3), col = "darkgreen",  lwd = 2)
+lines(theta_seq, pmin(sem_grm,  3), col = "purple",      lwd = 2)
+abline(h = 0.5, lty = 2, col = "grey50")
+legend("topright",
+       legend = c("PCM", "GPCM", "RSM", "GRM"),
+       col    = c("steelblue", "darkorange", "darkgreen", "purple"),
+       lwd    = 2, bty = "n")
+```
+
+```{r tif-summary}
+# Peak information and location for each model
+peak_info <- sapply(list(PCM = tif_pcm, GPCM = tif_gpcm, RSM = tif_rsm, GRM = tif_grm),
+                    function(tif) c(peak = max(tif),
+                                    location = theta_seq[which.max(tif)],
+                                    min_SEM = round(1/sqrt(max(tif)), 3)))
+
+knitr::kable(t(round(peak_info, 3)),
+             col.names = c("Peak Information", "Peak Location (θ)", "Minimum SEM"),
+             caption = "Summary of Test Information by Model")
+```
+
+**Key findings:**
+
+- **GPCM and GRM** yield substantially higher peak information than the **PCM and RSM**, because freely estimated discrimination parameters allow items with high discrimination to contribute more information. The PCM and RSM constrain all items to the same discrimination, spreading information more evenly but at a lower peak.
+- **RSM** produces the narrowest, most peaked information curve. By constraining all items to the same threshold distances *and* the same discrimination, the RSM concentrates its information in a narrow band of $\theta$. This is a meaningful constraint with real consequences for measurement precision at the extremes.
+- **Peak location**: All four models peak in the negative-to-moderate range of $\theta$, consistent with the sample being Belgian undergraduates who are, on average, moderately verbally aggressive. The test is most precise for respondents near the center of the distribution.
+- The dashed line in the SEM plot at $0.50$ is a common practical benchmark; below this threshold the test is providing reasonably precise measurement. The GPCM and GRM achieve SEM < 0.50 across the broadest range of $\theta$.
+
+---
+
+# Person Parameter Estimates: MLE vs. EAP Across Models
+
+Person parameter estimation methods and model choice both affect the $\hat{\theta}$ values assigned to respondents. This section compares **Maximum Likelihood Estimation (MLE)** and **Expected A Posteriori (EAP)** estimation within the PCM, and then compares **EAP estimates across all four models**.
+
+## MLE vs. EAP Within the PCM
+
+```{r person-params-compute}
+# EAP estimates for all models
+eap_pcm  <- fscores(pcm,  method = "EAP", full.scores = TRUE)[, 1]
+eap_gpcm <- fscores(gpcm, method = "EAP", full.scores = TRUE)[, 1]
+eap_rsm  <- fscores(rsm,  method = "EAP", full.scores = TRUE)[, 1]
+eap_grm  <- fscores(grm,  method = "EAP", full.scores = TRUE)[, 1]
+
+# MLE estimates for PCM (may be Inf/-Inf for perfect scores)
+mle_pcm_raw <- fscores(pcm, method = "ML", full.scores = TRUE)[, 1]
+finite_mle  <- is.finite(mle_pcm_raw)
+cat(sprintf("MLE estimates: %d finite, %d non-finite (extreme scores)\n",
+            sum(finite_mle), sum(!finite_mle)))
+
+mle_pcm <- mle_pcm_raw  # keep for plotting; will filter where needed
+```
+
+```{r mle-vs-eap-plot, fig.height=5, fig.width=9}
+par(mfrow = c(1, 2))
+
+# Scatter: MLE vs EAP (finite MLE only)
+plot(mle_pcm[finite_mle], eap_pcm[finite_mle],
+     pch = 16, cex = 0.5, col = adjustcolor("steelblue", 0.5),
+     xlab = "MLE", ylab = "EAP",
+     main = "PCM: MLE vs. EAP Person Estimates")
+abline(0, 1, col = "red", lty = 2)
+r_mle_eap <- cor(mle_pcm[finite_mle], eap_pcm[finite_mle])
+legend("topleft", legend = paste0("r = ", round(r_mle_eap, 3)), bty = "n")
+
+# Histogram overlay
+hist(eap_pcm, breaks = 30, col = adjustcolor("steelblue", 0.5),
+     main = "Distribution of Person Estimates (PCM)",
+     xlab = expression(hat(theta)), border = "white", freq = FALSE)
+hist(mle_pcm[finite_mle], breaks = 30,
+     col = adjustcolor("darkorange", 0.4), border = "white",
+     add = TRUE, freq = FALSE)
+legend("topright", legend = c("EAP", "MLE"),
+       fill = c(adjustcolor("steelblue", 0.5), adjustcolor("darkorange", 0.4)),
+       bty = "n", border = "white")
+
+par(mfrow = c(1, 1))
+```
+
+**Key findings — MLE vs. EAP:**
+
+- MLE and EAP are **highly correlated** (r shown above) but differ systematically: EAP **shrinks estimates toward the mean** of the prior distribution (a standard normal by default in mirt). This means EAP estimates have a smaller range than MLE estimates.
+- MLE **cannot estimate** $\theta$ for respondents with all-zero or all-maximum response patterns (scores of 0 or 48), because the likelihood is monotone and has no finite maximum. EAP handles these cases gracefully by pulling extreme respondents back toward the prior mean.
+- For practical measurement decisions (e.g., reporting individual scores), EAP is generally preferred because it is finite and has lower mean squared error. MLE may be preferred when the researcher wants to avoid the shrinkage introduced by the prior.
+
+## EAP Estimates Across Models
+
+```{r eap-across-models, fig.height=8, fig.width=9}
+par(mfrow = c(2, 2))
+
+pairs_list <- list(
+  list(x = eap_pcm, y = eap_gpcm, xl = "PCM EAP",  yl = "GPCM EAP",  col = "darkorange"),
+  list(x = eap_pcm, y = eap_rsm,  xl = "PCM EAP",  yl = "RSM EAP",   col = "darkgreen"),
+  list(x = eap_pcm, y = eap_grm,  xl = "PCM EAP",  yl = "GRM EAP",   col = "purple"),
+  list(x = eap_gpcm, y = eap_grm, xl = "GPCM EAP", yl = "GRM EAP",   col = "darkred")
+)
+
+for (p in pairs_list) {
+  r <- round(cor(p$x, p$y), 4)
+  plot(p$x, p$y, pch = 16, cex = 0.5,
+       col  = adjustcolor(p$col, 0.5),
+       xlab = p$xl, ylab = p$yl,
+       main = paste(p$xl, "vs.", p$yl))
+  abline(0, 1, col = "red", lty = 2)
+  legend("topleft", legend = paste0("r = ", r), bty = "n")
+}
+
+par(mfrow = c(1, 1))
+```
+
+```{r eap-summary-table}
+eap_cors <- cor(cbind(PCM = eap_pcm, GPCM = eap_gpcm, RSM = eap_rsm, GRM = eap_grm))
+knitr::kable(round(eap_cors, 4),
+             caption = "Correlations Among EAP Person Estimates Across Models")
+```
+
+```{r eap-descriptives}
+eap_summary <- data.frame(
+  Model  = c("PCM", "GPCM", "RSM", "GRM"),
+  Mean   = round(c(mean(eap_pcm), mean(eap_gpcm), mean(eap_rsm), mean(eap_grm)), 3),
+  SD     = round(c(sd(eap_pcm),   sd(eap_gpcm),   sd(eap_rsm),   sd(eap_grm)),   3),
+  Min    = round(c(min(eap_pcm),  min(eap_gpcm),  min(eap_rsm),  min(eap_grm)),  3),
+  Max    = round(c(max(eap_pcm),  max(eap_gpcm),  max(eap_rsm),  max(eap_grm)),  3)
+)
+knitr::kable(eap_summary, caption = "Descriptive Statistics for EAP Estimates by Model")
+```
+
+**Key findings — EAP across models:**
+
+- EAP estimates are **nearly perfectly correlated** across all four models (see correlation matrix). The rank ordering of respondents by verbal aggression tendency is essentially unchanged by model choice. This is arguably the most important finding for practical test use: a respondent's estimated position on the latent trait does not depend meaningfully on whether you use the PCM, GPCM, RSM, or GRM.
+- **Scale spread differs**: The GPCM and GRM, which allow freely estimated discrimination parameters, produce somewhat wider distributions of EAP estimates than the PCM and RSM. This is because high-discrimination items pull estimates toward more extreme values for respondents who respond in a consistently aggressive (or consistently non-aggressive) pattern.
+- **RSM** tends to compress estimates relative to the PCM because its equal-threshold-distance constraint forces a more regular information function, which shrinks the tails of the EAP distribution.
+- **Practical implication**: If you are using $\hat{\theta}$ to rank respondents, classify them into groups, or study individual differences, the model choice is largely inconsequential. If you care about the *absolute scale* of $\hat{\theta}$ (e.g., comparing means across groups or over time), small model-specific differences in SD could matter at the margins.

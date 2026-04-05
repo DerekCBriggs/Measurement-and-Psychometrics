@@ -1,0 +1,114 @@
+---
+title: "Deriving Category Probabilities in the Partial Credit Model"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+## Starting Point
+
+The Partial Credit Model specifies the log-odds of scoring in adjacent categories:
+
+$$\ln\left[\frac{P(X = j)}{P(X = j-1)}\right] = \theta_s - \lambda_i - \tau_j$$
+
+where $\theta_s$ is person ability, $\lambda_i$ is item location, and $\tau_j$ is the threshold
+for moving from category $j-1$ to category $j$.
+
+The goal is to derive closed-form expressions for each category probability
+$P(X = 0)$, $P(X = 1)$, and $P(X = 2)$.
+
+---
+
+## Step 1: Exponentiate Both Sides
+
+For a 3-category item there are two adjacent pairs ($j = 1$ and $j = 2$).
+Exponentiating each log-odds equation removes the logarithm:
+
+$$\frac{P(X=1)}{P(X=0)} = e^{\,\theta_s - \lambda_i - \tau_1}$$
+
+$$\frac{P(X=2)}{P(X=1)} = e^{\,\theta_s - \lambda_i - \tau_2}$$
+
+---
+
+## Step 2: Express Higher Categories in Terms of $P(X=0)$
+
+Multiply both sides of the first equation by $P(X=0)$:
+
+$$P(X=1) = P(X=0) \cdot e^{\,\theta_s - \lambda_i - \tau_1}$$
+
+Multiply both sides of the second equation by $P(X=1)$:
+
+$$P(X=2) = P(X=1) \cdot e^{\,\theta_s - \lambda_i - \tau_2}$$
+
+---
+
+## Step 3: Substitute to Express Everything in Terms of $P(X=0)$
+
+$P(X=2)$ still contains $P(X=1)$ on the right-hand side. Substitute the result
+from Step 2:
+
+$$P(X=2) = \underbrace{P(X=0) \cdot e^{\,\theta_s - \lambda_i - \tau_1}}_{P(X=1)} \cdot\; e^{\,\theta_s - \lambda_i - \tau_2}$$
+
+Combining the two exponentials (add exponents):
+
+$$P(X=2) = P(X=0) \cdot e^{\,2\theta_s - 2\lambda_i - \tau_1 - \tau_2}$$
+
+We now have all three probabilities expressed as $P(X=0)$ multiplied by some factor:
+
+| Category | Probability |
+|:--------:|:----------- |
+| $X = 0$  | $P(X=0) \;\times\; 1$ |
+| $X = 1$  | $P(X=0) \;\times\; e^{\,\theta_s - \lambda_i - \tau_1}$ |
+| $X = 2$  | $P(X=0) \;\times\; e^{\,2\theta_s - 2\lambda_i - \tau_1 - \tau_2}$ |
+
+The multiplier for $X = 0$ is written as $\times\; 1$ to make the pattern explicit:
+every category probability is $P(X=0)$ times a multiplier, and $P(X=0)$'s
+own multiplier is 1.
+
+---
+
+## Step 4: Use the Constraint That Probabilities Sum to 1
+
+The three categories are exhaustive and mutually exclusive, so:
+
+$$P(X=0) + P(X=1) + P(X=2) = 1$$
+
+Substitute the three expressions from the table:
+
+$$P(X=0)\cdot 1 \;+\; P(X=0)\cdot e^{\,\theta_s-\lambda_i-\tau_1} \;+\; P(X=0)\cdot e^{\,2\theta_s-2\lambda_i-\tau_1-\tau_2} \;=\; 1$$
+
+Every term contains $P(X=0)$ as a factor, so factor it out:
+
+$$P(X=0)\;\left[\,1 + e^{\,\theta_s-\lambda_i-\tau_1} + e^{\,2\theta_s-2\lambda_i-\tau_1-\tau_2}\,\right] = 1$$
+
+**Why does the 1 appear inside the bracket?**
+
+When you factor a common term out of a sum, each original term is replaced by
+its remaining factor after the common term is removed. Consider a simple numerical
+example:
+
+$$3\cdot 1 \;+\; 3\cdot 5 \;+\; 3\cdot 9 \;=\; 3\,(1 + 5 + 9)$$
+
+The first term $3 \cdot 1$ contributes a **1** to the bracket because, once you
+factor out the 3, nothing is left except 1. The same thing happens here: the first
+term in the sum is $P(X=0) \cdot 1$, and once $P(X=0)$ is factored out, the 1
+remains in the bracket.
+
+---
+
+## Result
+
+Define the **normalizing constant**:
+
+$$\Psi = 1 + e^{\,\theta_s-\lambda_i-\tau_1} + e^{\,2\theta_s-2\lambda_i-\tau_1-\tau_2}$$
+
+Solving for each probability:
+
+$$P(X=0) = \frac{1}{\Psi}$$
+
+$$P(X=1) = \frac{e^{\,\theta_s-\lambda_i-\tau_1}}{\Psi}$$
+
+$$P(X=2) = \frac{e^{\,2\theta_s-2\lambda_i-\tau_1-\tau_2}}{\Psi}$$
+
+You can verify these sum to 1: $\frac{1 + e^{\,\theta_s-\lambda_i-\tau_1} + e^{\,2\theta_s-2\lambda_i-\tau_1-\tau_2}}{\Psi} = \frac{\Psi}{\Psi} = 1$. $\checkmark$

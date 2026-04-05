@@ -1,0 +1,333 @@
+---
+title: "An Introduction to Fitting Polytomous IRT Models in mirt"
+author: "Derek Briggs"
+date: 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+[Partial Credit Model (PCM)] <br>
+[Generalized Partial Credit Model (GPCM)] <br>
+[Rating Scale Model (RSM)] <br>
+[Graded Response Model (GRM)] <br>
+[Getting Person Estimates] <br>
+[Visualizing Category Response Curves (CRCs)] <br>
+[Information Functions and SEM Plots] <br>
+[Comparing fit of nested models] <br>
+[Checking Item Fit] <br>
+[Person-Item Maps]
+
+## Introduction
+
+I took the idea for this Markdown (and even some of the wording) from a pre-existing one created by Okan Bulut entitled "Estimating Polytomous IRT Models in R"(https://rpubs.com/okanbulut/lecture2). The main purpose is to give students an applied introduction to the use of IRT models to fit items with scores in more than two categories (i.e., polytomous responses). A big difference is the data context I'm using here. 
+
+## Data: Verbal Aggression Survey 
+
+The data for this illustration comes from a survey that was administered to 316 Belgian undergraduates in the late 1990s. (This is classic psychology style of using students as study participants.) In the survey, students are presented with four different situation that most people would consider a source of frustration. The situations were
+
+1. A bus fails to stop for me.
+2. I miss the train because a clerk gave me faulty information.
+3. The grocery store closes just as I am about to enter.
+4. The operator disconnects me when I had used up all my change for a phone call. (dated!)
+
+Situations 1 and 2 are ones in which someone else is responsible for the frustration. In situations 3 and 4 the person is responsible.
+
+Following each situation, a student would be asked about whether they would *want* to react in each of three different ways that represent increasing levels of verbal aggression, and then whether they would *actually* react in this way. The three levels of verbally aggresive response (from lowest to highest) were (a) to curse (i.e., not directed at anyone in particular), (b) to scold (i.e., directed at the offending person, but mildly--"that was not very nice"), (c) to shout (i.e., "Piss off!"). Finally for each situation, verbal aggression level, and want vs. do scenario, a person could respond in one of three ordered categories: no (=0), maybe (=1) or yes (=2). There are a total of 24 items.
+
+Here is a summary of the data structure ![data structure](/Users/briggsd/Library/CloudStorage/Dropbox/Courses/EDUC 8720/Data Sets/verbal aggression/verbagg_structure.png)
+
+Just try to remember that items 1-6 are about the bus situation, 7-12 are about the train, 13-18 are about the store closing, and 19-24 are about the operator. For each situation we ask about cursing, then scolding, then shouting forms of verbal aggression. Within each form of these we ask about want vs. do. All odd item numbers are about wanting to do something, all even numbers are about actually doing something. 
+
+The psychological attribute of interest can be conceptualized as tendency to be verbally aggressive. We might expect that it requires more verbal aggression to shout than to scold, and to scold than to curse. We might also predict that it generally requires more aggression to actually curse than it does to want to curse. Finally, we might predict it requires greater latent aggression to endorse verbally aggressive responses even when the situation is one in which you are the person at fault.
+
+This data has been used for illustrative purposes in a number of books and articles. In particular see the 2004 book *Explanatory Item Response Models* edited by Paul de Boeck and Mark Wilson.
+
+## Loading the data, looking at descriptives
+
+```{r descriptives}
+setwd("~/Dropbox/Courses/EDUC 8720/Data Sets/verbal aggression")
+vdat <- read.csv(file = "verbagg_wide.csv")
+head(vdat)
+library(mirt)
+itemstats(vdat)
+```
+
+## Dimensionality
+
+```{r dimensionality}
+library(corrplot)
+library(psych)
+rho <- polychoric(vdat)$rho
+corrplot(rho)
+fa.parallel(vdat, fa = "both", cor = "poly")
+```
+Notice that the items within a situation tend to be more strongly intercorrrelated than they are across situations. Relatedly, there is some pretty good evidence of at least one (if not more) dimensions that explain the correlations between items. This is not too surprising because this data set was chosen precisely because it might require more a more complex model (a focus of many chapters in the de Boeck & Wilson book I referenced earlier). In any case, let's proceed as if it is reasonable to model these responses undimensionally (and we can also see from the scree plot it is not totally unreasonable to do so).
+
+## Partial Credit Model (PCM)
+
+We use the `mirt` function in the `mirt` package (Chalmers et al., 2012) to estimate item parameters for the Partial Credit Model. Here I will explicitly name a single latent variable (“aggression”) and associate it with all 24 verbal aggression items. Then we use this model in the `mirt` function to estimate the item parameters. (You don't actually have to do this, it's fine to just set model = 1 as we did for dichotomous models, but this will come in handy when we get to multidimensional specifications.) 
+
+Although we set `itemtype` as `Rasch`, the `mirt` function recognizes that the items have more than two response categories, and thus uses the Partial Credit Model to estimate item parameters.
+
+```{r pcm }
+model.pcm<-'aggression = 1-24'
+results.pcm<-mirt(data=vdat,model=model.pcm,itemtype="Rasch",SE=TRUE,verbose=FALSE)
+coef.pcm <- coef(results.pcm, IRTpars=TRUE, simplify=TRUE)
+```
+
+We can save the estimated item parameters as a new data frame called `items.pcm` and print the results using the following commands.
+
+```{r  }
+items.pcm <- as.data.frame(coef.pcm$items)
+items.pcm
+```
+
+I prefer to round the results before printing
+```{r  }
+round(items.pcm,2)
+```
+
+In the output, we see a data frame of the estimated item parameters. The names of the verbal aggression items are printed as the row names in the output. The first column shows the slope parameter, which is equal to "1" for all items because the Partial Credit Model, similar to the Rasch model, constrains the slope parameter to be "1". This is sometimes referred to as discrimination parameter, but that is not quite right in this context. For polytomous items, discrimination depends on both $a$ and the distance between the $b's$.
+
+In the following columns (b1 and b2), we see the estimated adjacent category intersection parameters (I often refer to these as "Andrich threshold" parameters). Because these items have three response categories, the PCM estimates two category intersection parameters (b1 and b2) for each item. If you have K categories, the PCM will always estimate K-1 adjacent category intersection parameters.
+
+* Under the PCM, the $b_1$ parameter tells us the location at which a respondent has a 50% chance of responding with a "maybe" relative to a "no."  
+* Under the PCM, the $b_2$ parameter tells us the location at which a respondent has a 50% chance of responding with a "yes" relative to a "maybe"  
+
+## Generalized Partial Credit Model (GPCM)
+
+We can also estimate item parameters for the Generalized Partial Credit Model in which item discrimination is freely estimated for the items. Instead of itemtype="Rasch", we need to use itemtype="gpcm" to indicate that we want to estimate the GPCM this time.
+
+```{r  gpcm}
+model.gpcm <- 'aggression = 1-24' 
+results.gpcm <- mirt(data=vdat, model=model.gpcm, itemtype="gpcm", SE=TRUE, verbose=FALSE)
+coef.gpcm <- coef(results.gpcm, IRTpars=TRUE, simplify=TRUE)
+items.gpcm <- as.data.frame(coef.gpcm$items)
+round(items.gpcm,2)
+```
+In the printed output, we can see that the column “a” is no longer fixed to 1, indicating that the items have different slope parameters. The interpretation of the adjacent category intersection parameters (the b's) remains the same as it did in the PCM (location where there is 50% chance of being in category j-1 vs. j).
+
+## Rating Scale Model (RSM)
+
+This time we will estimate item parameters using the Rating Scale Model. All of the items in the data set have three categories, which allows us to estimate the same number of category intersection parameters. If items varied in the number of response categories, it wouldn't be sensible to fit the RSM. Here we use `itemtype="rsm"` to estimate item parameters and save the results in the data frame named `items.rsm` 
+
+```{r  rsm}
+model.rsm <- 'aggression = 1-24' 
+results.rsm <- mirt(data=vdat, model=model.rsm, itemtype="rsm", verbose=FALSE)
+coef.rsm <- coef(results.rsm, simplify=TRUE)
+items.rsm <- as.data.frame(coef.rsm$items)
+round(items.rsm,2)
+```
+In the RSM, we decompose adjacent category intersection parameters $\delta_{ii}$ into two pieces $\lambda_i$ and $\tau_j$. 
+
+* The $\lambda_i$ represents the average of the item category intersection parameters (think of this as an estimate of overall difficulty)
+* The $\tau_j$ represents the deviation from average of intersection parameter $j$. 
+Unfortunately, this is not quite what we are getting in the output above. In `mirt` the $b$'s are equivalent to the $tau$ (i.e., $b_1 = \tau_1$). But $\lambda_i=-1*c_i$. To make these more comparable to what we get from the PCM and GPCM, do the following
+
+```{r  rsm thresholds}
+rsm_thresh <- data.frame(t1 = -1*items.rsm$c+items.rsm$b1,
+                         t2 = -1*items.rsm$c+items.rsm$b2)
+round(rsm_thresh,2)
+```
+
+## Graded Response Model (GRM)
+
+To estimate the Graded Response Model, we need to change the `itemtype` to `itemtype='graded'` 
+
+```{r  grm }
+model.grm <- 'aggression = 1-24' 
+results.grm <- mirt(data=vdat, model=model.grm, itemtype="graded", SE=TRUE, verbose=FALSE)
+coef.grm <- coef(results.grm, IRTpars=TRUE, simplify=TRUE)
+items.grm <- as.data.frame(coef.grm$items)
+round(items.grm,2)
+```
+
+Importantly, you can't directly compare these item and item category parameters to the ones we got earlier from the RSM, PCM and GPCM because those are all parameterized in terms of the intersection of adjacent category response functions. 
+
+* Under the GRM, the $b_1$ parameter tells us the location at which a respondent has a 50% chance of responding with a "maybe" or "yes" relative to a "no."  
+* Under the GRM, the $b_2$ parameter tells us the location at which a respondent has a 50% chance of responding with a "yes" relative to a "maybe" or "no" 
+
+These are known as *Thurstonian thresholds*.
+
+## Nominal Response Model (NRM)
+
+Use `itemtype='nominal'` to request the Nominal Response Model (NRM). The NRM is probably not a good model to apply to the verbal aggression data for two reasons. First, we have pretty strong reasons to think that  when it comes to evidence of verbally aggressive tendencies, irrespective to the stimulus, no < maybe < yes.  The NRM is more commonly used in the context of multiple-choice achievement test items. Second, the NRM requires very large sample sizes (usually N>1000). But just to show how it can be done, let's proceed.
+
+```{r  nrm }
+model.nrm <- 'aggression = 1-24' 
+results.nrm <- mirt(data=vdat, model=model.nrm, itemtype="nominal", SE=TRUE, verbose=FALSE)
+coef.nrm <- coef(results.nrm, IRTpars=TRUE, simplify=TRUE)
+items.nrm <- as.data.frame(coef.nrm$items)
+round(items.nrm,2)
+```
+
+## Getting Person Estimates
+
+This is no different than what you learned for dichotomous IRT models. Let's estimate eap theta values for the PCM and RSM.
+
+```{r  }
+pcm_theta <- fscores(results.pcm, full.scores=TRUE, full.scores.SE=TRUE, method="EAP")
+rsm_theta <- fscores(results.rsm, full.scores=TRUE, full.scores.SE=TRUE, method="EAP")
+```
+
+When you include the option `full.scores.SE=TRUE` these theta objects are a matrix where the rows are respondents (N=316), and column 1 = theta point estimate and column 2 = standard error of measurement. (If you omit the `full.scores.SE=TRUE` option than the object is just a vector of eap theta point estimates.)
+
+```{r   }
+head(pcm_theta)
+```
+
+So if you want to, for example, look at a histogram of eap theta point estimates from the PCM, you would use a command like this where you specifically reference the first column.
+
+```{r   }
+hist(pcm_theta[,1],main="Verbal Aggression (PCM)",xlab="EAP Theta Values")
+```
+
+## Visualizing Category Response Curves (CRCs)
+
+We will use the plot function in the mirt package to examine the items visually. In contrast to dichotomous IRT models, polytomous IRT models have category response curves (CRCs) which can be considered an extension of item characteristic curves (ICCs). Because the items have more than two response categories, CRCs have multiple curves in the same plot. Each curve represents the probability of selecting a particular response option as a function of the latent variable.
+
+In the plot function, we first enter the mirt-class object that stores the item parameters (i.e., `result.pcm`) and specify the type of plot using type = 'trace'. Assuming we want to see the CRCs for items 7 and 8 (a want vs do comparison for the train situation and cursing), we include `which.items = c(7,8)`.
+
+```{r   }
+plot(results.pcm, type = 'trace', which.items = c(7, 8), 
+     main = "", xlim=c(-5,5),par.settings = simpleTheme(lty=1:3,lwd=2),
+     auto.key=list(points=FALSE,lines=TRUE, columns=2)) 
+```
+
+If we eliminated `which.items = c(7,8)` from the plot function, we would get CRCs for *all* items in a single faceted plot. The option `main = ""` eliminates printing a title above the plot, but if you wanted one you could insert that here. Next, we choose the settings for the plot inside `par.settings`. To make the curves thicker, we use the option of `lwd = 2`. Assigning “3” or a higher value to lwd can make the CRCs thicker. In addition, we use `lty=1:3` to request different types of lines for each CRC. The auto.key command adjusts the legend settings. We want the legend to show which lines represent which CRC. 
+
+In the figure above, each item has three CRCs representing the three response options. The response categories are labeled as "P1", "P2"  and "P3". For both items, the CRCs follow the same order as the response categories. The CRC for the first response option (P1) is on the very left side of the plot, whereas the last response option (P3) is located on the right side of the plot. The  CRC for P2 in the middle.
+
+Another option is to use the `itemplot` function if you are just plotting one item at a time--this plot is a bit cleaner.
+
+```{r   }
+itemplot(results.pcm, item=7, type = 'trace', theta_lim = c(-4,4))
+```
+
+Here is a way to plot two items side by side using this function
+ 
+```{r   }
+par(mfrow=c(1,2))
+itemplot(results.pcm, type = 'trace', item=7, theta_lim = c(-4,4))
+itemplot(results.pcm, type = 'trace', item=8, theta_lim = c(-4,4))
+par(mfrow=c(1,1))
+``` 
+ 
+You can also request the cumulative category response functions that goes along with the Thurstonian item category thresholds 
+
+```{r   }
+itemplot(results.pcm, item=7, type = 'threshold', theta_lim = c(-4,4))
+```
+
+## Information Functions and SEM Plots
+
+We plot item information functions (IIF) to show the amount of information that each item can explain across different levels of the latent trait. This is the best way to "see" which items are the most discriminating. Use the same plot function again but this time we request the IIFs by changing type to `'infotrace'`. In the `par.settings` option, we only specify the thickness of the IIFs.
+
+```{r   }
+plot(results.pcm, type = 'infotrace', which.items = c(7, 8), 
+     main = "", par.settings = simpleTheme(lwd=2))
+```
+
+In addition to IIFs for particular items, we can show the total amount of information available from the items (i.e., the TIF) and the distribution of the conditional standard error of measurement (i.e., SEM). In the following example, we draw a plot of the TIF and SEM using the range of -4 to 4 for theta. We use `type = 'info'` for the TIF plot and `type = 'SE'` for the SEM plot.
+
+```{r   }
+plot(results.pcm, type = 'info', theta_lim = c(-4,4), lwd=2)  
+plot(results.pcm, type = 'SE', theta_lim = c(-4,4), lwd=2) 
+```
+
+## Comparing fit of nested models
+
+We can compare the fit of our three nested models RSM, PCM and GPCM.
+
+```{r   }
+anova(results.rsm,results.pcm)
+anova(results.pcm,results.gpcm)
+```
+
+The null hypothesis is that the constrained model is true. So if we find a p-value < .05 when comparing deviance statistics, we reject the null in favor of the unconstrained model. Here the GPCM shows the best fit. This is very similar to a 2PL vs 1PL comparison--the GPCM often fits better than the PCM in a global sense.
+
+## Checking Item Fit
+
+Not much different from how we check fit for dichotomous items. Starts with overall summary of items we flag on basis of p < .05. Let's see what this looks like for the PCM.
+
+```{r   }
+itemfit(results.pcm, fit_stats=c("X2","PV_Q1"), group.bins=10, method="EAP")
+itemfit(results.pcm, fit_stats=c("PV_Q1"), group.bins=10, empirical.plot=14, xlim=c(-4,4))
+```
+
+The empirical plots are for each category response curve. Item 23 looks like it may misfit the PCM. Let's see. Here I'm going to just use 6 bins `group.bins=6` because our sample size is only 316. 10 bins would still be defensible, but I'd rather have about 50 people per bin than 30.
+
+```{r   }
+itemfit(results.pcm, fit_stats=c("PV_Q1"), group.bins=6, empirical.plot=23, xlim=c(-3,3))
+```
+
+## Person-Item Maps
+
+Wright Maps (also called person-item maps) display the distribution of person abilities alongside item threshold locations on the same theta scale. The custom base R graphics below are easy to read and require no additional packages.
+
+Start with the PCM:
+
+```{r pcm-wrightmap, fig.height=8, fig.width=8}
+layout(matrix(c(1, 2), nrow = 1), widths = c(1, 2))
+
+# Left panel: person distribution
+par(mar = c(4, 1, 3, 0))
+hist_data <- hist(pcm_theta[, 1], breaks = 30, plot = FALSE)
+barplot(hist_data$counts, horiz = TRUE, space = 0, col = "steelblue",
+        border = "white", axes = FALSE,
+        main = "Persons")
+axis(1)
+
+# Right panel: item thresholds
+par(mar = c(4, 4, 3, 1))
+plot(NA, xlim = c(-4, 4), ylim = c(0.5, 24.5),
+     xlab = expression(theta), ylab = "", yaxt = "n",
+     main = "Item Thresholds (PCM)")
+axis(2, at = 1:24, labels = 1:24, las = 1, cex.axis = 0.7)
+abline(h = 1:24, col = "grey90")
+
+for (i in 1:24) {
+  points(items.pcm[i, "b1"], i, pch = 1, col = "red", cex = 1.2)
+  points(items.pcm[i, "b2"], i, pch = 2, col = "blue", cex = 1.2)
+}
+legend("topright", legend = c("b1 (0|1)", "b2 (1|2)"),
+       pch = c(1, 2), col = c("red", "blue"), bty = "n")
+
+layout(1)
+```
+
+Now let's look at the RSM. We use the threshold parameters computed by hand (`rsm_thresh`) since those are on the same scale as the PCM thresholds and are directly comparable.
+
+```{r rsm-wrightmap, fig.height=8, fig.width=8}
+layout(matrix(c(1, 2), nrow = 1), widths = c(1, 2))
+
+# Left panel: person distribution
+par(mar = c(4, 1, 3, 0))
+hist_data <- hist(rsm_theta[, 1], breaks = 30, plot = FALSE)
+barplot(hist_data$counts, horiz = TRUE, space = 0, col = "steelblue",
+        border = "white", axes = FALSE,
+        main = "Persons")
+axis(1)
+
+# Right panel: item thresholds
+par(mar = c(4, 4, 3, 1))
+plot(NA, xlim = c(-4, 4), ylim = c(0.5, 24.5),
+     xlab = expression(theta), ylab = "", yaxt = "n",
+     main = "Item Thresholds (RSM)")
+axis(2, at = 1:24, labels = 1:24, las = 1, cex.axis = 0.7)
+abline(h = 1:24, col = "grey90")
+
+for (i in 1:24) {
+  points(rsm_thresh[i, "t1"], i, pch = 1, col = "red", cex = 1.2)
+  points(rsm_thresh[i, "t2"], i, pch = 2, col = "blue", cex = 1.2)
+}
+legend("topright", legend = c("t1 (0|1)", "t2 (1|2)"),
+       pch = c(1, 2), col = c("red", "blue"), bty = "n")
+
+layout(1)
+```
+
+

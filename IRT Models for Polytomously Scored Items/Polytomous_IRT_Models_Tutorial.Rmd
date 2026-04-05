@@ -1,0 +1,913 @@
+---
+title: "IRT Models for Polytomously Scored Items"
+subtitle: "EDUC 8720"
+author: "Derek Briggs and Claude Code"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+    theme: flatly
+    highlight: tango
+    code_folding: show
+    df_print: kable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 8,
+  fig.height = 6,
+  fig.align = "center",
+  cache = TRUE
+)
+```
+
+# Introduction
+
+## What Are Polytomous Items?
+
+The IRT models we have examined so far have been designed for *dichotomously* scored items—items with exactly two scored outcomes (e.g., correct/incorrect). Many assessment contexts, however, involve *polytomous* items: items scored into three or more categories. Examples include:
+
+- **Likert scales**: Strongly Disagree / Disagree / Agree / Strongly Agree
+- **Partial credit tasks**: Constructed response items with multiple score points (0, 1, 2, 3)
+- **Rating scales**: Performance ratings (e.g., Fail / Pass / Credit / Distinction)
+
+A fundamental question is whether the response categories are **ordinal** (ordered in terms of the trait) or **nominal** (unordered, distinct options). This distinction determines which family of polytomous IRT model is appropriate.
+
+## Two Families of Models
+
+Mellenbergh (1995) provided a useful taxonomy of polytomous IRT models based on how they relate category probabilities to the latent trait:
+
+1. **Adjacent-category models**: The model is built from the ratio of probabilities of responding in adjacent categories (e.g., category $k$ vs. category $k+1$). These are sometimes called "divide-by-total" models (Thissen & Steinberg, 1986). This family includes the **Partial Credit Model (PCM)**, **Generalized Partial Credit Model (GPCM)**, and **Rating Scale Model (RSM)**.
+
+2. **Cumulative models**: The model is built from the cumulative probability of responding *at or above* a given category. This family includes the **Graded Response Model (GRM)**.
+
+3. **Nominal models**: No assumed ordering of categories. The **Nominal Response Model (NRM)** falls here.
+
+## Historical Context
+
+The key polytomous IRT models were developed over a 25-year span:
+
+| Year | Model | Developer |
+|------|-------|-----------|
+| 1969 | Graded Response Model (GRM) | Fumiko Samejima |
+| 1972 | Nominal Response Model (NRM) | R. Darrell Bock |
+| 1978 | Rating Scale Model (RSM) | David Andrich |
+| 1982 | Partial Credit Model (PCM) | Geoff Masters |
+| 1992 | Generalized Partial Credit Model (GPCM) | Eiji Muraki |
+
+In this tutorial we will present these models in an order that emphasizes their conceptual relationships: PCM → GPCM → RSM → GRM → NRM.
+
+## Key References
+
+- Andrich, D. (1978). A rating formulation for ordered response categories. *Psychometrika, 43*, 561–573.
+- Andrich, D. (2015). The problem with the step metaphor for polytomous models for ordinal assessments. *Educational Measurement: Issues and Practice, 34*(2), 8–14.
+- Embretson, S. E., & Reise, S. P. (2000). *Item response theory for psychologists*. Chapter 5.
+- Penfield, R. D. (2014). An NCME instructional module on polytomous item response theory models. *Educational Measurement: Issues and Practice, 33*(1), 36–48.
+
+
+# The Verbal Aggression Data
+
+## Setup
+
+```{r packages}
+library(mirt)
+library(psych)
+```
+
+## Data Description
+
+We use the **Verbal Aggression** dataset, which has been widely used in IRT textbooks and articles (e.g., de Boeck & Wilson, 2004). The data come from a study of $N = 316$ Belgian undergraduate students who rated their reactions to frustrating situations.
+
+Each item is a combination of three facets:
+
+- **Situation** (4 levels): A bus fails to stop for me (*bus*), I miss a train because a clerk gave me faulty information (*train*), the grocery store closes just as I am about to enter (*store*), the operator disconnects me when I had used up my last 10 cents for a call (*call*)
+- **Behavior mode** (2 levels): *want* to do vs. actually *do*
+- **Behavior type** (3 levels): *curse*, *scold*, *shout*
+
+This creates $4 \times 2 \times 3 = 24$ items. Items are scored: 0 = no, 1 = perhaps, 2 = yes.
+
+The two "other to blame" situations (bus, train) might be expected to elicit more verbal aggression than the two "self to blame" situations (store, call). Similarly, "want to" items should generally be easier to endorse than "do" items.
+
+```{r load-data}
+d <- read.csv("verbagg_wide.csv")
+cat("Dimensions:", nrow(d), "respondents x", ncol(d), "items\n")
+```
+
+## Item Structure
+
+```{r item-structure}
+# Create a reference table for the 24 items
+item_info <- data.frame(
+  Item = 1:24,
+  Name = names(d),
+  Situation = rep(c("bus", "train", "store", "call"), each = 6),
+  Blame = rep(c("other", "other", "self", "self"), each = 6),
+  Mode = rep(c("want", "do"), 12),
+  Type = rep(rep(c("curse", "scold", "shout"), each = 2), 4)
+)
+knitr::kable(item_info, caption = "Structure of the 24 Verbal Aggression Items")
+```
+
+## Motivating Questions
+
+As we fit different models to these data, we will return to these substantive questions:
+
+1. Which items require the **most verbal aggression** to endorse with a "yes" response?
+2. How big are the **distances between category thresholds** (no/perhaps and perhaps/yes) for "want" items vs. "do" items?
+3. How much more likely is verbal aggression in an **"other to blame"** vs. a **"self to blame"** scenario?
+4. **How do the answers to these questions change** depending on which model we use?
+
+
+## Descriptive Statistics
+
+```{r descriptives}
+# Response category frequencies for each item
+cat_freq <- apply(d, 2, function(x) table(factor(x, levels = 0:2)))
+cat_freq_df <- as.data.frame(t(cat_freq))
+names(cat_freq_df) <- c("No (0)", "Perhaps (1)", "Yes (2)")
+cat_freq_df$Item <- 1:24
+cat_freq_df$Name <- names(d)
+cat_freq_df <- cat_freq_df[, c("Item", "Name", "No (0)", "Perhaps (1)", "Yes (2)")]
+knitr::kable(cat_freq_df, caption = "Response Category Frequencies by Item", row.names = FALSE)
+```
+
+```{r total-scores, fig.height=4}
+# Total score distribution
+tot <- rowSums(d)
+
+hist(tot, breaks = seq(-0.5, max(tot) + 0.5, 1), las = 1, col = "steelblue",
+     main = "Distribution of Total Scores", xlab = "Total Score (0–48)",
+     ylab = "Frequency", border = "white")
+abline(v = mean(tot), col = "red", lwd = 2, lty = 2)
+legend("topright", legend = paste("Mean =", round(mean(tot), 1)),
+       col = "red", lty = 2, lwd = 2, bty = "n")
+```
+
+```{r item-means, fig.height=5}
+# Item means (analogous to classical difficulty)
+item_means <- colMeans(d)
+
+barplot(item_means, names.arg = 1:24, las = 1, col = "steelblue",
+        main = "Item Means (Higher = More Verbal Aggression Endorsed)",
+        xlab = "Item", ylab = "Mean Score (0–2)", ylim = c(0, 2),
+        border = "white")
+
+# Add reference lines for want vs. do
+abline(h = mean(item_means[item_info$Mode == "want"]), col = "red", lty = 2)
+abline(h = mean(item_means[item_info$Mode == "do"]), col = "blue", lty = 2)
+legend("topright", legend = c("Mean: Want items", "Mean: Do items"),
+       col = c("red", "blue"), lty = 2, lwd = 1.5, bty = "n", cex = 0.8)
+```
+
+
+# Checking Assumptions
+
+## Unidimensionality
+
+Before fitting any IRT model, we should check the assumption that a single latent trait underlies the item responses.
+
+```{r parallel-analysis, fig.height=5}
+fa.parallel(d, n.obs = nrow(d), fm = "minres", fa = "fa",
+            main = "Parallel Analysis Scree Plot",
+            n.iter = 100, error.bars = FALSE, SMC = FALSE,
+            ylabel = NULL, show.legend = TRUE)
+```
+
+The parallel analysis provides a screen for how many factors are supported by the data. For polytomous IRT models to be appropriate, we need evidence of a dominant first factor. A large gap between the first eigenvalue and the rest (and the parallel analysis reference line) supports the unidimensionality assumption.
+
+```{r response-freq-check}
+# Check that all categories are used for each item
+min_freq <- apply(d, 2, function(x) min(table(factor(x, levels = 0:2))))
+cat("Minimum category frequency across items:", min(min_freq), "\n")
+cat("Items where minimum category count < 20:",
+    paste(which(min_freq < 20), collapse = ", "), "\n")
+```
+
+
+# Partial Credit Model (PCM)
+
+## Model Overview
+
+The Partial Credit Model (Masters, 1982) is a Rasch-family model for ordered polytomous responses. For an item with $m+1$ response categories (scored $0, 1, \ldots, m$), the PCM specifies:
+
+$$P(X_{ij} = k \mid \theta_j) = \frac{\exp\left(\sum_{v=0}^{k}(\theta_j - b_{iv})\right)}{\sum_{r=0}^{m}\exp\left(\sum_{v=0}^{r}(\theta_j - b_{iv})\right)}$$
+
+where $b_{iv}$ are the **Andrich threshold** parameters (with $b_{i0} \equiv 0$ by convention). Each item has $m$ threshold parameters that indicate the points on the trait continuum where adjacent categories are equally likely.
+
+Key properties of the PCM:
+
+- **No discrimination parameter**: All items are assumed to discriminate equally (as in the Rasch model for dichotomous items).
+- **Sufficient statistics**: The total score is a sufficient statistic for $\theta$.
+- **Item-specific thresholds**: Each item can have its own set of threshold locations and distances between thresholds.
+
+## Fitting the PCM
+
+```{r fit-pcm}
+pcm <- mirt(d, 1, itemtype = "Rasch")
+```
+
+## Parameter Estimates
+
+```{r pcm-params}
+pcm_pars <- coef(pcm, IRTpars = TRUE, simplify = TRUE)$items
+colnames(pcm_pars) <- c("a", "b1", "b2")
+knitr::kable(round(pcm_pars, 3),
+             caption = "PCM Parameter Estimates (Andrich Thresholds)")
+```
+
+In the PCM, each item has two threshold parameters ($b_1$ and $b_2$) since there are three categories. The $a$ parameter is fixed at 1 for all items (Rasch constraint).
+
+- **$b_1$** (threshold 1): The trait level where categories 0 and 1 are equally probable.
+- **$b_2$** (threshold 2): The trait level where categories 1 and 2 are equally probable.
+
+```{r pcm-threshold-distances}
+# Threshold distances (b2 - b1) for each item
+thresh_dist <- pcm_pars[, "b2"] - pcm_pars[, "b1"]
+
+par(mar = c(4, 11, 3, 1))
+barplot(thresh_dist[order(thresh_dist)], horiz = TRUE,
+        names.arg = rownames(pcm_pars)[order(thresh_dist)],
+        las = 1, col = "steelblue", border = "white",
+        main = "Threshold Distance (b2 - b1) by Item",
+        xlab = "Distance between thresholds")
+abline(v = 0, col = "red", lty = 2)
+```
+
+Items with larger threshold distances have a wider region of $\theta$ where the middle category ("perhaps") is the most probable response. Items with very small or negative threshold distances may indicate problems with the middle category.
+
+## Category Response Curves
+
+The Category Response Curves (CRCs) show the probability of each response category as a function of $\theta$.
+
+```{r pcm-crc-example, fig.height=4, fig.width=10}
+# Show CRCs for two items: a want/do pair
+plot(pcm, type = "trace", which.items = c(7, 8),
+     theta_lim = c(-4, 4), par.settings = simpleTheme(lwd = 2),
+     main = "PCM Category Response Curves: Item 7 (want) vs. Item 8 (do)")
+```
+
+Item 7 is "I miss a train because a clerk gave me faulty information. I would **want** to curse." Item 8 is the same situation but "I **would** curse." Compare the location and spacing of the thresholds: the "do" item should generally require more verbal aggression (higher $\theta$) than the "want" item.
+
+```{r pcm-crc-all, fig.height=16, fig.width=10}
+# All 24 items
+plot(pcm, type = "trace", theta_lim = c(-4, 4),
+     par.settings = simpleTheme(lwd = 2),
+     layout = c(4, 6))
+```
+
+## Threshold Reversals
+
+Sometimes the PCM threshold estimates are **disordered** (i.e., $b_2 < b_1$), meaning the second threshold is easier than the first. When this happens, the middle category is never the most probable response for any value of $\theta$.
+
+```{r pcm-reversals}
+reversed <- which(pcm_pars[, "b2"] < pcm_pars[, "b1"])
+if (length(reversed) > 0) {
+  cat("Items with reversed thresholds:", paste(reversed, collapse = ", "), "\n")
+  cat("These items' middle category ('perhaps') is never the most likely response.\n")
+} else {
+  cat("No threshold reversals detected.\n")
+}
+```
+
+**What do reversals indicate?** There are two perspectives:
+
+- **Embretson & Reise (2000)** take a pragmatic view: reversals simply indicate that a category is never the modal response. They are "not necessarily problematic."
+- **Andrich (2015)** argues more strongly: "Because the successive categories are intended to be ordered in the sense that they successively reflect more of the trait, the implication is that the thresholds which define the boundaries of the categories are not only expected, but **required** to increase in difficulty." Reversed thresholds signal a problem with how the categories are functioning empirically.
+
+It is important to note that Andrich (2015) also clarifies that threshold parameters are **not** "steps" in a sequential process. A person does not "step through" categories sequentially to arrive at their response. Rather, the thresholds are **difficulty parameters** that define the boundaries between adjacent categories on the latent trait continuum.
+
+## Wright Map
+
+The Wright map (also called a person-item map) displays the distribution of person abilities alongside item threshold locations on the same scale.
+
+```{r pcm-wrightmap, fig.height=8, fig.width=8}
+# Custom Wright map: person distribution + item thresholds
+theta_est <- fscores(pcm, method = "EAP")[, 1]
+
+layout(matrix(c(1, 2), nrow = 1), widths = c(1, 2))
+
+# Left panel: person distribution
+par(mar = c(4, 1, 3, 0))
+hist_data <- hist(theta_est, breaks = 30, plot = FALSE)
+barplot(hist_data$counts, horiz = TRUE, space = 0, col = "steelblue",
+        border = "white", axes = FALSE,
+        main = "Persons")
+axis(1)
+
+# Right panel: item thresholds
+par(mar = c(4, 4, 3, 1))
+plot(NA, xlim = c(-4, 4), ylim = c(0.5, 24.5),
+     xlab = expression(theta), ylab = "", yaxt = "n",
+     main = "Item Thresholds (PCM)")
+axis(2, at = 1:24, labels = 1:24, las = 1, cex.axis = 0.7)
+abline(h = 1:24, col = "grey90")
+
+for (i in 1:24) {
+  points(pcm_pars[i, "b1"], i, pch = 1, col = "red", cex = 1.2)
+  points(pcm_pars[i, "b2"], i, pch = 2, col = "blue", cex = 1.2)
+}
+legend("topright", legend = c("b1 (0|1)", "b2 (1|2)"),
+       pch = c(1, 2), col = c("red", "blue"), bty = "n")
+
+layout(1)
+```
+
+## Comparing Want vs. Do Items
+
+One of our motivating questions concerns the difference between "want to" and "do" items. Let's compare threshold estimates for matched want/do pairs.
+
+```{r pcm-want-do, fig.height=8, fig.width=8}
+# Compare CRCs for want vs. do pairs
+# Items 1&2 (bus, curse), 7&8 (train, curse), 9&10 (train, scold), 23&24 (call, shout)
+plot(pcm, type = "trace",
+     which.items = c(1, 2, 7, 8, 9, 10, 23, 24),
+     theta_lim = c(-4, 4),
+     par.settings = simpleTheme(lwd = 2),
+     layout = c(2, 4))
+```
+
+Within each pair, the "do" item (even-numbered) should generally have thresholds located further to the right (higher $\theta$) than the "want" item (odd-numbered), reflecting the greater verbal aggression needed to endorse actually doing the behavior vs. merely wanting to.
+
+
+# Generalized Partial Credit Model (GPCM)
+
+## Model Overview
+
+The Generalized Partial Credit Model (Muraki, 1992) extends the PCM by allowing each item to have its own **discrimination parameter** ($a_i$):
+
+$$P(X_{ij} = k \mid \theta_j) = \frac{\exp\left(\sum_{v=0}^{k} a_i(\theta_j - b_{iv})\right)}{\sum_{r=0}^{m}\exp\left(\sum_{v=0}^{r} a_i(\theta_j - b_{iv})\right)}$$
+
+The GPCM is to the PCM as the 2PL is to the Rasch model for dichotomous items. When all $a_i = 1$, the GPCM reduces to the PCM.
+
+**A note on sufficiency**: Andrich (2015) points out that adding item-specific discrimination parameters "destroys sufficiency"—the total score is no longer a sufficient statistic for $\theta$. From a measurement perspective (as opposed to a statistical modeling perspective), this is a significant trade-off.
+
+## Fitting the GPCM
+
+```{r fit-gpcm}
+gpcm <- mirt(d, 1, itemtype = "gpcm")
+```
+
+## Parameter Estimates
+
+```{r gpcm-params}
+gpcm_pars <- coef(gpcm, IRTpars = TRUE, simplify = TRUE)$items
+colnames(gpcm_pars) <- c("a", "b1", "b2")
+knitr::kable(round(gpcm_pars, 3),
+             caption = "GPCM Parameter Estimates")
+```
+
+Now each item has its own discrimination ($a$) parameter in addition to two thresholds. Items with higher $a$ values discriminate more sharply between trait levels near the thresholds.
+
+```{r gpcm-discrimination, fig.height=4}
+# Plot discrimination parameters
+par(mar = c(4, 11, 3, 1))
+barplot(sort(gpcm_pars[, "a"]), horiz = TRUE,
+        names.arg = rownames(gpcm_pars)[order(gpcm_pars[, "a"])],
+        las = 1, col = "steelblue", border = "white",
+        main = "GPCM Item Discrimination Parameters",
+        xlab = "Discrimination (a)")
+abline(v = 1, col = "red", lty = 2)
+```
+
+The dashed line at $a = 1$ represents the PCM constraint. Items above this line discriminate more than assumed by the PCM; items below discriminate less.
+
+## Category Response Curves
+
+```{r gpcm-crc, fig.height=8, fig.width=10}
+# Compare same want/do pairs under GPCM
+plot(gpcm, type = "trace",
+     which.items = c(1, 2, 7, 8, 9, 10, 23, 24),
+     theta_lim = c(-4, 4),
+     par.settings = simpleTheme(lwd = 2),
+     layout = c(2, 4))
+```
+
+Compare these CRCs to the PCM versions above. Items with high discrimination will have narrower, more peaked curves; items with low discrimination will have flatter, wider curves.
+
+```{r gpcm-reversals}
+# Check for reversals
+gpcm_reversed <- which(gpcm_pars[, "b2"] < gpcm_pars[, "b1"])
+if (length(gpcm_reversed) > 0) {
+  cat("Items with reversed thresholds under GPCM:",
+      paste(gpcm_reversed, collapse = ", "), "\n")
+} else {
+  cat("No threshold reversals under GPCM.\n")
+}
+```
+
+One reason to fit the GPCM when the PCM shows reversals is that the reversals may be an artifact of assuming equal discrimination. If items actually vary in their discrimination, the PCM misattributes this variation, which can distort threshold estimates.
+
+
+# Rating Scale Model (RSM)
+
+## Model Overview
+
+The Rating Scale Model (Andrich, 1978) is a special case of the PCM in which the **threshold distances are constrained to be the same across all items**. Each item has a single location parameter ($\lambda_i$), and the category structure is defined by a common set of threshold parameters ($\tau_k$) shared by all items:
+
+$$P(X_{ij} = k \mid \theta_j) = \frac{\exp\left(\sum_{v=0}^{k}(\theta_j - \lambda_i - \tau_v)\right)}{\sum_{r=0}^{m}\exp\left(\sum_{v=0}^{r}(\theta_j - \lambda_i - \tau_v)\right)}$$
+
+The RSM is appropriate when all items share the same response format and the distances between categories can reasonably be assumed equal across items. This is a strong assumption—whether it holds is an empirical question.
+
+**Key implication**: Under the RSM, the CRCs for all items have the **same shape**; they are simply shifted left or right along the $\theta$ axis according to each item's location parameter.
+
+### From Log-Odds to Category Probabilities
+
+The RSM is often stated in its **log-odds form**:
+
+$$\ln\frac{P(X_{ij} = k)}{P(X_{ij} = k-1)} = \theta_j - \lambda_i - \tau_k$$
+
+The category probability equations follow directly from this. Here is the step-by-step derivation for a three-category item (categories 0, 1, 2):
+
+**Step 1.** Exponentiate both sides for each adjacent pair:
+
+$$\frac{P(X=1)}{P(X=0)} = \exp(\theta_j - \lambda_i - \tau_1), \qquad \frac{P(X=2)}{P(X=1)} = \exp(\theta_j - \lambda_i - \tau_2)$$
+
+**Step 2.** Rearrange to express higher categories in terms of the one below:
+
+$$P(X=1) = P(X=0) \cdot \exp(\theta_j - \lambda_i - \tau_1)$$
+$$P(X=2) = P(X=1) \cdot \exp(\theta_j - \lambda_i - \tau_2)$$
+
+**Step 3.** Substitute the expression for $P(X=1)$ into $P(X=2)$:
+
+$$P(X=2) = P(X=0) \cdot \exp(\theta_j - \lambda_i - \tau_1) \cdot \exp(\theta_j - \lambda_i - \tau_2) = P(X=0) \cdot \exp(2\theta_j - 2\lambda_i - \tau_1 - \tau_2)$$
+
+**Step 4.** Use the requirement that all probabilities sum to 1:
+
+$$P(X=0)\left[1 + \exp(\theta_j - \lambda_i - \tau_1) + \exp(2\theta_j - 2\lambda_i - \tau_1 - \tau_2)\right] = 1$$
+
+Defining $\Psi$ as the bracketed denominator, we get $P(X=0) = 1/\Psi$, $P(X=1) = \exp(\theta_j - \lambda_i - \tau_1)/\Psi$, and $P(X=2) = \exp(2\theta_j - 2\lambda_i - \tau_1 - \tau_2)/\Psi$.
+
+The key insight from Step 3 is that each additional category requires multiplying in one more log-odds term. This is why the exponent for category $k$ contains $k$ copies of $\theta_j$ and $\lambda_i$, and accumulates all $\tau$ parameters up through $\tau_k$.
+
+## Fitting the RSM
+
+```{r fit-rsm}
+rsm <- mirt(d, 1, itemtype = "rsm")
+```
+
+## Parameter Estimates
+
+```{r rsm-thresh}
+rsm_pars <- as.data.frame(coef(rsm, simplify = TRUE)$items)
+```
+
+In mirt's RSM output (without `IRTpars = TRUE`), the columns are:
+
+- **`b1`** = $\tau_1$: the first common Andrich threshold (same for all items)
+- **`b2`** = $\tau_2$: the second common Andrich threshold (same for all items)
+- **`c`** = $-\lambda_i$: the item-specific location parameter (varies by item)
+
+To recover the adjacent category intersection thresholds ($t_k = \lambda_i + \tau_k$) for each item, we use $t_k = -c_i + b_k$:
+
+```{r rsm-thresholds}
+rsm_thresh <- data.frame(
+  t1 = -rsm_pars[, "c"] + rsm_pars[, "b1"],
+  t2 = -rsm_pars[, "c"] + rsm_pars[, "b2"]
+)
+knitr::kable(round(rsm_thresh, 3),
+             caption = "RSM Andrich Threshold Estimates")
+```
+
+Under the RSM, the **distance** between thresholds ($t_2 - t_1 = \tau_2 - \tau_1$) is the same for all items—only the overall item location $\lambda_i$ shifts them left or right. Compare the `t2 - t1` column: it should be constant across all 24 items (within rounding).
+
+```{r rsm-locations}
+# Item locations: λᵢ = -cᵢ (midpoint of the two thresholds when τ₁ + τ₂ = 0)
+rsm_locations <- -rsm_pars[, "c"]
+```
+
+## Category Response Curves
+
+```{r rsm-crc, fig.height=4, fig.width=10}
+# Compare same want/do pair under RSM
+plot(rsm, type = "trace", which.items = c(7, 8),
+     theta_lim = c(-4, 4), par.settings = simpleTheme(lwd = 2),
+     main = "RSM Category Response Curves: Item 7 vs. Item 8")
+```
+
+Notice that the CRCs have the **same shape** for both items—they differ only in their horizontal location. This is the defining property of the RSM.
+
+## Wright Map
+
+```{r rsm-wrightmap, fig.height=8, fig.width=8}
+# Custom Wright map for RSM
+theta_est_rsm <- fscores(rsm, method = "EAP")[, 1]
+
+# rsm_thresh (t1, t2) already computed correctly above
+
+layout(matrix(c(1, 2), nrow = 1), widths = c(1, 2))
+
+# Left panel: person distribution
+par(mar = c(4, 1, 3, 0))
+hist_data <- hist(theta_est_rsm, breaks = 30, plot = FALSE)
+barplot(hist_data$counts, horiz = TRUE, space = 0, col = "steelblue",
+        border = "white", axes = FALSE,
+        main = "Persons")
+axis(1)
+
+# Right panel: item thresholds
+par(mar = c(4, 4, 3, 1))
+plot(NA, xlim = c(-4, 4), ylim = c(0.5, 24.5),
+     xlab = expression(theta), ylab = "", yaxt = "n",
+     main = "Item Thresholds (RSM)")
+axis(2, at = 1:24, labels = 1:24, las = 1, cex.axis = 0.7)
+abline(h = 1:24, col = "grey90")
+
+for (i in 1:24) {
+  points(rsm_thresh[i, "t1"], i, pch = 1, col = "red", cex = 1.2)
+  points(rsm_thresh[i, "t2"], i, pch = 2, col = "blue", cex = 1.2)
+}
+legend("topright", legend = c("t1 (0|1)", "t2 (1|2)"),
+       pch = c(1, 2), col = c("red", "blue"), bty = "n")
+
+layout(1)
+```
+
+Compare this to the PCM Wright map. Under the RSM, the distance between each item's thresholds is constant, so the map has a more regular appearance.
+
+## PCM vs. RSM: Which Fits Better?
+
+```{r pcm-vs-rsm}
+anova(rsm, pcm)
+```
+
+This likelihood ratio test compares the constrained RSM (equal threshold distances) to the more flexible PCM (item-specific threshold distances). A significant result suggests the PCM provides a meaningfully better fit, and the RSM's constraint is too restrictive for these data.
+
+
+# Graded Response Model (GRM)
+
+## Model Overview
+
+The Graded Response Model (Samejima, 1969) takes a fundamentally different approach from the adjacent-category models above. Rather than modeling the probability of one category vs. an adjacent category, the GRM models the **cumulative probability** of responding at or above each category threshold.
+
+For each item, the GRM first estimates $m$ **operating characteristic curves** (OCCs):
+
+$$P^*_{ik}(\theta) = \frac{\exp[a_i(\theta - b_{ik})]}{1 + \exp[a_i(\theta - b_{ik})]}$$
+
+where $b_{ik}$ is the **Thurstonian threshold**—the $\theta$ value where there is a 50% chance of responding *at or above* category $k$. These OCCs are simply 2PL curves.
+
+The probability of responding in a specific category is then obtained by subtraction:
+
+$$P(X_{ij} = k \mid \theta_j) = P^*_{ik}(\theta) - P^*_{i,k+1}(\theta)$$
+
+with the boundary conditions $P^*_{i0}(\theta) = 1$ and $P^*_{i,m+1}(\theta) = 0$.
+
+**Key distinction**: The GRM thresholds ($b_{ik}$) are "Thurstonian" thresholds—they represent the $\theta$ where the cumulative probability equals 0.50. These are *not* the same as the "Andrich" thresholds in the PCM/RSM, which represent the $\theta$ where two adjacent categories are equally likely. This is an important conceptual difference that can lead to confusion when comparing across models.
+
+**Important property**: In the GRM, the thresholds are *always ordered* ($b_{i1} < b_{i2} < \ldots < b_{im}$) by mathematical necessity. This contrasts with the PCM, where threshold reversals are possible and diagnostically meaningful.
+
+## Fitting the GRM
+
+```{r fit-grm}
+grm <- mirt(d, 1, itemtype = "graded")
+```
+
+## Parameter Estimates
+
+```{r grm-params}
+grm_pars <- coef(grm, IRTpars = TRUE, simplify = TRUE)$items
+colnames(grm_pars) <- c("a", "b1", "b2")
+knitr::kable(round(grm_pars, 3),
+             caption = "GRM Parameter Estimates (Thurstonian Thresholds)")
+```
+
+## Operating Characteristic Curves
+
+The OCCs show the cumulative probability of responding at or above each threshold.
+
+```{r grm-occ, fig.height=5, fig.width=10}
+# Custom OCCs (cumulative probability curves) for Items 7 and 8
+theta_seq <- seq(-4, 4, length.out = 200)
+
+par(mfrow = c(1, 2))
+
+for (item in c(7, 8)) {
+  a <- grm_pars[item, "a"]
+  b1 <- grm_pars[item, "b1"]
+  b2 <- grm_pars[item, "b2"]
+
+  # P*(theta) = probability of responding at or above category k
+  p_star1 <- 1 / (1 + exp(-a * (theta_seq - b1)))
+  p_star2 <- 1 / (1 + exp(-a * (theta_seq - b2)))
+
+  plot(theta_seq, p_star1, type = "l", col = "red", lwd = 2,
+       xlab = expression(theta), ylab = "Cumulative Probability",
+       main = paste("GRM OCCs: Item", item),
+       ylim = c(0, 1), las = 1)
+  lines(theta_seq, p_star2, col = "blue", lwd = 2)
+  abline(h = 0.5, lty = 3, col = "grey50")
+  abline(v = c(b1, b2), lty = 2, col = c("red", "blue"))
+  legend("bottomright",
+         legend = c(expression(P^"*"*(theta >= 1)),
+                    expression(P^"*"*(theta >= 2))),
+         col = c("red", "blue"), lwd = 2, bty = "n")
+}
+
+par(mfrow = c(1, 1))
+```
+
+## Category Response Curves
+
+```{r grm-crc, fig.height=4, fig.width=10}
+# CRCs
+plot(grm, type = "trace", which.items = c(7, 8),
+     theta_lim = c(-4, 4), par.settings = simpleTheme(lwd = 2),
+     main = "GRM Category Response Curves: Item 7 vs. Item 8")
+```
+
+Compare these GRM category response curves to the PCM curves for the same items. Two sources of difference are worth noting. First, because the GRM estimates an item-specific discrimination parameter ($a_i$), items with high discrimination will have narrower, more peaked curves than the PCM's equal-discrimination curves. Second, even holding discrimination constant, the GRM and PCM use fundamentally different mathematical forms—the GRM derives category probabilities by subtracting adjacent cumulative logistic curves, while the PCM uses adjacent-category ratios—and these different forms can produce different CRC shapes and peak locations. Note that the Thurstonian vs. Andrich threshold distinction explains why the *numerical parameter values* are not directly comparable across the two models, but is not itself the reason the CRCs look different: the curves reflect the fitted probabilities directly, regardless of how the underlying threshold parameters are defined.
+
+```{r grm-crc-all, fig.height=16, fig.width=10}
+# All 24 items
+plot(grm, type = "trace", theta_lim = c(-4, 4),
+     par.settings = simpleTheme(lwd = 2),
+     layout = c(4, 6))
+```
+
+## Item and Test Information
+
+One advantage of the GRM (and other models with item-specific discrimination) is the ability to examine differential item information.
+
+```{r grm-info, fig.height=5, fig.width=10}
+# Test information
+plot(grm, type = "info", theta_lim = c(-4, 4))
+```
+
+The test information function tells us where on the $\theta$ scale the test provides the most precise measurement. Items with higher discrimination contribute more information, particularly near their threshold locations.
+
+
+# Model Comparison
+
+## Comparing Model Fit
+
+We can compare nested and non-nested models using information criteria (AIC, BIC) and likelihood ratio tests where appropriate.
+
+```{r model-comparison}
+# Extract fit indices using anova() on individual models
+fit_rsm  <- anova(rsm)
+fit_pcm  <- anova(pcm)
+fit_gpcm <- anova(gpcm)
+fit_grm  <- anova(grm)
+
+fits <- data.frame(
+  Model  = c("RSM", "PCM", "GPCM", "GRM"),
+  AIC    = c(fit_rsm$AIC,  fit_pcm$AIC,  fit_gpcm$AIC,  fit_grm$AIC),
+  BIC    = c(fit_rsm$BIC,  fit_pcm$BIC,  fit_gpcm$BIC,  fit_grm$BIC),
+  logLik = c(fit_rsm$logLik, fit_pcm$logLik, fit_gpcm$logLik, fit_grm$logLik)
+)
+knitr::kable(fits, digits = 1, caption = "Model Fit Comparison (lower AIC/BIC = better)")
+```
+
+**Nested comparisons**:
+
+- RSM is nested within PCM (test whether threshold distances are equal across items):
+```{r rsm-vs-pcm}
+anova(rsm, pcm)
+```
+
+- PCM is nested within GPCM (test whether discrimination is equal across items):
+```{r pcm-vs-gpcm}
+anova(pcm, gpcm)
+```
+
+Note that the GRM is *not* nested within the PCM/GPCM family—they are based on different response process assumptions. We can still compare them via AIC/BIC.
+
+## Comparing Parameter Estimates Across Models
+
+```{r compare-thresholds, fig.height=6, fig.width=10}
+par(mfrow = c(1, 2))
+
+# Compare b1 across models
+plot(pcm_pars[, "b1"], gpcm_pars[, "b1"],
+     xlab = "PCM b1", ylab = "GPCM b1",
+     main = "Threshold 1: PCM vs. GPCM", pch = 16, col = "steelblue")
+abline(0, 1, lty = 2, col = "red")
+text(pcm_pars[, "b1"], gpcm_pars[, "b1"], labels = 1:24, pos = 3, cex = 0.7)
+r1 <- cor(pcm_pars[, "b1"], gpcm_pars[, "b1"])
+legend("topleft", legend = paste("r =", round(r1, 3)), bty = "n")
+
+# Compare b2 across models
+plot(pcm_pars[, "b2"], gpcm_pars[, "b2"],
+     xlab = "PCM b2", ylab = "GPCM b2",
+     main = "Threshold 2: PCM vs. GPCM", pch = 16, col = "steelblue")
+abline(0, 1, lty = 2, col = "red")
+text(pcm_pars[, "b2"], gpcm_pars[, "b2"], labels = 1:24, pos = 3, cex = 0.7)
+r2 <- cor(pcm_pars[, "b2"], gpcm_pars[, "b2"])
+legend("topleft", legend = paste("r =", round(r2, 3)), bty = "n")
+
+par(mfrow = c(1, 1))
+```
+
+```{r compare-grm, fig.height=6, fig.width=10}
+par(mfrow = c(1, 2))
+
+# Compare GPCM vs GRM thresholds
+plot(gpcm_pars[, "b1"], grm_pars[, "b1"],
+     xlab = "GPCM b1", ylab = "GRM b1",
+     main = "Threshold 1: GPCM vs. GRM", pch = 16, col = "darkorange")
+abline(0, 1, lty = 2, col = "red")
+text(gpcm_pars[, "b1"], grm_pars[, "b1"], labels = 1:24, pos = 3, cex = 0.7)
+
+plot(gpcm_pars[, "b2"], grm_pars[, "b2"],
+     xlab = "GPCM b2", ylab = "GRM b2",
+     main = "Threshold 2: GPCM vs. GRM", pch = 16, col = "darkorange")
+abline(0, 1, lty = 2, col = "red")
+text(gpcm_pars[, "b2"], grm_pars[, "b2"], labels = 1:24, pos = 3, cex = 0.7)
+
+par(mfrow = c(1, 1))
+```
+
+Notice that the GPCM and GRM thresholds may not align closely on the identity line. This is expected because they represent different quantities: **Andrich thresholds** (adjacent category crossover) vs. **Thurstonian thresholds** (cumulative 50% point).
+
+## Returning to the Motivating Questions
+
+```{r motivating-q1}
+# Q1: Which items require the most verbal aggression?
+# Use GRM b2 (threshold for "yes") as the benchmark
+cat("Items requiring the MOST verbal aggression (highest b2, GRM):\n")
+top5 <- head(order(grm_pars[, "b2"], decreasing = TRUE), 5)
+for (i in top5) {
+  cat(sprintf("  Item %d (%s): b2 = %.2f\n", i, names(d)[i], grm_pars[i, "b2"]))
+}
+
+cat("\nItems requiring the LEAST verbal aggression (lowest b2, GRM):\n")
+bot5 <- head(order(grm_pars[, "b2"]), 5)
+for (i in bot5) {
+  cat(sprintf("  Item %d (%s): b2 = %.2f\n", i, names(d)[i], grm_pars[i, "b2"]))
+}
+```
+
+```{r motivating-q2, fig.height=5}
+# Q2: Threshold distances for want vs. do items
+pcm_dist <- pcm_pars[, "b2"] - pcm_pars[, "b1"]
+want_items <- seq(1, 23, 2)  # odd items
+do_items <- seq(2, 24, 2)    # even items
+
+boxplot(pcm_dist[want_items], pcm_dist[do_items],
+        names = c("Want", "Do"), col = c("lightblue", "salmon"),
+        main = "PCM Threshold Distances: Want vs. Do Items",
+        ylab = "b2 - b1")
+cat("Mean threshold distance (Want):", round(mean(pcm_dist[want_items]), 3), "\n")
+cat("Mean threshold distance (Do):", round(mean(pcm_dist[do_items]), 3), "\n")
+```
+
+```{r motivating-q3, fig.height=5}
+# Q3: Other-to-blame vs. self-to-blame
+other_items <- c(1:12)   # bus and train
+self_items <- c(13:24)    # store and call
+
+# Average item location across models
+pcm_locs <- rowMeans(pcm_pars[, 2:3])
+
+boxplot(pcm_locs[other_items], pcm_locs[self_items],
+        names = c("Other to blame\n(bus, train)", "Self to blame\n(store, call)"),
+        col = c("lightblue", "salmon"),
+        main = "PCM Item Locations: Blame Attribution",
+        ylab = "Average threshold location")
+cat("Mean location (Other to blame):", round(mean(pcm_locs[other_items]), 3), "\n")
+cat("Mean location (Self to blame):", round(mean(pcm_locs[self_items]), 3), "\n")
+```
+
+
+# Nominal Response Model (NRM)
+
+## Model Overview
+
+The Nominal Response Model (Bock, 1972) does not assume any ordering of the response categories. Instead, it estimates separate slope ($a_k$) and intercept ($c_k$) parameters for each category:
+
+$$P(X_{ij} = k \mid \theta_j) = \frac{\exp(a_{ik}\theta_j + c_{ik})}{\sum_{r=0}^{m}\exp(a_{ir}\theta_j + c_{ir})}$$
+
+The NRM is the most general model: all other polytomous models can be expressed as special cases with constraints on the $a_k$ and $c_k$ parameters.
+
+**When is the NRM useful?**
+
+- When you want to **empirically verify** that response categories are ordered as intended.
+- For items where categories are truly nominal (e.g., analyzing distractor choice patterns on multiple-choice items).
+
+The `mirt` package uses a reparameterized version of the NRM that separates an overall item discrimination from empirically derived category weights.
+
+## Fitting the NRM
+
+```{r fit-nrm}
+nrm <- mirt(d, 1, itemtype = "nominal")
+```
+
+## Parameter Estimates
+
+```{r nrm-params}
+nrm_pars_irt <- coef(nrm, IRTpars = TRUE, simplify = TRUE)$items
+knitr::kable(round(nrm_pars_irt, 3),
+             caption = "NRM Parameter Estimates (IRT parameterization)")
+```
+
+```{r nrm-params-default}
+nrm_pars_def <- coef(nrm, simplify = TRUE)$items
+knitr::kable(round(nrm_pars_def, 3),
+             caption = "NRM Parameter Estimates (mirt default parameterization)")
+```
+
+## Interpreting NRM Parameters
+
+The key to interpreting the NRM is the **order of the slope parameters** ($a_k$). If the slopes are in ascending order across categories (i.e., $a_0 < a_1 < a_2$), this confirms that the categories are ordered as expected on the latent trait.
+
+```{r nrm-category-order}
+# Check whether the category slope parameters (ak0, ak1, ak2) are ordered for each item.
+# Note: the mirt default NRM output also contains an overall slope column (a1) that must
+# be excluded — only the ak columns represent the category-specific scoring functions.
+cat("Checking category ordering via NRM slope parameters (ak0, ak1, ak2):\n\n")
+
+nrm_coefs <- coef(nrm, simplify = TRUE)$items
+ak_cols   <- grep("^ak", colnames(nrm_coefs))   # ak0, ak1, ak2 only
+
+n_disordered <- 0
+for (i in 1:24) {
+  ak_vals <- nrm_coefs[i, ak_cols]
+  if (!all(diff(ak_vals) > 0)) {
+    n_disordered <- n_disordered + 1
+    cat(sprintf("  Item %d (%s): ak values = %s — NOT in expected order\n",
+                i, names(d)[i], paste(round(ak_vals, 3), collapse = ", ")))
+  }
+}
+if (n_disordered == 0) {
+  cat("All 24 items have ak slope parameters in ascending order (ak0 < ak1 < ak2),\n")
+  cat("confirming the expected no < perhaps < yes ordering for every item.\n")
+}
+
+# Cross-check using the IRT parameterization (a1 < a2 < a3)
+cat("\nCross-check via IRT parameterization (a1, a2, a3):\n")
+nrm_irt   <- coef(nrm, IRTpars = TRUE, simplify = TRUE)$items
+a_irt_cols <- grep("^a", colnames(nrm_irt))
+
+n_disordered_irt <- 0
+for (i in 1:24) {
+  a_vals <- nrm_irt[i, a_irt_cols]
+  if (!all(diff(a_vals) > 0)) {
+    n_disordered_irt <- n_disordered_irt + 1
+    cat(sprintf("  Item %d (%s): a values = %s — NOT in expected order\n",
+                i, names(d)[i], paste(round(a_vals, 3), collapse = ", ")))
+  }
+}
+if (n_disordered_irt == 0) {
+  cat("All 24 items confirmed: a1 < a2 < a3 in the IRT parameterization as well.\n")
+}
+```
+
+## NRM Category Response Curves
+
+```{r nrm-crc, fig.height=4, fig.width=10}
+plot(nrm, type = "trace", which.items = c(7, 8),
+     theta_lim = c(-4, 4), par.settings = simpleTheme(lwd = 2),
+     main = "NRM Category Response Curves: Item 7 vs. Item 8")
+```
+
+The NRM curves will generally look similar to the GPCM curves for items where the category ordering is confirmed. The NRM is more flexible, however, because it does not impose any ordering constraint.
+
+## General Strategy for Using the NRM
+
+Following the approach from the NRM lecture notes:
+
+1. **Fit the model** and examine the slope parameters.
+2. **Check category ordering** from the estimated $a$ values.
+3. **If ordering is confirmed**, the NRM results are consistent with the ordered models (PCM, GPCM, GRM). You can compute Andrich thresholds from the NRM parameters.
+4. **If ordering is not confirmed**, this suggests problems with the category structure for those items.
+
+Note: Just because the $a$ values are ordered does *not* guarantee that the thresholds will be ordered (Bock, 1972).
+
+
+# Summary
+
+## Models at a Glance
+
+```{r summary-table}
+summary_df <- data.frame(
+  Model = c("PCM", "GPCM", "RSM", "GRM", "NRM"),
+  Family = c("Adjacent", "Adjacent", "Adjacent", "Cumulative", "Nominal"),
+  Discrimination = c("Fixed (=1)", "Item-specific", "Fixed (=1)",
+                      "Item-specific", "Category-specific"),
+  Thresholds = c("Item-specific", "Item-specific", "Common across items",
+                  "Item-specific", "Not directly estimated"),
+  `Threshold Type` = c("Andrich", "Andrich", "Andrich",
+                        "Thurstonian", "Derived from a/c"),
+  `Reversals Possible` = c("Yes", "Yes", "Yes", "No (by construction)", "N/A"),
+  `Sufficient Statistics` = c("Yes", "No", "Yes", "No", "No"),
+  check.names = FALSE
+)
+knitr::kable(summary_df, caption = "Comparison of Polytomous IRT Models")
+```
+
+## Guidelines for Model Selection
+
+1. **Start with the PCM** if you have no strong prior about item discrimination. The PCM is the most flexible Rasch-family model and allows you to examine threshold ordering as a diagnostic tool.
+
+2. **Try the RSM** if all items share the same response format. Test whether the RSM constraint holds using a likelihood ratio test against the PCM.
+
+3. **Use the GPCM or GRM** if there is evidence that items differ substantially in discrimination and you are willing to give up sufficient statistics. Remember that the GPCM thresholds are Andrich thresholds; the GRM is a cumulative model, so it has Thurstonian thresholds.
+
+4. **Use the NRM** to empirically test whether response categories are ordered as intended, or when categories are truly nominal.
+
+5. **Always examine fit plots** — no single fit statistic tells the whole story. Compare category response curves across models to see where they agree and disagree.
