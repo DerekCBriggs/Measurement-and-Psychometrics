@@ -1,7 +1,7 @@
 ---
 title: "Evaluating IRT Model Fit"
-author: "EDUC 8720"
-date: "February 22, 2026"
+author: "Derek Briggs & Claude Code (Opus 4.6)"
+date: "EDUC 8710"
 output:
   html_document:
     toc: true
