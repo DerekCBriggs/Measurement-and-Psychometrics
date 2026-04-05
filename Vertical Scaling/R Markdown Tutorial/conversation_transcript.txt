@@ -1,0 +1,299 @@
+Vertical Scaling R Markdown Tutorial — Conversation Transcript
+==============================================================
+Date: 2026-04-05
+Participants: Derek Briggs, Claude (Opus 4.6)
+
+Note: The early portion of this conversation was summarized due to context
+length. The first several exchanges are reconstructed from that summary.
+The later exchanges (from the review phase onward) are verbatim.
+
+======================================================================
+PHASE 1: INTRODUCTION AND PLANNING
+======================================================================
+
+DEREK:
+Are you able to access a new subdirectory I've just created entitled
+'Vertical Scaling'?
+
+CLAUDE:
+[Confirmed access to the Vertical Scaling folder and its contents]
+
+DEREK:
+I'd like your help in developing an R Markdown for the class I'm teaching
+on this topic tomorrow, similar to the style of past R Markdowns we've
+created together such as the ones for IRT Equating and Differential Item
+Functioning. Before we get started, I need for you to read the articles in
+the 'Readings' folder and the powerpoint file in the 'Presentation Slides'
+folder for background context.
+
+CLAUDE:
+[Read 10 PDFs from the Readings folder using PyMuPDF for text extraction,
+and extracted text from the 49-slide PowerPoint presentation. Proposed
+several ideas for the tutorial structure, including a Thurstone scaling
+demonstration, IRT-based vertical scaling with chain linking, and
+concurrent calibration.]
+
+DEREK:
+These are some good ideas, but first read over the powerpoint slides I've
+used in the past. You can now find these in the Presentation Slides folder.
+
+CLAUDE:
+[Read the PowerPoint slides. Discussed how the tutorial could supplement
+the existing AzMERIT activity, proposed covering Thurstone scaling with a
+worked example, chain linking across multiple grades, and concurrent
+calibration. Asked four clarifying questions about scope.]
+
+DEREK:
+1. I'd say supplement it. I think it's good for students to see a
+'real-world' application in practice. But yes, I think a big missing piece
+is showing them how they can actually do it in R.
+2. Yes, that would be great--I usually skip over the technical details
+slide in my presentation (slide 28). Would be great to have this worked
+out in an R Markdown document.
+3. We are very much on the same page--I really want students to learn how
+to do chain linking as this is new from what they learned in the IRT
+Equating tutorial. Your plan for 4 grades sounds perfect.
+4. Let's start by just using the Rasch Model (since it is most consistent
+with a desire for a scale with interval properties). Later I might ask you
+to add a additional section using the 2PL or 3PL, but we should be careful
+not to try to do too much with this introductory tutorial.
+
+======================================================================
+PHASE 2: WRITING THE TUTORIAL
+======================================================================
+
+CLAUDE:
+[Created Vertical_Scaling_in_mirt.Rmd with the following structure:
+
+1. Introduction
+2. Thurstone's Method of Absolute Scaling
+   - Core idea, worked example with 10 common items and 500 students
+     per grade, z-score conversion, linking constant estimation
+   - Connection to IRT
+3. Simulating a Multi-Grade Vertical Scale Design
+   - Design diagram and table for 4 grades with sliding-window common items
+   - 50 items total, 20 per grade, 10 common between adjacent grades
+   - True parameters: decelerating growth (0.8, 0.6, 0.4)
+4. Separate Calibration with Chain Linking
+   - Rasch model fit to each grade separately
+   - Common item comparison plots
+   - B constants and cumulative chain linking
+   - Growth trajectory visualization
+5. Concurrent Calibration
+   - Data structuring (stacked matrix with NAs)
+   - multipleGroup() with Rasch and invariance constraints
+6. Comparing the Two Approaches
+   - Side-by-side tables and growth trajectory plot
+7. Discussion: What Does the Scale Mean?
+8. Summary table
+9. On Your Own (6 exercises)
+10. References
+
+Key simulation: set.seed(2026), b_true from seq(-2, 2.5, length.out=50),
+theta means of 0, 0.8, 1.4, 1.8 with SD=1 for all grades.]
+
+======================================================================
+PHASE 3: KNITTING AND INITIAL FIXES
+======================================================================
+
+CLAUDE:
+[Attempted to knit. Found and fixed two issues before successful render:
+
+1. Design diagram chunk had two overlapping plots (second incomplete).
+   Replaced with a single clean diagram showing all 4 grades.
+
+2. Narrative text around chain-linking section had "Wait---let's be
+   precise..." thinking-out-loud passage. Replaced with clean transition.
+
+Successfully knitted to HTML. All 51 chunks ran without errors.]
+
+======================================================================
+PHASE 4: REVIEW AND REVISIONS
+======================================================================
+
+DEREK:
+Ok, I've read through it. I think this is generally great, but there are a
+few issues we need to resolve. In the Thurstone scaling example notice that
+the estimated difference in means is -.34 while the true difference is
+-.8. That's pretty far off. In contrast, when we shift to the IRT
+examples, our estimates are very close to truth. I assume this is just an
+artifact of the small randomly drawn sample of common items? Or perhaps
+also due to sample size of students. It is just 500 in the Thurstone
+example, but 1000 in the IRT examples. I think we have two options here,
+keep generating item responses until our estimates are closer to truth
+(just for the didactic purpose of illustrating how this works without
+throwing students off) or we should build sampling variability (for items
+and students) more explicitly into this setup. I'm leaning toward the
+former. We don't want students to get bogged down in what is just supposed
+to be a demonstration of how Thurstone scaling proceeds.
+
+CLAUDE:
+[Investigated systematically by searching over seeds, sample sizes (500,
+1000, 2000), and number of items (10, 15, 20, 30). Found that the best
+achievable B was around -0.5 regardless of configuration — indicating a
+systematic attenuation, not just sampling noise.
+
+Explained the root cause: Thurstone's z-scores from qnorm(proportion
+correct) are on a fundamentally different scale than the generating theta
+parameters. When you integrate the item response function over a normal
+ability distribution, the resulting proportion correct compresses the
+signal. The z-score intercept captures (mu_3 - mu_4) / sqrt(1 + D^2 *
+sigma^2) rather than (mu_3 - mu_4) / sigma, where D ≈ 1.7 is the
+logistic-to-normal scaling constant.
+
+Fixed the tutorial by:
+1. Removing misleading "(true: -0.8)" comparisons from Thurstone output
+2. Adding the z-score correlation as a key diagnostic
+3. Reframing the implied mean as "SD units above Grade 3" on Thurstone's
+   own scale
+4. Adding a paragraph explaining the compression/attenuation and why
+   Thurstone's scale units differ from IRT logit units
+5. Updating the "Connection to IRT" section to note IRT's advantage of
+   estimating item and person parameters separately, avoiding the
+   compression]
+
+DEREK:
+That is a great catch--it makes sense and I learned something here. Ok,
+next minor fix: in section 3.1 the grade levels in the graphic are
+truncated on the left. We can't see the "G"
+
+CLAUDE:
+[Fixed by widening the left margin (mar from 6 to 7), extending the
+x-axis to start at -1 instead of 0, and moving text labels from x=0.3 to
+x=0.8. Re-knitted successfully.]
+
+DEREK:
+Ok, this one is more important. Right before section 4 you produce a table
+showing mean and SD for the totals scores of our simulated item responses
+by grade. But I don't understand why the mean is going down and SD is
+going up. Yes, generating item difficulties are getting harder by a mean
+of .3 by grade, but the generating mean of student ability is also going
+up, and always more than .3 even with deceleration built in. And the
+generating SD is always 1. So I would have predicted that the observed raw
+score correct for each grade's 20 item test would be about the same and SD
+would stay about the same. Wait, I think I see the problem. In your line
+b_true <- seq(-2, 2.5, length.out = n_items) + rnorm(n_items, 0, 0.3) I
+think you meant to be making item progressively harder but this code just
+adds noise since rnorm(n_items, 0, 0.3) can be positive or negative. I'm
+still not entirely sure why this would lead to the pattern of increasing
+observed score means, but I'm pretty sure this is the culprit.
+
+CLAUDE:
+[Explained that rnorm(n_items, 0, 0.3) is fine — it just adds realistic
+noise around the systematic trend from seq(-2, 2.5, ...). The real culprit
+is the RANGE: item difficulties span 4.5 logits (-2 to 2.5) across 4
+grades, meaning each grade's test gets ~0.92 logits harder. But ability
+only grows 0.4-0.8 logits per grade. So tests get harder faster than
+students improve.
+
+Computed the optimal item difficulty range: seq(-0.5, 2.4, length.out=50)
+makes each grade's test difficulty increase by ~0.6 logits per grade,
+matching the average ability growth. Verified that the offset between mean
+ability and mean item difficulty is near zero for all grades.
+
+Changed b_true to seq(-0.5, 2.4, length.out = 50) + rnorm(50, 0, 0.2).
+Re-knitted successfully.]
+
+DEREK:
+Ah, now I see the point of the noise term, that makes sense. I think you
+should add some text right before the code in section 3.2 for simulating
+responses that explains the importance of having items that are well
+targeted the range of student ability. Right now it is easily missed as a
+short comment in the code. You might even come back to this in the "on
+your own" section and ask to explore what happens when items are not well
+targeted (as in the initial setup you had)
+
+CLAUDE:
+[Added a paragraph before the simulate-responses code chunk explaining why
+the item difficulty range was chosen to match ability growth — well-
+targeted tests produce similar raw score distributions, good reliability,
+and realistic measurement. Items much harder or easier than students
+provide poor measurement.
+
+Added new exercise #6 ("Poorly targeted items") asking students to change
+the range back to seq(-2, 2.5, ...) and observe the effect on raw scores,
+SDs, and vertical scale quality. Renumbered AzMERIT comparison to #7.
+
+Re-knitted successfully.]
+
+DEREK:
+In section 5.2 can you add some text as a side note that explains more
+about some of the options in the multipleGroup function? My students have
+a lot of experience using the mirt function, but really only saw the
+multipleGroup function the first time in the IRT equating tutorial and we
+didn't spend much time working with it. Specifically, explain what the
+"invariance" option does.
+
+CLAUDE:
+[Added a detailed walkthrough of the four invariance elements before the
+concurrent-calibration code chunk:
+
+- "slopes": constrains a parameters equal across groups (already 1 under
+  Rasch, but makes the constraint explicit)
+- "intercepts": constrains d parameters equal across groups, equivalent to
+  saying the same item has the same difficulty regardless of grade — this
+  is the parameter invariance assumption
+- "free_means": allows latent means to differ; Grade 3 fixed at mu=0,
+  others freely estimated
+- "free_var": allows latent variances to differ; Grade 3 fixed at
+  sigma^2=1, others freely estimated
+
+Summarized: invariance says "the items are the same across groups, but the
+people are different." Noted what would happen if free_means and free_var
+were omitted.
+
+Re-knitted successfully.]
+
+DEREK:
+Why do you think the concurrent calibration approach does better at
+estimating the true SD relative to the separate calibration approach?
+
+CLAUDE:
+The difference comes down to how the SD is being estimated in each
+approach.
+
+In separate calibration, the SD we report is sd(eap_scores) — the
+standard deviation of the EAP point estimates. EAP scores are posterior
+means, and posterior means are always shrunken toward the population mean
+relative to the true abilities. This is the classic regression-to-the-mean
+effect: students with extreme true abilities get pulled back toward zero.
+The spread of the point estimates is always less than the spread of the
+true abilities, so sd(eap_scores) systematically underestimates the true
+SD. The chain linking constants shift the means correctly, but they don't
+fix this shrinkage.
+
+In concurrent calibration, the SD is estimated as a structural model
+parameter — it's the sigma of the population distribution for each group,
+estimated directly via the EM algorithm. During the M-step, the variance
+estimate accounts for both the spread of the posterior means and the
+posterior uncertainty around each person's score. In other words, it
+"knows" that the EAP scores are shrunken and corrects for it. So it's
+estimating the variance of the latent distribution itself, not the
+variance of a set of shrunken point estimates.
+
+That's the fundamental distinction: separate calibration derives the SD
+from the spread of point estimates (which are attenuated), while
+concurrent calibration estimates it as a parameter of the generating
+distribution (which is not).
+
+DEREK:
+Oh, totally, I knew this! I just forgot how the SD was being estimated in
+each case. Yes! Please add a note about this in the tutorial.
+
+CLAUDE:
+[Added a new bullet in the Section 6 comparison discussing why concurrent
+calibration recovers SDs more accurately: separate calibration uses
+sd(eap_scores) which is attenuated by posterior shrinkage, while
+concurrent calibration estimates sigma as a structural model parameter via
+EM that corrects for shrinkage. Also tweaked the final bullet to clarify
+the "similar results" finding applies primarily to means.
+
+Re-knitted successfully.]
+
+DEREK:
+Please create a transcript file of our conversation from when I first
+introduced you to the materials in the Vertical Scaling folder.
+
+======================================================================
+END OF TRANSCRIPT
+======================================================================
