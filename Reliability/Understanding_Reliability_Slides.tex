@@ -1,0 +1,764 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\title{Understanding Classical Test Theory and Reliability: Avoiding
+Misconceptions}
+\author{Derek Briggs}
+\date{1/23/2022}
+
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{part title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{part title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Understanding Classical Test Theory and Reliability: Avoiding Misconceptions},
+  pdfauthor={Derek Briggs},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\newif\ifbibliography
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+\usepackage{caption}
+% Make caption package work with longtable
+\makeatletter
+\def\fnum@table{\tablename~\thetable}
+\makeatother
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}{Preliminaries: Defining a Test Score as a Composite of
+Test Items}
+\protect\hypertarget{preliminaries-defining-a-test-score-as-a-composite-of-test-items}{}
+Let's start with a ``test'' score, \(X\), associated with a test-taker,
+indexed by the subscript \(j\). A test in this context consists of some
+fixed number of items, and the responses to these items are given
+ordinal scores. (In this sense we can also consider an attitudinal
+survey to be a type of test). So if we then let the subscript \(i\)
+index a test item, then
+
+\[ X_j= \sum_{i=1}^{n_i} X_{ij} \] where \(n_i\) represents the total
+number of items on the test.
+\end{frame}
+
+\begin{frame}{Sources of ``Error''}
+\protect\hypertarget{sources-of-error}{}
+\begin{itemize}
+\tightlist
+\item
+  The choice of items (\(n_i\))
+\item
+  The sample of people taking the test (\(n_j\))
+\item
+  All other facets of measurement that interact with people across
+  replications.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Within-Person Model}
+\protect\hypertarget{the-within-person-model}{}
+\[\tag{1}X_j = \tau_j + e_j\] Each person's true score is the expected
+value over all possible tests of \(n_i\) items sampled from some
+universe of possible items \[\tag{2}E(X_j)=\tau_j\] and the ``error''
+term is the difference between a single observed score and the unknown
+true score. \[\tag{3}e_j=X_j-E(X_j)\] Note that \(\tau_j\) and \(e\) are
+independent, and therefore uncorrelated, by definition.
+\end{frame}
+
+\begin{frame}{Vocabulary Test Thought Experiment}
+\protect\hypertarget{vocabulary-test-thought-experiment}{}
+Derek and Ben each take 200 vocabulary tests, each test is a different
+random sample of 10 words.
+\includegraphics{Understanding_Reliability_Slides_files/figure-beamer/unnamed-chunk-1-1.pdf}
+\end{frame}
+
+\begin{frame}{Things to Notice}
+\protect\hypertarget{things-to-notice}{}
+Derek's true score = 3.3, Ben's = 7.1 Derek's SD = 2, Ben's = 1 We are
+interested in the sampling variance of observed scores for each case
+\(j\), we want \[\sigma^2_{X_j}=\sigma^2_{\tau_j}+\sigma^2_{e_j}\] But
+since \(\tau_j\) is a constant, this expression reduces to
+\[\sigma^2_{X_j}=\sigma^2_{e_j}\] So in this example, not only is
+Derek's true score lower than Ben's true score, it is measured with more
+error.
+\end{frame}
+
+\begin{frame}{The Between-Person Model}
+\protect\hypertarget{the-between-person-model}{}
+We are going to express the fundamental equation of true score theory
+for a population of test-takers as
+
+\[\tag{4}X = T + E\] This time, we are taking the variance not over
+replications within each individual test-taker, but \emph{across} the
+observed scores of all individual test-takers.
+
+\[\tag{5}\sigma^2_{X}=\sigma^2_{T}+\sigma^2_{E}\] Recall that when the
+model was within-person, each person's true score was a constant
+(\(\tau_j\)). But here, since we are taking variance \emph{across}
+people, it is not. Also, \(\sigma^2_{E}\) can be thought of as
+\(E[\sigma^2_{e_j}]\)
+\end{frame}
+
+\begin{frame}{Back to the Vocabulary Test Example}
+\protect\hypertarget{back-to-the-vocabulary-test-example}{}
+Now assume that Derek and Ben were part of a sample of 100 students that
+took this test. The average score on this test was 6.4 with a standard
+deviation of 1.5.
+
+\includegraphics{Understanding_Reliability_Slides_files/figure-beamer/unnamed-chunk-2-1.pdf}
+
+The variability we observe in these scores is caused by \emph{both} true
+differences among students, and by measurement error.
+\end{frame}
+
+\begin{frame}{The Concept of Reliability}
+\protect\hypertarget{the-concept-of-reliability}{}
+\[\tag{6}\rho^2_{XT}=\frac{\sigma^2_{T}}{\sigma^2_{X}}\]
+
+-Reliability is the proportion of observed score variance that is true
+score variance
+
+-It can also be interpreted as the squared correlation between observed
+scores and true scores
+
+Here are three mathematically equivalent formulations of the concept
+
+\[\rho^2_{XT}=\frac{\sigma^2_{XT}}{\sigma^2_{X}\sigma^2_{T}}=\frac{\sigma^2_{T}}{\sigma^2_{T}+\sigma^2_{E}}=1-\frac{\sigma^2_{E}}{\sigma^2_{X}}\]
+
+\#\#Parallel Test Forms 1
+
+Let \(X, X^\prime\) represent two different test forms
+
+The two test forms are parallel so long as
+
+\(E(X)=E(X^\prime)=T\) and \(\sigma^2_{X} = \sigma^2_{X^\prime}\)
+
+This means that the two forms are equivalent in difficulty and have the
+same observed score variance. What if we compute the correlation of
+scores across the common population taking the two test forms? This
+correlation would be
+
+\[\rho_{XX^\prime}=\frac{\sigma_{XX^\prime}}{\sigma_{X}\sigma_{X^\prime}}\]
+
+\#\#Parallel Test Forms 2
+
+Recall that \(X = T + E\) and \(X^\prime = T + E^\prime\), so
+\[\rho_{XX^\prime}=\frac{\sigma_{(T+E)(T+E^\prime)}}{\sigma_{X}\sigma_{X^\prime}},\]
+\[\rho_{XX^\prime}=\frac{\sigma_{TT}+\sigma_{TE}+\sigma_{TE^\prime}+\sigma_{EE^\prime}}{\sigma_{X}\sigma_{X^\prime}}.\]
+By assumption of the model, true scores and error scores are
+uncorrelated, and error scores are uncorrelated across parallel forms.
+So this expression reduces to
+
+\[\rho_{XX^\prime}=\frac{\sigma_{TT}}{\sigma_{X}\sigma_{X^\prime}}.\]
+
+\#\#Parallel Test Forms 3
+
+Now the covariance between true scores is just the variance of true
+scores, so \(\sigma_{TT}=\sigma^2_{T}\). And we defined parallel forms
+to have equal observed score variance, so
+\(\sigma_{X}=\sigma_{X^\prime}\) and
+\(\sigma_{X}\sigma_{X^\prime}=\sigma^2_{X}\). This means that
+\[\tag{7}\rho_{XX^\prime}=\frac{\sigma^2_{T}}{\sigma^2_{X}}.\] Hence
+\(\rho_{XX^\prime}=\rho^2_{XT}\).
+
+\#\#Spearman-Brown Formula
+
+The Spearman-Brown ``prophecy'' formula can be use to predict the
+reliability of a test that consists of a composite from two smaller
+tests of the same length (i.e., same number of items).
+
+\[\tag{8}\rho_{XX^\prime}=\frac{2\rho_{YY^\prime}}{1+\rho_{YY^\prime}}\]
+
+In the expression above, the composite test score \(X=Y_1+Y_2\), and we
+define \(Y_1\) and \(Y_2\) to be parallel. So \(X=Y+Y^\prime\).
+
+Think of \(\rho_{YY^\prime}\) as the ``old'' reliability of a test and
+\(\rho_{XX^\prime}\) as the ``new'' reliability we would predict if the
+test doubled in length.
+
+\#\#Visualizing Spearman-Brown \{.smaller\}
+
+\includegraphics{Understanding_Reliability_Slides_files/figure-beamer/unnamed-chunk-3-1.pdf}
+
+Notice the nonlinear relationship.
+
+As base reliability increases, doubling the number of items is predicted
+to have less of an impact on the reliability of the new test.
+
+\#\#Generalized Spearman-Brown Formula
+
+\[\tag{9}\rho_{XX^\prime}=\frac{k\rho_{YY^\prime}}{1+(k-1)\rho_{YY^\prime}}\]
+
+This formula indicates how reliability is predicted to increase for any
+factor \(k\) increase in the number of items on the test.
+\end{frame}
+
+\begin{frame}{Split Half Approach to Estimating a Reliability
+Coefficient}
+\protect\hypertarget{split-half-approach-to-estimating-a-reliability-coefficient}{}
+So here is a strategy for getting an estimate of reliability if you only
+have a single test administration.
+
+\begin{enumerate}
+\tightlist
+\item
+  Split the test into two parallel halves
+\item
+  Correlate the scores on each half
+\item
+  Use the Spearman-Brown formula to get an estimate for reliability if
+  the test was twice as long.
+\end{enumerate}
+
+Problem: May not be obvious how to split the test
+\end{frame}
+
+\begin{frame}{Cronbach's Alpha Coefficient}
+\protect\hypertarget{cronbachs-alpha-coefficient}{}
+\[ \tag{10}\alpha =  \frac{m}{m-1} \left(1-\frac{\sum_{i=1}^{m}S^2_{X_i}}{S^2_{X}} \right) \]
+
+Can be interpreted as the average of all possible ways the test could be
+split into two forms and correlated, correcting for the restriction in
+test length
+\end{frame}
+
+\begin{frame}{Unpacking the Expression for Alpha 1}
+\protect\hypertarget{unpacking-the-expression-for-alpha-1}{}
+\[ \alpha =  \frac{m}{m-1} \left(1-\frac{\sum_{i=1}^{m}S^2_{X_i}}{S^2_{X}} \right) \]
+
+\begin{enumerate}
+\item
+  The denominator, \(S^2_{X}\) represents the variance of the composite
+  test score we get by adding together all the items on the test. Since
+  each item can be thought of as a random variable, it follows that
+  \(S^2_{X}=\sum_{i=1}^{m}\sum_{j=1}^{m}S_{X_iX_j}\). What this means is
+  that the variance of the composite is the sum of all the item
+  variances and item covariances. If there are \(m\) items, then
+  variance of the sum of these items equals the sum of \(m^2\) variance
+  and covariance terms.
+\item
+  The numerator, \(\sum_{i=1}^{m}S^2_{X_i}\), represents the sum of all
+  \(m\) item variances. What it does \emph{not} include are the item
+  covariances.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Unpacking the Expression for Alpha 2}
+\protect\hypertarget{unpacking-the-expression-for-alpha-2}{}
+\[ \alpha =  \frac{m}{m-1} \left(1-\frac{\sum_{i=1}^{m}S^2_{X_i}}{S^2_{X}} \right) \]
+
+When the ratio \(\frac{\sum_{i=1}^{m}S^2_{X_i}}{S^2_{X}}\) is small,
+this implies that the covariance between test items is large.
+
+When the ratio \(\frac{\sum_{i=1}^{m}S^2_{X_i}}{S^2_{X}}\) is large,
+this implies that the covariance between test items is small.
+\end{frame}
+
+\begin{frame}{Original Motivation for Reliability: An Attenuated
+Correlation}
+\protect\hypertarget{original-motivation-for-reliability-an-attenuated-correlation}{}
+\begin{figure}
+\centering
+\includegraphics{~/Dropbox/Courses/EDUC 8720/Images and Plots/Spearman.png}
+\caption{As More Error is Added, Correlation Decreases}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Uses of Reliability Coefficients}
+\protect\hypertarget{uses-of-reliability-coefficients}{}
+\begin{block}{Disattenuating a Correlation}
+\protect\hypertarget{disattenuating-a-correlation}{}
+\[\rho(X,Y)=\frac{\rho(\hat{X},\hat{Y})}{\sqrt{{\alpha_X}{\alpha_Y}}}\]
+\end{block}
+
+\begin{block}{Estimating the Standard Error of Measurement}
+\protect\hypertarget{estimating-the-standard-error-of-measurement}{}
+\[SEM=\sqrt{1-\alpha}S_{X}\]
+\end{block}
+
+\begin{block}{Estimating True Scores}
+\protect\hypertarget{estimating-true-scores}{}
+\[\tau_j={\alpha}{x_j}+({1-\alpha}){\bar{x}}\]
+\end{block}
+\end{frame}
+
+\begin{frame}{Misconception \#1: Alpha = internal consistency}
+\protect\hypertarget{misconception-1-alpha-internal-consistency}{}
+To simplify, if all items have a variance of 1,\\
+\[\tag{11}\alpha=\frac{m\bar{r}}{1+(m-1)\bar{r}}\] With a little
+algebra, \[m=\frac{\alpha_{d}(1-\bar{r})}{\bar{r}(1-\alpha_{d})}\] where
+\(\alpha_{d}\) stands for ``desired'' alpha.
+
+Bottom Line: Reliability, as estimated using \(\alpha\), is not solely a
+function of internal consistency.
+
+For details, see Davenport, Davison, Liu \& Love (2015, p.~5)
+\end{frame}
+
+\begin{frame}{Misconception \#2: Alpha = Index of Unidimensionality}
+\protect\hypertarget{misconception-2-alpha-index-of-unidimensionality}{}
+\begin{itemize}
+\item
+  Given some set of \(m\) items, we use eigenvalues to re-express the
+  total variance in our \(m\) by \(m\) correlation matrix into \(m\)
+  orthogonal variables such that each successive eigenvalue explains
+  only variance that could not be explained by the previous eigenvalue.
+\item
+  The total variance is an orthogonal re-expression of the correlation
+  matrix, and will be equivalent to the total number of indicator
+  variables, \(m\).
+\item
+  Let \(\lambda_1\) represent the first eigenvalue extracted from a PCA.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Misconception \#2: Alpha = Index of Unidimensionality}
+\protect\hypertarget{misconception-2-alpha-index-of-unidimensionality-1}{}
+The total variance explained by the first eigenvalue is
+
+\[V=\frac{\lambda_1}{m}\]
+
+Given this, DDLL point out a way that \(\alpha\) can be approximated:
+
+\[\tag{12}\alpha \approx \frac{\bar{r}}{V}\]
+
+DDLL provide three made-up examples where \(\alpha\) would provide
+misleading information if used as an index of unidimensionality. In two
+cases, \(\alpha\) is large (.91, .81) even though the data is clearly
+multidimensional; in another case, \(\alpha\) is small (.09) even though
+there is evidence of one (albeit weak) common factor.
+\end{frame}
+
+\begin{frame}{Misconception \#3: Alpha = Consistency across Occasions}
+\protect\hypertarget{misconception-3-alpha-consistency-across-occasions}{}
+\begin{itemize}
+\item
+  What we actually would like to know is how a test score would change
+  if the same test had been taken on a different temporal occasion:
+  STABILITY
+\item
+  The only way to estimate this would be to intentionally vary the
+  occasion of measurement.
+\item
+  The problem when measuring a cognitive attribute is that such
+  estimates will likely be biased if the time between testings is too
+  long, or will lead to fatigue if they time is too short.
+\item
+  Alpha is an estimate for consistency across different versions of
+  tests form sampled from the universe of possible items.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{An Empirical Example: Measuring 80s Music Fluency}
+\protect\hypertarget{an-empirical-example-measuring-80s-music-fluency}{}
+\begin{itemize}
+\tightlist
+\item
+  Data from a test given to 46 doctoral students in the University of
+  Colorado's School of Education.
+\item
+  Each of 20 items consists of the first 30 seconds of a song that was a
+  top 10 hit from the 1980s.
+\item
+  An item is scored as correct (1) if the student can name the title of
+  the song or the artist. Otherwise it is scored as incorrect (0).
+\item
+  So maximum total score is 20.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Descriptive Statistics}
+\protect\hypertarget{descriptive-statistics}{}
+\begin{verbatim}
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    1.0     3.0     6.5     7.7    11.0    19.0 
+\end{verbatim}
+
+\includegraphics{Understanding_Reliability_Slides_files/figure-beamer/unnamed-chunk-4-1.pdf}
+\end{frame}
+
+\begin{frame}[fragile]{Using alpha in the psych package}
+\protect\hypertarget{using-alpha-in-the-psych-package}{}
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(}\StringTok{"psych"}\NormalTok{)}
+\NormalTok{x}\OtherTok{\textless{}{-}}\FunctionTok{alpha}\NormalTok{(d)}
+\CommentTok{\#Standardized Alpha (Equivalent to Equation 11)}
+\FunctionTok{round}\NormalTok{(x}\SpecialCharTok{$}\NormalTok{total}\SpecialCharTok{$}\NormalTok{std.alpha,}\DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0.873
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#Raw Alpha (Equivalent to Equation 5 in DDLL)}
+\FunctionTok{round}\NormalTok{(x}\SpecialCharTok{$}\NormalTok{total}\SpecialCharTok{$}\NormalTok{raw\_alpha,}\DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0.873
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#Average Interitem Correlation}
+\FunctionTok{round}\NormalTok{(x}\SpecialCharTok{$}\NormalTok{total}\SpecialCharTok{$}\NormalTok{average\_r,}\DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0.256
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Classical Item Statistics}
+\protect\hypertarget{classical-item-statistics}{}
+\begin{verbatim}
+            r.cor r.drop  mean    sd
+J.Cougar    0.635  0.594 0.652 0.482
+Flock       0.546  0.493 0.348 0.482
+TTD         0.561  0.493 0.217 0.417
+Wham        0.636  0.572 0.261 0.444
+Marley      0.340  0.297 0.283 0.455
+Madonna     0.236  0.198 0.717 0.455
+Metallica   0.520  0.459 0.326 0.474
+Tone.Loc    0.527  0.482 0.500 0.506
+Big.Country 0.692  0.645 0.283 0.455
+DM          0.446  0.403 0.283 0.455
+Erasure     0.599  0.540 0.196 0.401
+U2          0.452  0.406 0.739 0.444
+Bon.Jovi    0.648  0.610 0.457 0.504
+Cure        0.373  0.330 0.217 0.417
+Idol        0.574  0.522 0.500 0.506
+Band.Aid    0.420  0.365 0.130 0.341
+Def.Leppard 0.694  0.642 0.304 0.465
+Schilling   0.470  0.417 0.109 0.315
+MJ          0.442  0.395 0.630 0.488
+Prince      0.626  0.587 0.522 0.505
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Using DDLL's Alternate Expression for Alpha}
+\protect\hypertarget{using-ddlls-alternate-expression-for-alpha}{}
+Let's go ahead and apply DDLL's equation 3 (my equation 11) above
+
+\[\alpha=\frac{m\bar{r}}{1+(m-1)\bar{r}}\]
+
+to show that it gives the same reliability estimate we get using the
+alpha function.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{m}\OtherTok{\textless{}{-}}\FunctionTok{ncol}\NormalTok{(d)}
+\NormalTok{rbar}\OtherTok{\textless{}{-}}\NormalTok{x}\SpecialCharTok{$}\NormalTok{total}\SpecialCharTok{$}\NormalTok{average\_r}
+\FunctionTok{round}\NormalTok{(m}\SpecialCharTok{*}\NormalTok{rbar}\SpecialCharTok{/}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{(m}\DecValTok{{-}1}\NormalTok{)}\SpecialCharTok{*}\NormalTok{rbar),}\DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0.873
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Using DDLL's Approximation Based on Eigenvalue
+Ratio}
+\protect\hypertarget{using-ddlls-approximation-based-on-eigenvalue-ratio}{}
+\begin{itemize}
+\item
+  Now let's see if we can compute \(\alpha \approx \frac{\bar{r}}{V}\).
+\item
+  We already know \(\bar{r}\) = 0.256
+\item
+  We need to find \(V\).
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fpc}\OtherTok{\textless{}{-}}\FunctionTok{principal}\NormalTok{(d,}\AttributeTok{nfactors=}\DecValTok{1}\NormalTok{)}
+\NormalTok{V}\OtherTok{\textless{}{-}}\NormalTok{fpc}\SpecialCharTok{$}\NormalTok{values[}\DecValTok{1}\NormalTok{]}\SpecialCharTok{/}\FunctionTok{ncol}\NormalTok{(d)}
+\FunctionTok{round}\NormalTok{(V,}\DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0.306
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{round}\NormalTok{(rbar}\SpecialCharTok{/}\NormalTok{V,}\DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0.834
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{A More Direct Evaluation of Dimensionality}
+\protect\hypertarget{a-more-direct-evaluation-of-dimensionality}{}
+\begin{itemize}
+\tightlist
+\item
+  Let's have a closer look at the dimensionality of this 80s music test.
+  \includegraphics{Understanding_Reliability_Slides_files/figure-beamer/unnamed-chunk-9-1.pdf}
+\end{itemize}
+
+\begin{verbatim}
+Parallel analysis suggests that the number of factors =  NA  and the number of components =  1 
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{Alpha as a Lower Bound Estimate}
+\protect\hypertarget{alpha-as-a-lower-bound-estimate}{}
+\(\alpha\) is not necessarily the same thing as \(\rho_{XT}\)
+
+In general, \(\alpha \leq \rho_{XX^\prime}\)
+
+For a proof, see Novick \& Lewis (1967), pages 4-6
+
+The original demonstration is due to Guttman (1945)
+
+The Question: When will \(\alpha = \rho_{XX^\prime}\)?
+\end{frame}
+
+\begin{frame}{Relationships Between Test Items}
+\protect\hypertarget{relationships-between-test-items}{}
+\begin{itemize}
+\tightlist
+\item
+  Consider any two test items, \(X_g\) and \(X_h\).
+\item
+  Each item has been sampled from the same universe of items
+\item
+  For each item,fundamental eqn of CTT holds, so
+\item
+  \(X_g = T_g + E_g\) and \(X_h = T_h + E_h\).
+\end{itemize}
+
+Now express the true score for one item as a linear function of the
+other:
+
+\[T_g = a_{gh} + b_{gh}T_{h}\]
+\end{frame}
+
+\begin{frame}{From tau-equivalent to essentially tau equivalent}
+\protect\hypertarget{from-tau-equivalent-to-essentially-tau-equivalent}{}
+\[T_g = a_{gh} + b_{gh}T_{h}\]
+
+A test is \emph{tau equivalent} when \(a_{gh}=0\) and \(b_{gh}=1\)
+
+A test is \emph{essentially tau equivalent} when \(a_{gh}\) can vary and
+\(b_{gh}=1\)
+
+\emph{If test items meet either of these conditions,
+\(\alpha = \rho_{XX^\prime}\)}
+
+If \(a_{gh}\) and \(b_{gh}\) can vary, the test is called
+\emph{congeneric}
+
+In this case, \(\alpha < \rho_{XX^\prime}\)
+\end{frame}
+
+\begin{frame}{Another way to make distinctions in assumptions about
+``parallelism''}
+\protect\hypertarget{another-way-to-make-distinctions-in-assumptions-about-parallelism}{}
+\begin{longtable}[]{@{}lc@{}}
+\toprule
+Assumption & Expression \\
+\midrule
+\endhead
+Strictly parallel & \(X_{ij} = T_j + E_j\) \\
+Tau Equivalent & \(X_{ij} = T_j + E_{ij}\) \\
+Essential Tau Equivalent & \(X_{ij} = (a_i + T_j) + E_{ij}\) \\
+Congeneric & \(X_{ij} = (a_i + B_i*T_j) + E_{ij}\) \\
+\bottomrule
+\end{longtable}
+\end{frame}
+
+\begin{frame}{Visual Representation of Essentially Tau Equivalent
+Structure}
+\protect\hypertarget{visual-representation-of-essentially-tau-equivalent-structure}{}
+\begin{figure}
+\centering
+\includegraphics{~/Dropbox/Courses/EDUC 8720/Images and Plots/Essentually_tau_equivalent.png}
+\caption{All loadings are the same}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Visual Representation of Congeneric Structure}
+\protect\hypertarget{visual-representation-of-congeneric-structure}{}
+\begin{figure}
+\centering
+\includegraphics{~/Dropbox/Courses/EDUC 8720/Images and Plots/Congeneric.png}
+\caption{Loadings can vary}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Summing Up: Takeaway Lessons}
+\protect\hypertarget{summing-up-takeaway-lessons}{}
+\begin{itemize}
+\tightlist
+\item
+  Reliability = consistency of results across replications of a
+  measurement procedure
+\item
+  A reliability coefficient is a means to an end
+\item
+  CTT depends on the premise of a within-person thought experiment
+\item
+  The CTT population level model is \(X = T + E\)
+\item
+  The estimation of \(\rho^2_{XT}\) depends on the availability of a
+  parallel test
+\item
+  It is really hard to create and administer independent parallel tests
+\item
+  Cronbach's alpha is one popular way to estimate a reliability
+  coefficient
+\item
+  It is really easy to misinterpret alpha
+\item
+  Alpha is a lower bound estimate of reliability: consistency of
+  rankings based on a test
+\item
+  Error comes from facets of measurement that vary across replications
+  and interact with the people taking the test
+\end{itemize}
+\end{frame}
+
+\end{document}

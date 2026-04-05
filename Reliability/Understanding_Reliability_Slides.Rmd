@@ -1,0 +1,390 @@
+---
+title: "Understanding Classical Test Theory and Reliability: Avoiding Misconceptions"
+author: "Derek Briggs"
+date: "1/23/2022"
+output:
+  beamer_presentation: default
+  ioslides_presentation: default
+  widescreen: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Preliminaries: Defining a Test Score as a Composite of Test Items
+
+Let's start with a "test" score, $X$, associated with a test-taker, indexed by the subscript $j$. A test in this context consists of some fixed number of items, and the responses to these items are given ordinal scores. (In this sense we can also consider an attitudinal survey to be a type of test). So if we then let the subscript $i$ index a test item, then
+
+$$ X_j= \sum_{i=1}^{n_i} X_{ij} $$
+where $n_i$ represents the total number of items on the test. 
+
+## Sources of "Error" {.build}
+
+- The choice of items ($n_i$)
+- The sample of people taking the test ($n_j$) 
+- All other facets of measurement that interact with people across replications.
+
+## The Within-Person Model
+
+ $$\tag{1}X_j = \tau_j + e_j$$
+Each person's true score is the expected value over all possible tests of $n_i$ items sampled from some universe of possible items
+ $$\tag{2}E(X_j)=\tau_j$$
+and the "error" term is the difference between a single observed score and the unknown true score.
+ $$\tag{3}e_j=X_j-E(X_j)$$
+ Note that $\tau_j$ and $e$ are independent, and therefore uncorrelated, by definition.
+
+## Vocabulary Test Thought Experiment {.smaller .build}
+
+Derek and Ben each take 200 vocabulary tests, each test is a different random sample of 10 words.
+```{r echo=FALSE}
+library(msm)
+set.seed(8971)
+derek<-rtnorm(200,3.3,2,lower=0,upper=10) 
+derek<-round(derek,digits=1)
+set.seed(1234)
+ben<-rtnorm(200,7.1,1,lower=0,upper=10)
+ben<-round(ben,digits=1)
+par(mfrow=c(1,2))
+hist(derek,xlim=range(0,10),main='',col="blue",xlab="Derek's Scores")
+hist(ben,xlim=range(0,10),breaks=c(4:10),main='',col="red",xlab="Ben's Scores")
+```
+
+
+## Things to Notice
+Derek's true score = 3.3, Ben's = 7.1
+Derek's SD = 2, Ben's = 1
+We are interested in the sampling variance of observed scores for each case $j$, we want
+$$\sigma^2_{X_j}=\sigma^2_{\tau_j}+\sigma^2_{e_j}$$
+But since $\tau_j$ is a constant, this expression reduces to
+$$\sigma^2_{X_j}=\sigma^2_{e_j}$$
+So in this example, not only is Derek's true score lower than Ben's true score, it is measured with more error. 
+
+## The Between-Person Model
+
+We are going to express the fundamental equation of true score theory for a population of test-takers as
+
+$$\tag{4}X = T + E$$
+This time, we are taking the variance not over replications within each individual test-taker, but *across* the observed scores of all individual test-takers.
+
+$$\tag{5}\sigma^2_{X}=\sigma^2_{T}+\sigma^2_{E}$$
+Recall that when the model was within-person, each person's true score was a constant ($\tau_j$). But here, since we are taking variance *across* people, it is not. Also, $\sigma^2_{E}$ can be thought of as $E[\sigma^2_{e_j}]$
+
+## Back to the Vocabulary Test Example {.smaller}
+
+Now assume that Derek and Ben were part of a sample of 100 students that took this test. The average score on this test was 6.4 with a standard deviation of 1.5.
+
+```{r echo=FALSE, fig.height=4}
+library(msm)
+set.seed(345)
+x<-rtnorm(100,6.4,1.5,lower=0,upper=10) 
+x<-round(x,digits=1)
+hist(x,xlim=range(0,10),main="Distribution Across 100 Students",
+     xlab="Vocabulary Test Scores")
+```
+
+The variability we observe in these scores is caused by *both* true differences among students, and by measurement error.
+
+## The Concept of Reliability
+
+$$\tag{6}\rho^2_{XT}=\frac{\sigma^2_{T}}{\sigma^2_{X}}$$
+
+-Reliability is the proportion of observed score variance that is true score variance
+
+-It can also be interpreted as the squared correlation between observed scores and true scores 
+
+Here are three mathematically equivalent formulations of the concept
+
+$$\rho^2_{XT}=\frac{\sigma^2_{XT}}{\sigma^2_{X}\sigma^2_{T}}=\frac{\sigma^2_{T}}{\sigma^2_{T}+\sigma^2_{E}}=1-\frac{\sigma^2_{E}}{\sigma^2_{X}}$$
+
+##Parallel Test Forms 1 
+
+Let $X, X^\prime$ represent two different test forms
+
+The two test forms are parallel so long as 
+
+$E(X)=E(X^\prime)=T$ and $\sigma^2_{X} = \sigma^2_{X^\prime}$ 
+
+This means that the two forms are equivalent in difficulty and have the same observed score variance. What if we compute the correlation of scores across the common population taking the two test forms? This correlation would be
+
+$$\rho_{XX^\prime}=\frac{\sigma_{XX^\prime}}{\sigma_{X}\sigma_{X^\prime}}$$
+
+##Parallel Test Forms 2 
+
+Recall that $X = T + E$ and $X^\prime = T + E^\prime$, so 
+$$\rho_{XX^\prime}=\frac{\sigma_{(T+E)(T+E^\prime)}}{\sigma_{X}\sigma_{X^\prime}},$$
+$$\rho_{XX^\prime}=\frac{\sigma_{TT}+\sigma_{TE}+\sigma_{TE^\prime}+\sigma_{EE^\prime}}{\sigma_{X}\sigma_{X^\prime}}.$$
+By assumption of the model, true scores and error scores are uncorrelated, and error scores are uncorrelated across parallel forms. So this expression reduces to
+
+$$\rho_{XX^\prime}=\frac{\sigma_{TT}}{\sigma_{X}\sigma_{X^\prime}}.$$
+
+##Parallel Test Forms 3 
+
+Now the covariance between true scores is just the variance of true scores, so $\sigma_{TT}=\sigma^2_{T}$. And we defined parallel forms to have equal observed score variance, so $\sigma_{X}=\sigma_{X^\prime}$ and $\sigma_{X}\sigma_{X^\prime}=\sigma^2_{X}$. This means that
+$$\tag{7}\rho_{XX^\prime}=\frac{\sigma^2_{T}}{\sigma^2_{X}}.$$
+Hence $\rho_{XX^\prime}=\rho^2_{XT}$.
+
+##Spearman-Brown Formula 
+
+The Spearman-Brown "prophecy" formula can be use to predict the reliability of a test that consists of a composite from two smaller tests of the same length (i.e., same number of items). 
+
+$$\tag{8}\rho_{XX^\prime}=\frac{2\rho_{YY^\prime}}{1+\rho_{YY^\prime}}$$
+
+In the expression above, the composite test score $X=Y_1+Y_2$, and we define $Y_1$ and $Y_2$ to be parallel. So $X=Y+Y^\prime$.
+
+Think of $\rho_{YY^\prime}$ as the "old" reliability of a test and $\rho_{XX^\prime}$ as the "new" reliability we would predict if the test doubled in length. 
+
+##Visualizing Spearman-Brown {.smaller}
+
+```{r echo=FALSE,fig.height=4}
+rel.old<-seq(from=0, to=1,by=.05) 
+rel.new<-2*rel.old/(1+rel.old)
+plot(rel.old,rel.new,type="b",xlab="Old Reliability",ylab="New Reliability",
+     main="Impact of Doubling Test Length")
+```
+
+Notice the nonlinear relationship. 
+
+As base reliability increases, doubling the number of items is predicted to have less of an impact on the reliability of the new test.
+
+##Generalized Spearman-Brown Formula
+
+$$\tag{9}\rho_{XX^\prime}=\frac{k\rho_{YY^\prime}}{1+(k-1)\rho_{YY^\prime}}$$
+
+This formula indicates how reliability is predicted to increase for any factor $k$ increase in the number of items on the test.
+
+## Split Half Approach to Estimating a Reliability Coefficient
+
+So here is a strategy for getting an estimate of reliability if you only have a single test administration. 
+
+1. Split the test into two parallel halves
+2. Correlate the scores on each half
+3. Use the Spearman-Brown formula to get an estimate for reliability if the test was twice as long.
+
+Problem: May not be obvious how to split the test
+
+## Cronbach's Alpha Coefficient
+
+$$ \tag{10}\alpha =  \frac{m}{m-1} \left(1-\frac{\sum_{i=1}^{m}S^2_{X_i}}{S^2_{X}} \right) $$
+
+Can be interpreted as the average of all possible ways the test could be split into two forms and correlated, correcting for the restriction in test length
+
+## Unpacking the Expression for Alpha 1 {.smaller}
+
+$$ \alpha =  \frac{m}{m-1} \left(1-\frac{\sum_{i=1}^{m}S^2_{X_i}}{S^2_{X}} \right) $$
+
+1. The denominator, $S^2_{X}$ represents the variance of the composite test score we get by adding together all the items on the test. Since each item can be thought of as a random variable, it follows that $S^2_{X}=\sum_{i=1}^{m}\sum_{j=1}^{m}S_{X_iX_j}$. What this means is that the variance of the composite is the sum of all the item variances and item covariances. If there are $m$ items, then variance of the sum of these items equals the sum of $m^2$ variance and covariance terms.
+
+2. The numerator, $\sum_{i=1}^{m}S^2_{X_i}$, represents the sum of all $m$ item variances. What it does _not_ include are the item covariances.
+
+## Unpacking the Expression for Alpha 2 
+
+$$ \alpha =  \frac{m}{m-1} \left(1-\frac{\sum_{i=1}^{m}S^2_{X_i}}{S^2_{X}} \right) $$
+
+When the ratio $\frac{\sum_{i=1}^{m}S^2_{X_i}}{S^2_{X}}$ is small, this implies that the covariance between test items is large.
+
+When the ratio $\frac{\sum_{i=1}^{m}S^2_{X_i}}{S^2_{X}}$ is large, this implies that the covariance between test items is small.
+
+## Original  Motivation for Reliability: An Attenuated Correlation
+
+![As More Error is Added, Correlation Decreases](~/Dropbox/Courses/EDUC 8720/Images and Plots/Spearman.png)
+
+## Uses of Reliability Coefficients 
+
+### Disattenuating a Correlation 
+
+$$\rho(X,Y)=\frac{\rho(\hat{X},\hat{Y})}{\sqrt{{\alpha_X}{\alpha_Y}}}$$
+
+### Estimating the Standard Error of Measurement
+
+$$SEM=\sqrt{1-\alpha}S_{X}$$
+
+### Estimating True Scores
+
+$$\tau_j={\alpha}{x_j}+({1-\alpha}){\bar{x}}$$
+
+## Misconception #1: Alpha = internal consistency {.smaller}
+
+To simplify, if all items have a variance of 1,  
+$$\tag{11}\alpha=\frac{m\bar{r}}{1+(m-1)\bar{r}}$$
+With a little algebra,
+$$m=\frac{\alpha_{d}(1-\bar{r})}{\bar{r}(1-\alpha_{d})}$$
+where $\alpha_{d}$ stands for "desired" alpha. 
+
+Bottom Line: Reliability, as estimated using $\alpha$, is not solely a function of internal consistency.
+ 
+For details, see Davenport, Davison, Liu & Love (2015, p. 5)
+
+## Misconception #2: Alpha = Index of Unidimensionality 
+
+- Given some set of $m$ items, we use eigenvalues to re-express the total variance in our $m$ by $m$ correlation matrix into $m$ orthogonal variables such that each successive eigenvalue explains only variance that could not be explained by the previous eigenvalue.
+
+- The total variance is an orthogonal re-expression of the correlation matrix, and will be equivalent to the total number of indicator variables, $m$.
+
+- Let $\lambda_1$ represent the first eigenvalue extracted from a PCA.
+
+## Misconception #2: Alpha = Index of Unidimensionality 
+
+The total variance explained by the first eigenvalue is
+
+$$V=\frac{\lambda_1}{m}$$
+
+Given this, DDLL point out a way that $\alpha$ can be approximated:
+
+$$\tag{12}\alpha \approx \frac{\bar{r}}{V}$$
+
+DDLL provide three made-up examples where $\alpha$ would provide misleading information if used as an index of unidimensionality. In two cases, $\alpha$ is large (.91, .81) even though the data is clearly multidimensional; in another case, $\alpha$ is small (.09) even though there is evidence of one (albeit weak) common factor.
+
+## Misconception #3: Alpha = Consistency across Occasions
+
+- What we actually would like to know is how a test score would change if the same test had been taken on a different temporal occasion: STABILITY
+
+- The only way to estimate this would be to intentionally vary the occasion of measurement.
+
+- The problem when measuring a cognitive attribute is that such estimates will likely be biased if the time between testings is too long, or will lead to fatigue if they time is too short.
+
+- Alpha is an estimate for consistency across different versions of tests form sampled from the universe of possible items. 
+
+
+## An Empirical Example: Measuring 80s Music Fluency
+
+- Data from a test given to 46 doctoral students in the University of Colorado's School of Education.
+- Each of 20 items consists of the first 30 seconds of a song that was a top 10 hit from the 1980s. 
+- An item is scored as correct (1) if the student can name the title of the song or the artist. Otherwise it is scored as incorrect (0).
+- So maximum total score is 20.
+
+## Descriptive Statistics
+
+```{r echo=FALSE, comment=""}
+data<-read.csv("80sresults_pilot_data_analysis.csv")
+d <- data[,18:37]
+total<-apply(d,1,sum)
+round(summary(total),1)
+hist(total,main=" ",xlab="Total Score on 80s Test"
+     ,ylab="Number of Cases",ylim=c(0,16),col="blue")
+```
+
+## Using alpha in the psych package
+
+```{r echo=TRUE, warning=FALSE,comment=""}
+library("psych")
+x<-alpha(d)
+#Standardized Alpha (Equivalent to Equation 11)
+round(x$total$std.alpha,3)
+#Raw Alpha (Equivalent to Equation 5 in DDLL)
+round(x$total$raw_alpha,3)
+#Average Interitem Correlation
+round(x$total$average_r,3)
+```
+
+## Classical Item Statistics {.smaller}
+
+```{r comment=""}
+round(x$item.stats[4:7],digits=3)
+```
+
+## Using DDLL's Alternate Expression for Alpha
+
+Let's go ahead and apply DDLL's equation 3 (my equation 11) above 
+
+$$\alpha=\frac{m\bar{r}}{1+(m-1)\bar{r}}$$
+
+to show that it gives the same reliability estimate we get using the alpha function.
+
+```{r echo=TRUE, comment=""}
+m<-ncol(d)
+rbar<-x$total$average_r
+round(m*rbar/(1+(m-1)*rbar),3)
+```
+
+## Using DDLL's Approximation Based on Eigenvalue Ratio {.smaller}
+
+- Now let's see if we can compute $\alpha \approx \frac{\bar{r}}{V}$. 
+
+- We already know $\bar{r}$ = `r round(rbar,digits=3)`
+
+- We need to find $V$. 
+
+```{r echo=TRUE,comment=""}
+fpc<-principal(d,nfactors=1)
+V<-fpc$values[1]/ncol(d)
+round(V,3)
+round(rbar/V,3)
+```
+
+## A More Direct Evaluation of Dimensionality {.smaller}
+
+- Let's have a closer look at the dimensionality of this 80s music test.
+```{r echo=FALSE, fig.height=4, warning=FALSE, comment=""}
+cm<-cor(d)
+fa.parallel(cm, n.obs = nrow(d),fm="pa", fa="pc", 
+       main = "Parallel Analysis Scree Plot",
+        n.iter=100,error.bars=FALSE,ylabel=NULL,show.legend=TRUE)
+```
+
+## Alpha as a Lower Bound Estimate
+
+$\alpha$ is not necessarily the same thing as $\rho_{XT}$
+
+In general, $\alpha \leq \rho_{XX^\prime}$
+
+For a proof, see Novick & Lewis (1967), pages 4-6
+
+The original demonstration is due to Guttman (1945)
+
+The Question: When will $\alpha = \rho_{XX^\prime}$?
+
+## Relationships Between Test Items
+
+- Consider any two test items, $X_g$ and $X_h$. 
+- Each item has been sampled from the same universe of items 
+- For each item,fundamental eqn of CTT holds, so 
+- $X_g = T_g + E_g$ and $X_h = T_h + E_h$. 
+
+Now express the true score for one item as a linear function of the other:
+
+$$T_g = a_{gh} + b_{gh}T_{h}$$
+
+## From tau-equivalent to essentially tau equivalent {.shorter}
+
+$$T_g = a_{gh} + b_{gh}T_{h}$$
+
+A test is *tau equivalent* when $a_{gh}=0$ and $b_{gh}=1$
+
+A test is *essentially tau equivalent* when $a_{gh}$ can vary and $b_{gh}=1$
+
+*If test items meet either of these conditions, $\alpha = \rho_{XX^\prime}$*
+
+If $a_{gh}$ and $b_{gh}$ can vary, the test is called *congeneric*
+
+In this case, $\alpha < \rho_{XX^\prime}$
+
+## Another way to make distinctions in assumptions about "parallelism"
+
+| Assumption | Expression |
+|:------|:-----:|
+| Strictly parallel           | $X_{ij} = T_j + E_j$              |
+| Tau Equivalent              | $X_{ij} = T_j + E_{ij}$             |
+| Essential Tau Equivalent    | $X_{ij} = (a_i + T_j) + E_{ij}$     |
+| Congeneric                  | $X_{ij} = (a_i + B_i*T_j) + E_{ij}$ |
+
+## Visual Representation of Essentially Tau Equivalent Structure
+
+![All loadings are the same](~/Dropbox/Courses/EDUC 8720/Images and Plots/Essentually_tau_equivalent.png)
+
+## Visual Representation of Congeneric Structure
+
+![Loadings can vary](~/Dropbox/Courses/EDUC 8720/Images and Plots/Congeneric.png)
+
+## Summing Up: Takeaway Lessons {.smaller}
+
+- Reliability = consistency of results across replications of a measurement procedure
+- A reliability coefficient is a means to an end
+- CTT depends on the premise of a within-person thought experiment
+- The CTT population level model is $X = T + E$
+- The estimation of $\rho^2_{XT}$ depends on the availability of a parallel test
+- It is really hard to create and administer independent parallel tests
+- Cronbach's alpha is one popular way to estimate a reliability coefficient 
+- It is really easy to misinterpret alpha
+- Alpha is a lower bound estimate of reliability: consistency of rankings based on a test
+- Error comes from facets of measurement that vary across replications and interact with the people taking the test
