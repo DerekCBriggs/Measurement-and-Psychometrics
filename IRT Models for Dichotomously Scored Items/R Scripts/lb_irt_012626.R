@@ -12,7 +12,7 @@ library(psych)
 ###PART 1##################################################################
 
 # update this for your computer!
-data_path <- "~/Users/briggsd/Library/CloudStorage/Dropbox/Github/Measurement and Psychometrics/IRT Models for Dichotomously Scored Items/Data"
+data_path <- "~/Library/CloudStorage/Dropbox/Github/Measurement and Psychometrics/IRT Models for Dichotomously Scored Items/Data/"
 
 # Import data----
 
