@@ -1,7 +1,7 @@
 ---
 title: "Item Parameter Estimation via MMLE/EM"
 subtitle: "From Intuition to Implementation"
-author: "Derek Briggs"
+author: "Derek Briggs and Claude Code (Opus 4.6)"
 date: "`r Sys.Date()`"
 output:
   html_document:
@@ -11,6 +11,8 @@ output:
     code_folding: show
     theme: flatly
     highlight: tango
+    self_contained: true
+    mathjax: default
 ---
 
 ```{r setup, include=FALSE}
@@ -47,7 +49,7 @@ library(mirt)
 
 In the person parameter estimation module, we met Thor, who takes a two-item test (Item 1: $a = 1, b = 0$; Item 2: $a = 2, b = 2$) and gets the pattern {1, 0} (first item correct, second incorrect).
 
-We computed Thor's posterior distribution by combining a **prior** (our assumption about the population distribution of $\theta$, typically standard normal) with the **likelihood** of his response pattern:
+We computed Thor's posterior distribution by combining a **prior** (our assumption about the population distribution of $\theta$, typically standard normal) with the **likelihood** of his response pattern $\mathbf{u}$, the vector of item responses (in this two-item example, $\mathbf{u} = \{1, 0\}$):
 
 $$\text{Posterior}(\theta) \propto \underbrace{L(\theta \mid \mathbf{u})}_{\text{likelihood}} \times \underbrace{g(\theta)}_{\text{prior}}$$
 
@@ -90,9 +92,9 @@ plot(theta, posterior_unnorm, type = "l", col = "purple", lwd = 2,
      xlab = expression(theta), ylab = "Posterior (unnormalized)", las = 1)
 ```
 
-## The Denominator You May Have Ignored
+## The Denominator We Previously Ignored
 
-When we wrote Bayes' theorem for the posterior, the full expression was:
+When we use Bayes' theorem for the posterior, the full expression is:
 
 $$P(\theta \mid \mathbf{u}, \boldsymbol{\xi}) = \frac{L(\mathbf{u} \mid \theta, \boldsymbol{\xi}) \cdot g(\theta)}{\int L(\mathbf{u} \mid \theta, \boldsymbol{\xi}) \cdot g(\theta) \, d\theta}$$
 
@@ -908,6 +910,72 @@ MMLE/EM Algorithm Summary
 cat("R version:", R.version.string, "\n")
 cat("mirt version:", as.character(packageVersion("mirt")), "\n")
 ```
+
+# Appendix: Derivation of the M-Step Estimation Equations {#appendix}
+
+This appendix shows where the two M-step equations come from for students who want to see the calculus. **You do not need this material to understand the rest of the document** --- the main text explains what the equations do; this section explains *why* they take the form they do.
+
+## Setup
+
+We are using the 2PL with intercept/slope parameterization:
+
+$$P_i(\theta) = \frac{1}{1 + \exp(-(d_i + a_i\theta))}$$
+
+After the E-step, we have the artificial data $\bar{r}_{ik}$ (expected correct responses) and $\bar{n}_k$ (expected examinees) at each quadrature node $X_k$. The log-likelihood for item $i$, treating this artificial data as known, is:
+
+$$\log L_i = \sum_{k=1}^{q} \left[\bar{r}_{ik} \log P_i(X_k) + (\bar{n}_k - \bar{r}_{ik}) \log Q_i(X_k)\right]$$
+
+We want to find the values of $d_i$ and $a_i$ that maximize this. The standard approach is to take the partial derivatives with respect to each parameter, set them equal to zero, and solve.
+
+## The chain rule: the key difference between the two equations
+
+The ICC depends on $d_i$ and $a_i$ only through the linear combination $d_i + a_i X_k$. By the chain rule:
+
+$$\frac{\partial P_i(X_k)}{\partial d_i} = P_i(X_k)\, Q_i(X_k) \cdot \frac{\partial}{\partial d_i}(d_i + a_i X_k) = P_i(X_k)\, Q_i(X_k) \cdot 1$$
+
+$$\frac{\partial P_i(X_k)}{\partial a_i} = P_i(X_k)\, Q_i(X_k) \cdot \frac{\partial}{\partial a_i}(d_i + a_i X_k) = P_i(X_k)\, Q_i(X_k) \cdot X_k$$
+
+The two derivatives are identical except for the trailing factor: **1** for the intercept, **$X_k$** for the slope. This is the only reason the two estimation equations differ.
+
+## Deriving the equation for $d_i$
+
+Taking the partial derivative of $\log L_i$ with respect to $d_i$:
+
+$$\frac{\partial \log L_i}{\partial d_i} = \sum_{k=1}^{q} \left[\bar{r}_{ik} \cdot \frac{1}{P_i(X_k)} \cdot \frac{\partial P_i}{\partial d_i} + (\bar{n}_k - \bar{r}_{ik}) \cdot \frac{1}{Q_i(X_k)} \cdot \left(-\frac{\partial P_i}{\partial d_i}\right)\right]$$
+
+Substituting $\frac{\partial P_i}{\partial d_i} = P_i Q_i$:
+
+$$= \sum_{k=1}^{q} \left[\bar{r}_{ik} \cdot \frac{P_i Q_i}{P_i} - (\bar{n}_k - \bar{r}_{ik}) \cdot \frac{P_i Q_i}{Q_i}\right]$$
+
+$$= \sum_{k=1}^{q} \left[\bar{r}_{ik}\, Q_i - (\bar{n}_k - \bar{r}_{ik})\, P_i\right]$$
+
+$$= \sum_{k=1}^{q} \left[\bar{r}_{ik}\, Q_i - \bar{n}_k P_i + \bar{r}_{ik}\, P_i\right]$$
+
+$$= \sum_{k=1}^{q} \left[\bar{r}_{ik}(Q_i + P_i) - \bar{n}_k P_i\right]$$
+
+Since $Q_i + P_i = 1$:
+
+$$= \sum_{k=1}^{q} \left[\bar{r}_{ik} - \bar{n}_k P_i(X_k)\right]$$
+
+Setting this equal to zero gives the **intercept estimation equation**:
+
+$$\sum_{k=1}^{q} \bar{n}_k \left[\frac{\bar{r}_{ik}}{\bar{n}_k} - P_i(X_k)\right] = 0$$
+
+## Deriving the equation for $a_i$
+
+The derivation is identical, except that $\frac{\partial P_i}{\partial a_i} = P_i Q_i \cdot X_k$. The extra $X_k$ carries through every line, giving:
+
+$$\frac{\partial \log L_i}{\partial a_i} = \sum_{k=1}^{q} \left[\bar{r}_{ik} - \bar{n}_k P_i(X_k)\right] \cdot X_k$$
+
+Setting this equal to zero gives the **slope estimation equation**:
+
+$$\sum_{k=1}^{q} \bar{n}_k \left[\frac{\bar{r}_{ik}}{\bar{n}_k} - P_i(X_k)\right] X_k = 0$$
+
+## Intuition
+
+Both equations say: *the weighted residuals (observed proportion minus predicted probability) must sum to zero.* The first equation ensures the overall level is right (intercept). The second equation ensures the *trend across the ability scale* is right (slope) --- which is why it is weighted by $X_k$.
+
+If you have seen ordinary logistic regression, this is the same logic: the score equation for the intercept has no covariate multiplier, while the score equation for the slope is multiplied by the covariate value. Here, the "covariate" is the quadrature node $X_k$.
 
 # Reference
 

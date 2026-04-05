@@ -1,0 +1,516 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\newif\ifbibliography
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% remove section numbering
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{subsection title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+\usepackage{caption}
+% Make caption package work with longtable
+\makeatletter
+\def\fnum@table{\tablename~\thetable}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={The EM Algorithm for MMLE, Step by Step},
+  pdfauthor={Derek Briggs},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{The EM Algorithm for MMLE, Step by Step}
+\subtitle{EDUC 8720: Item Parameter Estimation}
+\author{Derek Briggs}
+\date{2026-02-15}
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}{The EM Algorithm: Overview}
+\phantomsection\label{the-em-algorithm-overview}
+The EM algorithm alternates between two steps:
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2143}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.4643}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3214}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Step
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+What it does
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Analogy
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\textbf{E-step} & Uses current item parameter guesses to figure out how
+examinees are distributed across the ability scale & ``If these were the
+true item parameters, where would each examinee likely fall?'' \\
+\textbf{M-step} & Uses that ability distribution to re-estimate item
+parameters & ``Given where we think examinees fall, what item parameters
+best fit the responses?'' \\
+\bottomrule\noalign{}
+\end{longtable}
+
+We repeat until the estimates stop changing.
+\end{frame}
+
+\begin{frame}{The Data: LSAT-6}
+\phantomsection\label{the-data-lsat-6}
+\begin{itemize}
+\tightlist
+\item
+  \textbf{1000 examinees}, \textbf{5 dichotomous items}, \textbf{32
+  unique response patterns}
+\end{itemize}
+
+\begin{longtable}[]{@{}lr@{}}
+\caption{8 Most Common Response Patterns}\tabularnewline
+\toprule\noalign{}
+Pattern & Freq \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+Pattern & Freq \\
+\midrule\noalign{}
+\endhead
+11111 & 298 \\
+11011 & 173 \\
+10011 & 81 \\
+10111 & 80 \\
+11101 & 61 \\
+11001 & 56 \\
+10001 & 29 \\
+10101 & 28 \\
+\bottomrule\noalign{}
+\end{longtable}
+\end{frame}
+
+\begin{frame}{Initial Setup}
+\phantomsection\label{initial-setup}
+\textbf{2PL model} with intercept/slope parameterization:
+
+\[P_i(\theta) = \frac{1}{1 + \exp(-(d_i + a_i\theta))}\]
+
+\textbf{Starting values:} all intercepts \(d_i = 0\), all slopes
+\(a_i = 1\)
+
+\textbf{Quadrature:} 10 nodes from \(-4\) to \(+4\) with weights from
+the standard normal
+
+These starting values treat all items as identical --- the \emph{data}
+will differentiate them.
+\end{frame}
+
+\begin{frame}{E-Step 1: Likelihood at Each Node}
+\phantomsection\label{e-step-1-likelihood-at-each-node}
+For each response pattern \(l\) at each quadrature node \(X_k\):
+
+\[L_l(X_k) = \prod_{i=1}^{n} P_i(X_k)^{u_{li}} Q_i(X_k)^{1-u_{li}}\]
+
+``How probable is this response pattern if the examinee's ability were
+exactly \(X_k\)?''
+
+\begin{longtable}[]{@{}cc@{}}
+\caption{Pattern 22 \{1,0,1,0,1\}: Likelihood at each
+node}\tabularnewline
+\toprule\noalign{}
+X\_k & L\_l(X\_k) \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+X\_k & L\_l(X\_k) \\
+\midrule\noalign{}
+\endhead
+-4.0000 & 0.00000561 \\
+-3.1111 & 0.00007111 \\
+-2.2222 & 0.00076087 \\
+-1.3333 & 0.00568600 \\
+-0.4444 & 0.02214009 \\
+0.4444 & 0.03452866 \\
+1.3333 & 0.02157010 \\
+2.2222 & 0.00702097 \\
+3.1111 & 0.00159618 \\
+4.0000 & 0.00030636 \\
+\bottomrule\noalign{}
+\end{longtable}
+\end{frame}
+
+\begin{frame}{E-Step 2: Marginal Probability}
+\phantomsection\label{e-step-2-marginal-probability}
+Sum over nodes, weighted by quadrature weights:
+
+\[P_l = \sum_{k=1}^{q} L_l(X_k) \cdot A(X_k)\]
+
+This is the \textbf{marginal likelihood} of pattern \(l\) --- the
+probability of seeing that pattern averaged across all ability levels.
+
+\begin{longtable}[]{@{}lrr@{}}
+\toprule\noalign{}
+Pattern & Freq & Marginal Prob \\
+\midrule\noalign{}
+\endhead
+11111 & 298 & 0.0955352 \\
+11011 & 173 & 0.0360619 \\
+10011 & 81 & 0.0224199 \\
+10111 & 80 & 0.0360619 \\
+11101 & 61 & 0.0360619 \\
+11001 & 56 & 0.0224199 \\
+10001 & 29 & 0.0224199 \\
+10101 & 28 & 0.0224199 \\
+\bottomrule\noalign{}
+\end{longtable}
+\end{frame}
+
+\begin{frame}{E-Step 3: Posterior Probabilities}
+\phantomsection\label{e-step-3-posterior-probabilities}
+Apply Bayes' theorem at each node:
+
+\[P(X_k \mid \mathbf{u}_l) = \frac{L_l(X_k) \cdot A(X_k)}{P_l}\]
+
+\begin{longtable}[]{@{}ccccc@{}}
+\caption{Pattern 22 \{1,0,1,0,1\}; \(P_l\) = 0.02241993}\tabularnewline
+\toprule\noalign{}
+\(X_k\) & \(L_l(X_k)\) & \(A(X_k)\) & \(L \times A\) & Posterior \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\(X_k\) & \(L_l(X_k)\) & \(A(X_k)\) & \(L \times A\) & Posterior \\
+\midrule\noalign{}
+\endhead
+-4.0000 & 0.00000561 & 0.000119 & 0.00000000 & 0.00000003 \\
+-3.1111 & 0.00007111 & 0.002805 & 0.00000020 & 0.00000890 \\
+-2.2222 & 0.00076087 & 0.030020 & 0.00002284 & 0.00101879 \\
+-1.3333 & 0.00568600 & 0.145800 & 0.00082902 & 0.03697690 \\
+-0.4444 & 0.02214009 & 0.321300 & 0.00711361 & 0.31728951 \\
+0.4444 & 0.03452866 & 0.321300 & 0.01109406 & 0.49483018 \\
+1.3333 & 0.02157010 & 0.145800 & 0.00314492 & 0.14027339 \\
+2.2222 & 0.00702097 & 0.030020 & 0.00021077 & 0.00940098 \\
+3.1111 & 0.00159618 & 0.002805 & 0.00000448 & 0.00019970 \\
+4.0000 & 0.00030636 & 0.000119 & 0.00000004 & 0.00000163 \\
+\bottomrule\noalign{}
+\end{longtable}
+\end{frame}
+
+\begin{frame}{E-Step 3: Posterior (Visual)}
+\phantomsection\label{e-step-3-posterior-visual}
+\begin{center}\includegraphics{MMLE_EM_Slides_files/figure-beamer/e3-plot-1} \end{center}
+\end{frame}
+
+\begin{frame}{E-Step 4: The ``Artificial Data''}
+\phantomsection\label{e-step-4-the-artificial-data}
+Aggregate across all examinees (weighted by pattern frequency \(f_l\)):
+
+\[\bar{n}_k = \sum_{l=1}^{s} f_l \cdot P(X_k \mid \mathbf{u}_l) \quad \text{(expected examinees at node } k\text{)}\]
+
+\[\bar{r}_{ik} = \sum_{l=1}^{s} u_{li} \cdot f_l \cdot P(X_k \mid \mathbf{u}_l) \quad \text{(expected correct on item } i \text{ at node } k\text{)}\]
+
+These play the same role as the observed frequencies in the JMLE
+estimation equations.
+\end{frame}
+
+\begin{frame}{E-Step 4: Artificial Data Table}
+\phantomsection\label{e-step-4-artificial-data-table}
+\begin{longtable}[]{@{}
+  >{\centering\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0882}}
+  >{\centering\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1275}}
+  >{\centering\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1569}}
+  >{\centering\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1569}}
+  >{\centering\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1569}}
+  >{\centering\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1569}}
+  >{\centering\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1569}}@{}}
+\caption{Artificial data from E-Step (Cycle 1)}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\centering
+\(X_k\)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(\bar{n}_k\)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(\bar{r}_{1k}\)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(\bar{r}_{2k}\)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(\bar{r}_{3k}\)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(\bar{r}_{4k}\)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(\bar{r}_{5k}\)
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\centering
+\(X_k\)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(\bar{n}_k\)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(\bar{r}_{1k}\)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(\bar{r}_{2k}\)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(\bar{r}_{3k}\)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(\bar{r}_{4k}\)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(\bar{r}_{5k}\)
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+-4.0000 & 0.0 & 0.0 & 0.0 & 0.0 & 0.0 & 0.0 \\
+-3.1111 & 0.1 & 0.0 & 0.0 & 0.0 & 0.0 & 0.0 \\
+-2.2222 & 2.7 & 1.4 & 0.4 & 0.2 & 0.5 & 1.0 \\
+-1.3333 & 31.1 & 22.1 & 9.6 & 4.9 & 11.7 & 18.0 \\
+-0.4444 & 182.0 & 155.1 & 91.1 & 56.3 & 105.5 & 137.5 \\
+0.4444 & 402.3 & 374.1 & 278.7 & 206.0 & 304.1 & 351.3 \\
+1.3333 & 295.8 & 286.4 & 249.0 & 211.1 & 259.6 & 278.2 \\
+2.2222 & 77.6 & 76.5 & 72.0 & 66.5 & 73.3 & 75.5 \\
+3.1111 & 8.1 & 8.0 & 7.8 & 7.6 & 7.9 & 8.0 \\
+4.0000 & 0.4 & 0.4 & 0.4 & 0.3 & 0.4 & 0.4 \\
+\bottomrule\noalign{}
+\end{longtable}
+\end{frame}
+
+\begin{frame}[fragile]{Why Do the \(\bar{r}_{ik}\) Columns Differ?}
+\phantomsection\label{why-do-the-barr_ik-columns-differ}
+We started with \textbf{identical} parameters for all 5 items, yet the
+\(\bar{r}_{ik}\) values differ.
+
+\begin{itemize}
+\tightlist
+\item
+  \(\bar{n}_k\) depends only on the posterior --- \textbf{same for all
+  items}
+\item
+  \(\bar{r}_{ik}\) multiplies by \(u_{li}\) (the actual response) ---
+  only correct responses contribute
+\end{itemize}
+
+\textbf{The raw data break the symmetry:}
+
+\begin{verbatim}
+##   Item 1: 0.924 proportion correct
+##    Item 2: 0.709 proportion correct
+##    Item 3: 0.553 proportion correct
+##    Item 4: 0.763 proportion correct
+##    Item 5: 0.87 proportion correct
+\end{verbatim}
+
+Items with higher proportion correct \(\rightarrow\) larger
+\(\bar{r}_{ik}\) values.
+\end{frame}
+
+\begin{frame}{The M-Step: Estimating Item Parameters}
+\phantomsection\label{the-m-step-estimating-item-parameters}
+Treat the artificial data as known and solve (one item at a time):
+
+\[\sum_{k=1}^{q} \bar{n}_k \left[\frac{\bar{r}_{ik}}{\bar{n}_k} - P_i(X_k)\right] = 0 \quad \text{(for } d_i\text{)}\]
+
+\[\sum_{k=1}^{q} \bar{n}_k \left[\frac{\bar{r}_{ik}}{\bar{n}_k} - P_i(X_k)\right] X_k = 0 \quad \text{(for } a_i\text{)}\]
+
+\textbf{Logic:} Find the \(d_i\) and \(a_i\) that make the residuals
+(observed \(-\) expected) sum to zero. The \(X_k\) multiplier in the
+second equation captures the \emph{trend} across ability (slope).
+
+Solve iteratively using \textbf{Newton-Raphson} (same as in JMLE).
+\end{frame}
+
+\begin{frame}{M-Step: Results After Cycle 1}
+\phantomsection\label{m-step-results-after-cycle-1}
+\begin{longtable}[]{@{}cccc@{}}
+\caption{Item Parameter Estimates After 1 EM Cycle}\tabularnewline
+\toprule\noalign{}
+Item & Intercept (\(d_i\)) & Slope (\(a_i\)) & Difficulty (\(b_i\)) \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+Item & Intercept (\(d_i\)) & Slope (\(a_i\)) & Difficulty (\(b_i\)) \\
+\midrule\noalign{}
+\endhead
+1 & 2.1659 & 0.9438 & -2.2949 \\
+2 & 0.4102 & 0.9410 & -0.4360 \\
+3 & -0.3787 & 0.9697 & 0.3905 \\
+4 & 0.7263 & 0.9322 & -0.7791 \\
+5 & 1.5321 & 0.9198 & -1.6658 \\
+\bottomrule\noalign{}
+\end{longtable}
+
+Already, the items have differentiated! Items with higher proportion
+correct get larger (more negative) difficulty estimates.
+\end{frame}
+
+\begin{frame}{The Full EM Loop}
+\phantomsection\label{the-full-em-loop}
+Now iterate: use these new estimates as input to the next E-step,
+repeat.
+
+\begin{longtable}[]{@{}cccc@{}}
+\caption{Final Estimates After 44 EM Cycles}\tabularnewline
+\toprule\noalign{}
+Item & Intercept (\(d_i\)) & Slope (\(a_i\)) & Difficulty (\(b_i\)) \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+Item & Intercept (\(d_i\)) & Slope (\(a_i\)) & Difficulty (\(b_i\)) \\
+\midrule\noalign{}
+\endhead
+1 & 2.7732 & 0.8256 & -3.3588 \\
+2 & 0.9903 & 0.7231 & -1.3695 \\
+3 & 0.2491 & 0.8901 & -0.2798 \\
+4 & 1.2848 & 0.6887 & -1.8657 \\
+5 & 2.0535 & 0.6573 & -3.1239 \\
+\bottomrule\noalign{}
+\end{longtable}
+\end{frame}
+
+\begin{frame}{Watching EM Converge}
+\phantomsection\label{watching-em-converge}
+\begin{center}\includegraphics{MMLE_EM_Slides_files/figure-beamer/convergence-d-1} \end{center}
+\end{frame}
+
+\begin{frame}{Watching EM Converge (cont.)}
+\phantomsection\label{watching-em-converge-cont.}
+\begin{center}\includegraphics{MMLE_EM_Slides_files/figure-beamer/convergence-a-1} \end{center}
+
+EM converges \textbf{slowly} --- parameters change rapidly early, then
+creep toward final values.
+\end{frame}
+
+\begin{frame}[fragile]{Comparison with \texttt{mirt}}
+\phantomsection\label{comparison-with-mirt}
+\begin{longtable}[]{@{}ccccc@{}}
+\caption{Our MMLE/EM vs.~mirt Package}\tabularnewline
+\toprule\noalign{}
+Item & Our \(a\) & mirt \(a\) & Our \(b\) & mirt \(b\) \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+Item & Our \(a\) & mirt \(a\) & Our \(b\) & mirt \(b\) \\
+\midrule\noalign{}
+\endhead
+1 & 0.826 & 0.825 & -3.359 & -3.361 \\
+2 & 0.723 & 0.723 & -1.369 & -1.370 \\
+3 & 0.890 & 0.890 & -0.280 & -0.280 \\
+4 & 0.689 & 0.689 & -1.866 & -1.866 \\
+5 & 0.657 & 0.658 & -3.124 & -3.123 \\
+\bottomrule\noalign{}
+\end{longtable}
+
+Small differences reflect implementation details: \texttt{mirt} uses 61
+quadrature points (vs.~our 10) and Bock-Aitkin acceleration.
+\end{frame}
+
+\begin{frame}[fragile]{EM Algorithm Summary}
+\phantomsection\label{em-algorithm-summary}
+\begin{verbatim}
+1. INITIALIZE: Starting values for all item parameters
+
+2. E-STEP:
+   → Compute likelihood at each node for each response pattern
+   → Apply Bayes' theorem to get posterior at each node
+   → Aggregate into "artificial data" (n-bar, r-bar)
+
+3. M-STEP:
+   → For each item separately:
+     Treat artificial data as known, solve for d and a
+     using Newton-Raphson
+
+4. CONVERGED? If yes → stop. If no → go to step 2.
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{Key Takeaways}
+\phantomsection\label{key-takeaways}
+\begin{itemize}
+\item
+  \textbf{JMLE} estimates every person's \(\theta\) along with item
+  parameters \(\rightarrow\) inconsistent estimates (Neyman-Scott
+  problem)
+\item
+  \textbf{MMLE} integrates out \(\theta\) by assuming a population
+  distribution \(\rightarrow\) consistent item parameter estimates
+\item
+  \textbf{EM} handles the circular dependency: the E-step infers the
+  ability distribution, the M-step re-estimates item parameters, repeat
+\item
+  MMLE produces \textbf{item parameters only} --- person \(\theta\)
+  estimates require a separate step (MLE, MAP, or EAP)
+\end{itemize}
+\end{frame}
+
+\end{document}
