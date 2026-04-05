@@ -1,0 +1,22 @@
+# OS artifacts
+.DS_Store
+
+# R artifacts
+.Rhistory
+.RData
+.Rproj.user
+*_cache/
+
+# LaTeX artifacts
+*.log
+*.aux
+*.synctex.gz
+
+# Excluded folders
+NDE-Comps/
+NDE-Project/
+Claude-Comps/
+Baker and Kim Activities/
+Math Equations in R Markdown/
+Factor Analysis/
+Spearman/
