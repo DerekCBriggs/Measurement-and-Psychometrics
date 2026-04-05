@@ -1,0 +1,139 @@
+---
+title: "DIF Analysis Using Mantel-Haenzel"
+author: "Derek Briggs"
+date: "3/27/2022"
+output: html_document
+---
+
+
+
+## Data
+
+Once again we will use the CDE data, but this time I will also include the column that indicates gender of test taker. The variable "V78" in the CDE dataframe provides the gender for each student. A value of 1 = "F", 2 = "M". The default when using maentel haenszel in R is for the lower alphanumeric value (females) to be designated the "focal" category and the higher value (males) designated the "reference" category.
+
+```{r}
+setwd("~/Dropbox/Courses/EDUC 8720/Data Sets/MASC-CDE")  #adjust this line for your own wd
+fulldata<-read.fwf("CTBMathSci.rwo",widths=c(rep(1,76),3,1,6),skip=2)
+cde<-fulldata[,c(1:31,78)]
+names(cde)[32]<-"gender"
+```
+
+## Looking at Unconditional Item Performance by Gender
+
+We will start by examining the unconditional crosstab of item responses by gender. Do we notice items with significant differences in proportion correct?
+
+```{r}
+cross<-list(NULL) #This initializes a new list object
+for (i in 1:31){
+TAB<-table(cde[,i],cde$gender)
+cross[[i]]<-prop.table(TAB,2)
+}
+```
+I see differences in favor of males greater than 5% for items 7, 8, 20, 21, 26, 28, 29. 
+```{r}
+cross[c(7,8,20,21,26,28,29)]   
+```
+So they key question is this: are these items biased in favor of males (i.e., biased against females)? To answer this question we look for evidence of differential item functioning based on computation of the MH statistic.
+
+## Create an "Ability" Grouping Variable
+
+Let's examine the total score distribution to make sure we have large enough bins (sample size per value of totscore)
+
+```{r}
+totscore<-apply(cde[,1:31],1,sum)
+table(totscore)
+```
+
+To keep this example relatively simple I'll collapse scores for every 10 percentiles of the raw score distribution 0 to 9, 10 to 19, ..., 90 to 99. I use the function "quantile" for this purpose. This will leave me with 5 bins in the collapsed ability grouping variable I'm calling "diftot"
+
+```{r}
+x<-quantile(totscore,probs = seq(0, 1, 0.10))
+diftot<-matrix(0,1500,1)
+for(i in 1:length(x)-1) {
+diftot[(totscore>=x[i] & totscore<x[i+1])]<-i
+}
+diftot[totscore==max(totscore)]<-length(x)-1
+```
+
+Now we can compare the original and collapsed raw score distributions
+
+```{r}
+table(totscore)
+table(diftot)
+```
+
+## Computing and Interpreting the MH Statistic
+
+OK, now I'll show how to get an MH statistic, p-value and 95% CI for a given item.
+Remember that the null hypothesis is that the odds of solving the item correctly for the focal group (in this case focal = females) is same as for reference group (in this cases reference = males). If null hypothesis is true, the odds ratio should be 1. The alternative hypothesis is that it is not equal 1. If MH statistic is greater than 1, means females are more likely to solve item correctly relative to a comparable male. If less than 1, means females are less likely to solve item correctly than a comparable male.
+
+Here I run the MH for just the first item on the test
+
+```{r}
+mh<-mantelhaen.test(cde$V1, y = cde$gender, z = diftot, alternative = "two.sided", conf.level = 0.95)
+mh
+```
+
+Here the MH statistic is less than 1, which means females are actually *more* likely to solve this item correctly than comparable males, but the result is not statistically significant. 
+
+To create a list with all MH results for ALL items on the test.
+
+```{r}
+MH<-list(NULL)  #This initializes a new list object
+
+for (i in 1:31) {
+MH[[i]]<-mantelhaen.test(cde[,i], y = cde$gender, z = diftot, alternative = "two.sided", conf.level = 0.95)
+}
+```
+Let's check out the MH results for the 7 items we identified earlier with our unconditional crosstabs.
+```{r }
+MH[c(7,8,20,21,26,28,29)]
+```
+These results suggest that the we get a statistically significant MH statistic for items 20, 21, 28 and 29, but not for items 7, 8 and 26.
+
+Now in the code below I create a vector with just the MH statistic estimates for each of the 31 items and then I plot them as a histogram. Remember, the more the MH statistic diverges from 1, the greater the evidence of DIF against the focal group.
+
+```{r }
+mh.or<-rep(0,31)
+
+for (i in 1:31) {
+temp<-mantelhaen.test(cde[,i], y = cde$gender, z = diftot, alternative = "two.sided", conf.level = 0.95)
+mh.or[i]<-temp$estimate	
+}
+
+hist(mh.or)
+abline(v=1,col="blue")
+```
+
+## Transforming MH Statistic into the ETS Delta Statistic 
+
+```{r}
+delta<--2.35*log(mh.or)
+hist(delta)
+delta
+```
+
+* Negative values mean evidence of DIF working against the focal group (e.g., females find item harder than males of comparable ability)
+
+* Positive values mean evidence of DIF working against the reference group (e.g., males find item harder than females of comparable ability)
+
+ETS uses the following criteria to interpret the practical significance of DIF:
+
+* Level A: delta < 1 in absolute value [Feel free to use these.]
+* Level B: delta > 1 but < 1.5 in absolute value [Can use if you have to.]
+* Level C: delta > 1.5 in absolute value [Don't use unless content experts say so.]
+
+Let's see how many items we have that fall into each of these three levels
+
+```{r}
+sum(abs(delta)<=1) #Level A
+sum(abs(delta)>1 & abs(delta)<=1.5) # Level B
+sum(abs(delta)>=1.5) # Level C
+```
+
+It looks like we have 2 level B items we should look into for possible bias against female test-takers: 20 and 21. We had noticed 20 and 21 earlier There is also one level B item suggetive of possible bias against males: item  12. 
+
+Notice that items 28 and 29, even though they were statistically significant, do not have delta statistics large enough (in absolute value) to be considered practically significant, at least according to the ETS taxonomy.
+
+One last thing to pay attention to is whether the general direction of DIF is consistent in the subset of items that have been identified. It is possible that one could have a subset of level B items that all have statistically significant but not practically significant amounts of DIF. But if they are all in the same direction (e.g., focal group does worse than reference group), then this could lead to amplification of DIF at the test level. In contrast, if the direction is mixed, then even a subset of level C items could cancel out at the test level.
+

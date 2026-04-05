@@ -1,0 +1,165 @@
+---
+title: "DIF Exercises: Group 2"
+author: "Your Name Here"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Overview
+
+In this assignment you will apply the DIF detection methods covered in class to a **simulated** dataset. The data contain 2,000 examinees (1,000 per gender group), 28 dichotomous items, and a gender indicator variable (`Male`: 0 = Female, 1 = Male). Some of the items were simulated to contain DIF. Your task is to find them using both the Mantel-Haenszel approach and the `lordif` approach, and to compare the results.
+
+---
+
+# Exercise 1: Load and Explore the Data
+
+Load the dataset `DIF.data2.csv`. Examine the structure of the data using `head()`, `tail()`, `nrow()`, and `ncol()`. Convert the `Male` variable to a factor with labels "Female" and "Male".
+
+```{r exercise-1}
+# Load the data
+DIF.data <- read.csv("DIF.data2.csv")
+
+# Convert Male to a factor
+DIF.data$Male <- factor(DIF.data$Male, levels = c(0, 1),
+                        labels = c("Female", "Male"))
+
+# Explore the data (add your code below)
+
+```
+
+**Question 1a**: How many examinees are in each gender group?
+
+> *Your answer here.*
+
+**Question 1b**: Examine the unconditional proportions correct by gender for all 28 items. Which items show the largest unconditional differences between groups? List any items where the difference in proportion correct exceeds 5 percentage points.
+
+```{r exercise-1b}
+# Compute unconditional crosstabs by gender (add your code below)
+
+```
+
+> *Your answer here.*
+
+---
+
+# Exercise 2: DIF Analysis Using Mantel-Haenszel
+
+## 2a: Create the matching criterion
+
+Compute total scores for all examinees. Collapse total scores into decile bins using the `quantile()` function to create a grouping variable called `diftot`.
+
+```{r exercise-2a}
+# Compute total scores and create bins (add your code below)
+
+```
+
+## 2b: Compute MH statistics
+
+Compute the Mantel-Haenszel statistic for each of the 28 items. Extract the odds ratios and p-values.
+
+```{r exercise-2b}
+# Compute MH statistics for all items (add your code below)
+
+```
+
+## 2c: ETS delta classification
+
+Transform the MH odds ratios into ETS delta statistics. Classify each item as Level A, B, or C.
+
+```{r exercise-2c}
+# Compute delta statistics and classify (add your code below)
+
+```
+
+**Question 2**: Based on the MH analysis, which items would you flag for DIF? For each flagged item, indicate: (a) the direction of DIF (which group is disadvantaged), (b) whether the result is statistically significant, and (c) the ETS classification level.
+
+> *Your answer here.*
+
+---
+
+# Exercise 3: DIF Analysis Using lordif
+
+## 3a: Run lordif
+
+Reload the data (without the factor conversion) and run the `lordif` algorithm with the $\chi^2$ criterion at $\alpha$ = 0.01.
+
+```{r exercise-3a}
+library(lordif)
+
+# Reload data as numeric
+DIF.data <- read.csv("DIF.data2.csv")
+
+# Run lordif (add your code below)
+
+```
+
+## 3b: Examine and interpret results
+
+Use `print()` to examine the flagged items and their associated statistics.
+
+```{r exercise-3b}
+# Print lordif results (add your code below)
+
+```
+
+**Question 3a**: Which items were flagged by `lordif`? How many iterations did the algorithm require?
+
+> *Your answer here.*
+
+## 3c: Diagnostic plots
+
+Generate the diagnostic plots and examine them carefully.
+
+```{r exercise-3c, fig.width=8, fig.height=6, results='hide'}
+# Generate plots (add your code below)
+
+```
+
+**Question 3b**: For each flagged item, describe the nature of the DIF: Is it uniform or non-uniform? Which group is advantaged? How large is the effect?
+
+> *Your answer here.*
+
+**Question 3c**: Examine the test-level impact plots (TCCs). Does DIF appear to amplify or cancel at the test level?
+
+> *Your answer here.*
+
+**Question 3d**: Examine the individual-level impact plot. What is the typical magnitude of score change when DIF is accounted for? Is this large relative to the standard error of measurement?
+
+> *Your answer here.*
+
+---
+
+# Exercise 4: Compare Methods
+
+**Question 4a**: Create a table or list comparing which items were flagged by MH versus `lordif`. Which items were flagged by both methods? Which were flagged by only one?
+
+```{r exercise-4}
+# Compare results (add your code below)
+
+```
+
+> *Your answer here.*
+
+**Question 4b**: Why might the two methods disagree about certain items? Consider differences in the matching criterion, sensitivity to uniform vs. non-uniform DIF, and the iterative purification process.
+
+> *Your answer here.*
+
+**Question 4c**: Based on your full analysis, which items would you recommend for further content review by subject matter experts? Justify your recommendation.
+
+> *Your answer here.*
+
+---
+
+# Exercise 5: Reflection
+
+**Question 5**: Suppose you found strong evidence of DIF for several items, all favoring the same group. What are the implications for the validity of total score comparisons between groups? How would you advise a test developer who received these results?
+
+> *Your answer here.*
