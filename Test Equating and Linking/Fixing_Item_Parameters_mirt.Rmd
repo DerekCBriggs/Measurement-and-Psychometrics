@@ -1,0 +1,98 @@
+---
+title: "Fixing Item Parameters in mirt"
+author: "Derek Briggs"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+The purpose of this tutorial test is to show how to fix the values of various item parameters in mirt. There are lots of reasons you might want to do this--I'll get into this later. 
+
+## The starting values for item (and person) parameters in mirt
+
+For now let me just show how this works using the data from Embretson & Reise, Chapter 7, Tables 7.2 & 7.3.
+
+```{r }
+library(mirt)
+d<-read.csv("/Users/briggsd/Library/CloudStorage/Dropbox/Courses/EDUC 8720/Data/ER_data_tab7-2.csv")
+```
+
+Instead of calibrating the 2PL, I'm going to run the following command
+
+```{r }
+sv1 <- mirt(d, 1,  itemtype='2PL', pars = 'values',verbose=FALSE)
+```
+
+Let's have a look at the first 8 rows this object
+
+```{r }
+sv1[1:8,] 
+```
+* This table has 4 rows for each of the first 2 of 10 items in the ER data. 
+* Each row corresponds to a different item parameter that it would be possible to specify, and these are listed under the "name" column: a1 is item discrimination, d is location (in mirt's slope-intercept form), g is the lower asymptote (guessing parameter) and u is an upper asymptote (yes, there is actually a 4PL model). 
+* Notice that each item parameter also has a "value" column. These represent "starting values" before mirt invokes the MMLE/EM algorithm. Because we set itemtype to 2PL, the g and u parameters are set to 0 and 1.
+* The "lbound" and "ubound" columns specify the lower and upper bound for possible values of each parameter. Notice that right now there are no bounds on values that can be estimated for a1 and d.
+* The "est" column is very important. It indicates whether or not a given item and parameter combination will be estimated. Right now, this is set to TRUE for all a1 and d item parameters, but FALSE for all g and u parameters
+* Finally, we have the "prior_1" and "prior_2" columns. Right now these are all empty, but mirt gives us the flexibility to specify a unique Bayesian prior distribution for each item parameter.
+
+I also want to show you the last two rows of sv1
+
+```{r }
+sv1[41:42,] 
+```
+These are the only rows in the table that don't correspond to item parameters. Instead, these are the mean and variance of the person ability distribution (assuming we are specifying a normal distribution for ability, which is the default in mirt). Note that these values, by default are set to 0 and 1 to identify the scale.
+
+## Replicating the first column of ER's Table 7.3
+
+Now, in the ER example in Table 7.3, they are getting ML estimates ("scores") of theta for their 23 examinees after imposing different assumptions about the true values of the item parameters in each case. I want to show you how to replicate what they did with mirt by fixing values in the sv1 object I just introduced. 
+
+For the first column, all discrimination values are fixed at 1 and item difficulty goes -2 to 2 mostly in increments of .5 logits.
+
+```{r }
+#custom discrimination and easiness values
+sv1$value[sv1$name == 'a1'] <- rep(1,10) #Creates a vector of 10 1's
+sv1$value[sv1$name == 'd'] <- -1*c(-2,-1.5,-1,-.5,0,0,.5,1,1.5,2) #Multiplied by -1 to make this easiness
+#Fix the parameters to these starting values, do NOT estimate them
+sv1$est <- FALSE
+#Set pop mean and variance as free to be estimated
+sv1$est[sv1$name == 'MEAN_1'] <- TRUE
+sv1$est[sv1$name == 'COV_11'] <- TRUE
+```
+
+Do you see what we are doing here? Let's see how the sv1 object has changed 
+
+```{r }
+sv1[1:8,] 
+sv1[41:42,] 
+```
+When we fit the 2PL under these constraints, we aren't estimating any item parameters. The only thing getting estimated is the population mean and variance. Then we go straight to estimating thetas.
+
+```{r }
+fit.1 <- mirt(d, 1, pars = sv1,verbose= FALSE)
+coef.fit.1 <- coef(fit.1, IRTpars=TRUE, simplify=TRUE)
+coef.fit.1
+# The estimated population SD
+sqrt(coef(fit.1)$GroupPars[2]) 
+theta_mle1 <- fscores(fit.1, method = "ML", full.scores.SE = TRUE)
+round(theta_mle1,2)
+#An estimate of marginal reliability
+num <- mean(theta_mle1[,2]) #Average SEM of thetas
+den <- var(theta_mle1[,1]) #Total observed Variance of estimated thetas
+1 - num/den #Proportion of Observed Variance that is "real" variance
+sqrt((1 - num/den)*den) #The "true" standard deviation of theta (compare to estimated pop SD)
+```
+You can see that this replicates the results in columns for $\alpha=1$ in ER's Table 7.3.
+
+## For you to try
+
+For you to try on your own: use the approach above to replicate ER's columns for $\alpha=2$ and $\alpha=2.5$.
+
+## mirt.specify.partable in the R package sirt 
+
+There is an even nicer way to specify these values using a function in the package sirt called mirt.specify.partable. To see how it works, first install the sirt package, load it, and then type ?mirt.specify.partable for an illustration of how this works.
+

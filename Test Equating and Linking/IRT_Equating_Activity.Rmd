@@ -1,0 +1,260 @@
+---
+title: "In-Class Activity: IRT Equating with Anchor Items"
+author: "Derek Briggs & Claude Code (Opus 4.6)"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Overview
+
+In this activity you will work in small groups to put two test forms onto a common IRT scale. You have two test forms that share 10 anchor items, and each form was taken by a different group of students. Because `mirt` fixes the population mean and variance to 0 and 1 during calibration, the two sets of item parameter estimates are on different scales even though the anchor items are the same. Your job is to fix this using two different approaches:
+
+- **Part A**: Separate calibration with mean-mean linking constants
+- **Part B**: Anchored calibration
+
+You'll compare your results at the end to see how well each approach recovers the true Group 2 population mean ($\mu = 0.5$) and SD ($\sigma = 0.8$).
+
+---
+
+## Starter Code (Provided)
+
+The code below simulates data from a NEAT design and calibrates each form separately. **Run this section as-is** --- it gives you the objects you'll need for Parts A and B.
+
+```{r starter-simulation}
+library(mirt)
+library(dplyr)
+library(kableExtra)
+
+set.seed(17)
+
+# True item parameters (IRT parameterization)
+b1 <- rnorm(20)
+b2 <- c(b1[1:10], rnorm(10))
+a1 <- runif(20, .5, 2)
+a2 <- c(a1[1:10], runif(10, .5, 2))
+
+# Convert to slope-intercept for simdata
+d1 <- -a1 * b1
+d2 <- -a2 * b2
+
+# Person abilities
+th1 <- rnorm(500, 0, 1)       # Group 1: N(0, 1)
+th2 <- rnorm(500, 0.5, 0.8)   # Group 2: N(0.5, 0.8)
+
+# Simulate response data
+test1 <- as.data.frame(simdata(a = a1, d = d1, Theta = th1, itemtype = "dich"))
+test2 <- as.data.frame(simdata(a = a2, d = d2, Theta = th2, itemtype = "dich"))
+```
+
+```{r starter-calibration}
+# Separate 2PL calibrations
+fit1 <- mirt(test1, 1, itemtype = "2PL", verbose = FALSE)
+fit2 <- mirt(test2, 1, itemtype = "2PL", verbose = FALSE)
+
+# Extract item parameters in IRT form (col 1 = a, col 2 = b)
+items1 <- coef(fit1, IRTpars = TRUE, simplify = TRUE)$items
+items2 <- coef(fit2, IRTpars = TRUE, simplify = TRUE)$items
+```
+
+Before diving in, confirm that `mirt` has set the population mean and SD to 0 and 1 for both forms:
+
+```{r starter-check}
+cat("Form 1 -- Mean:", coef(fit1)$GroupPars[1],
+    " SD:", sqrt(coef(fit1)$GroupPars[2]), "\n")
+cat("Form 2 -- Mean:", coef(fit2)$GroupPars[1],
+    " SD:", sqrt(coef(fit2)$GroupPars[2]), "\n")
+```
+
+---
+
+## Step 0: Visualize the Scale Indeterminacy Problem
+
+Before trying to equate anything, let's see the problem. The 10 anchor items (items 1--10) have the **same true parameters** on both forms, but the two calibrations produce different estimates because they are on different scales.
+
+> **Task:** Create a scatter plot of the anchor item difficulty estimates from the two calibrations. Put `b` from the Form 1 calibration on the x-axis and `b` from the Form 2 calibration on the y-axis. Add a 45-degree reference line. Do the same for the anchor discrimination estimates.
+
+```{r step0-anchor-plots}
+# Your code here
+
+
+
+
+```
+
+> **Discussion questions:**
+>
+> - If the two calibrations were on the same scale, where would the points fall?
+> - What pattern do you see instead? What does this tell you about the relationship between the two scales?
+
+---
+
+## Part A: Separate Calibration with Mean-Mean Linking
+
+The idea behind separate calibration is straightforward: calibrate each form on its own, then use the anchor item estimates to compute linking constants $A$ and $B$ that map the Form 2 scale onto the Form 1 scale. The transformation is:
+
+$$\theta_1 = A \cdot \theta_2 + B$$
+
+which implies that anchor item parameters must satisfy:
+
+$$b_1 = A \cdot b_2 + B \qquad \text{and} \qquad a_1 = \frac{a_2}{A}$$
+
+### Task A1: Extract anchor item estimates
+
+> **Task:** Extract the discrimination (`a`) and difficulty (`b`) estimates for the 10 anchor items from each calibration.
+
+```{r taskA1}
+# Your code here
+
+
+
+
+```
+
+### Task A2: Compute A and B using the mean-mean method
+
+The mean-mean method uses two simple equations. From the relationship $a_1 = a_2 / A$, we can solve for $A$ using the means of the anchor discrimination parameters:
+
+$$A = \frac{\bar{a}_2}{\bar{a}_1}$$
+
+And from $b_1 = A \cdot b_2 + B$, we can solve for $B$ using the means of the anchor difficulty parameters:
+
+$$B = \bar{b}_1 - A \cdot \bar{b}_2$$
+
+> **Task:** Compute $A$ and $B$ from your anchor item estimates.
+
+```{r taskA2}
+# Your code here
+
+
+
+
+```
+
+### Task A3: Interpret A and B
+
+> **Discussion questions:**
+>
+> - Is $A$ greater or less than 1? What does this tell you about whether the Form 2 scale is stretched or compressed relative to Form 1?
+> - What is the sign of $B$? What does this tell you about the relative location of the two scales?
+> - Since `mirt` constrained the Group 2 distribution to $N(0, 1)$ during the Form 2 calibration, the transformation $\theta_1 = A \cdot \theta_2 + B$ implies that the Group 2 distribution on the Form 1 scale has mean = $B$ and SD = $A$. How close are these to the true generating values ($\mu = 0.5$, $\sigma = 0.8$)?
+
+### Task A4: Transform the Form 2 item parameters
+
+Now apply the linking constants to put **all 20** Form 2 item parameters onto the Form 1 scale:
+
+$$b_{2}^* = A \cdot b_{2} + B \qquad \text{and} \qquad a_{2}^* = \frac{a_{2}}{A}$$
+
+> **Task:** Compute the transformed Form 2 item parameters. Then make a scatter plot comparing the transformed anchor difficulties ($b_2^*$) to the Form 1 anchor difficulties ($b_1$). Are they closer to the 45-degree line now?
+
+```{r taskA4}
+# Your code here
+
+
+
+
+```
+
+---
+
+## Part B: Anchored Calibration
+
+In the anchored calibration approach, we skip the linking constants entirely. Instead, we re-calibrate Form 2 while **fixing** the anchor item parameters to the values estimated from the Form 1 calibration. Because the anchor items are pinned to the Form 1 scale, everything else---the unique item parameters and the population distribution---gets estimated on that same scale automatically.
+
+### Warm-up: The starting values table
+
+Before you can fix parameters, you need to understand the object that controls them. Recall from the *Fixing Item Parameters in mirt* tutorial that when you pass `pars = "values"` to `mirt`, you get back a data frame of starting values.
+
+> **Task:** Generate the starting values table for a 2PL calibration of `test2`. Examine the first 12 rows (items 1--3) and the last two rows (population parameters).
+
+```{r taskB-warmup}
+# Your code here
+
+
+
+
+```
+
+> **Discussion questions:**
+>
+> - What column tells `mirt` whether to estimate or fix a parameter?
+> - What parameterization does `mirt` use internally --- IRT ($a$, $b$) or slope-intercept ($a_1$, $d$)? How is `d` related to `a` and `b`?
+> - Which rows correspond to the 10 anchor items? Which rows correspond to `MEAN_1` and `COV_11`?
+
+### Task B1: Fix anchor items to Form 1 values
+
+Here's the plan: for the 10 anchor items, replace the `a1` and `d` starting values with the estimates from the **Form 1 calibration**, then set `est = FALSE` so `mirt` doesn't re-estimate them. For all other parameters (unique items 11--20), leave everything as-is. Finally, set `est = TRUE` for `MEAN_1` and `COV_11` so that the population mean and variance are free to be estimated.
+
+> **Task:** Modify the starting values table to implement this plan.
+>
+> **Hints:**
+>
+> - You already have the Form 1 anchor estimates in IRT form from `items1`. The `a` values can go directly into the `a1` slots. But for difficulty, you need to convert: `d = -a * b`.
+> - Think about which rows of the starting values table belong to the anchor items. The table has 4 rows per item (`a1`, `d`, `g`, `u`). How many rows do 10 items span?
+
+```{r taskB1}
+# Your code here
+
+
+
+
+```
+
+### Task B2: Fit the anchored model
+
+> **Task:** Pass your modified starting values table to `mirt` using the `pars` argument. Extract the estimated population mean and SD for Group 2.
+
+```{r taskB2}
+# Your code here
+
+
+
+
+```
+
+> **Discussion questions:**
+>
+> - How close are the estimated mean and SD to the true values ($\mu = 0.5$, $\sigma = 0.8$)?
+> - How do these results compare to what you got from the mean-mean method in Part A?
+
+### Task B3: Verify anchor items are fixed
+
+One way to confirm your anchored calibration worked is to check that the anchor item parameters from the anchored Form 2 calibration are identical to the Form 1 estimates.
+
+> **Task:** Extract the item parameters from your anchored calibration and compare the anchor items (1--10) to those from `fit1`. Are they exactly equal?
+
+```{r taskB3}
+# Your code here
+
+
+
+
+```
+
+---
+
+## Comparison
+
+> **Task:** Fill in the table below with your results. You can do this by hand or in code.
+
+| | Mean ($\theta$) | SD ($\theta$) |
+|:---|:---:|:---:|
+| True generating values | 0.500 | 0.800 |
+| Form 2 separate calibration (no transformation) | 0.000 | 1.000 |
+| Mean-mean linking | | |
+| Anchored calibration | | |
+
+> **Discussion questions:**
+>
+> 1. Which approach came closer to recovering the true Group 2 mean? The true SD?
+> 2. Why does the untransformed Form 2 calibration show a mean of 0 and SD of 1?
+> 3. In Part A, you had to compute $A$ and $B$ yourself. In Part B, `mirt` estimated the mean and variance directly. What are the advantages and disadvantages of each approach?
+> 4. Both approaches rely on the anchor items. What would happen if the anchor items were poorly chosen (e.g., very easy items, or items with low discrimination)?

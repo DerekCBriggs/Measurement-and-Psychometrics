@@ -1,0 +1,294 @@
+---
+title: "IRT Equating using mirt"
+author: "Derek Briggs"
+date: "2024-04-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+In a previous R Markdown "Fixing Item Parameters in mirt" I said there are a lot of reasons you might want to fix the values of item parameters instead of estimating them. In this Markdown I give an example of one of those reasons: equating the scores from two "forms" of the same test. You might need to do this when giving multiple forms of the same test for security reasons (to prevent cheating). Or you might want to do this because over time the items become well known to the testers, so each year you release some items (make them "public") and introduce new items. But you still may want to compare scores from one year to the next, and you want to make sure this is fair because it is possible that one test form is harder than the other.
+
+## Using IRT to Equate Two Test Forms
+
+The way this is typically done in practice is by embedding some common items in the two test forms. If these items show adequate fit to an IRT model, then they have the property of parameter invariance, which means that beyond estimation estimation error they should be the same--up to a linear transformation--regardless of the ability of the subjects used to calibrate them. We are going to take advantage of this property to equate our two test forms. There are three ways this could be accomplished
+
+1. Calibrate each test form separately ("separate calibration"), then use the two sets of estimates for your common item parameters to figure out the linking constants you would need to apply to express the theta values for form B on the same scale as the theta values for form A (or vice-versa). 
+
+2. Calibrate all the items on both test forms concurrently ("concurrent calibration") by treating the data as if it came from a design collected at one point in time from two different groups, with data on form-specific unique items treated as missing at random.
+
+3. Calibrate the items on form A, and the fix the common items on form B to the values estimated for form A. This is known as an "anchored calibration."
+
+## Simulating a Non-Equivalent Group Anchor Test (NEAT) Design
+
+Let's start by simulating data from two 20 test forms "1" and "2" that have been collected using a NEAT design such that the first 10 items on each form are the same, but the second 10 are unique. In total then, there are 20 unique items across the two test forms, and 10 common, for a total of 30 distinct items. For the purpose of this illustration let's also assume that there are 500 students taking each test form, but that students taking form 1 of the test have lower thetas on average and more variability than students taking form 2 of the test.
+
+### A Disclaimer
+
+I am taking a somewhat lazy approach in generating item parameters for the data I'm about to simulate in that I'm not trying to using any known test item parameter distributions as a target. In practice, item difficulty and discrimination tend to be positively correlated. But in what follows I am treating them as independent. Also, in the equating literature there is a key assumption that the two forms being equated have about the same reliability, and as we will see I have actually purposefully violated this assumption. Long story short, take the simulated data with a grain of salt, I am using them for didactic purposes to show to enact IRT equating using mirt.
+
+
+```{r generate pars}
+library(mirt)
+library(dplyr)
+# use set.seed command with fixed integer so we get the same random draws each time we run this
+set.seed(17)
+# 20 random draws of item difficulty parameters from standard normal distribution for form 1
+b1<-rnorm(20)
+# First 10 items for form 2 have same diff as form 1 +
+# 10 random draws of item difficulty for standard normal distribution for form 2
+b2<-c(b1[1:10],rnorm(10))
+#Same approach for discrimination parameters, draw these at random from a uniform distribution [.5, 2]
+a1<-runif(20,.5,2)
+a2<-c(a1[1:10],runif(10,.5,2))
+#Convert IRT difficulty parameterization to mirt slope-intercept parameterization
+d1<--a1*b1
+d2<--a2*b2
+# 200 Random draws of theta values from two different normal distributions
+th1<-rnorm(500,0,1)
+th2<-rnorm(500,.5,.8)
+```
+
+Now we are ready to simulate two matrix of 500 by 20 dichotomous item responses using the `simdata` function from the `mirt` package.
+
+```{r }
+test1<-as.data.frame(simdata(a=a1,d=d1,Theta=th1,itemtype='dich'))
+test2<-as.data.frame(simdata(a=a2,d=d2,Theta=th2,itemtype='dich'))
+```
+
+Let's look at our descriptive statistics for these two simulated data sets
+
+```{r }
+it1<-itemstats(test1)
+it2<-itemstats(test2)
+it1$overall
+it2$overall
+it1$itemstats
+it2$itemstats
+```
+Some things to notice
+
+* Test form 1 is more reliable than test form 2 
+* The mean total correct for test 1 is less than the mean for test 2
+* The sd total correct for test 1 is higher than it is for test 2
+* Even though the first 10 items on both tests have the same difficulty and discrimination in my setup, they look "harder" on test 1 relative to test 2 when looking at the classical item statistics.
+
+None of this should come from a surprise given the way I generated item and person parameters for these two test forms.
+
+
+## Calibrating the items on each test form separately using the 2PLM in mirt
+
+```{r }
+fit1<-mirt(test1,1,itemtype="2PL",verbose=FALSE)
+coef(fit1,IRTpars=TRUE,simplify=TRUE)
+fit2<-mirt(test2,1,itemtype="2PL",verbose=FALSE)
+coef(fit2,IRTpars=TRUE,simplify=TRUE)
+#Extract item parameter estimates
+items1<-coef(fit1,IRTpars=TRUE,simplify=TRUE)$items
+items2<-coef(fit2,IRTpars=TRUE,simplify=TRUE)$items
+```
+
+Now, we know that the "truth" based on the setup to our simulation is that the thetas of students taking test 1 are lower on average and less variable than the thetas for students taking test 2. But let's have a look at the mean and SD of our two population distributions
+
+```{r }
+library(kableExtra)
+comp <- data.frame(
+  Variable = c("Test 1","Test 2"),
+  Mean = c(coef(fit1)$GroupPars[1],coef(fit2)$GroupPars[1]),
+  SD = c(sqrt(coef(fit1)$GroupPars[2]),sqrt(coef(fit2)$GroupPars[2]))
+)
+comp %>%
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
+```
+
+What happened? Well, when mirt gets item parameter estimates it automatically anchors the logit scale by fixing the mean and SD of the person population distribution to be 0 and 1. Now as it turns out, this is in fact the actual mean and SD for the sample of 500 students we generated for test 1. But it is NOT the mean and SD we generated for test 2. While it might seem like the two sets of thetas are on the same scale, they are not. Let's compare the estimated item difficulty and discrimination values for the first 10 items.
+
+```{r }
+#Difficulty Parameters
+cor(items1[1:10,2],items2[1:10,2])
+plot(items1[1:10,2],items2[1:10,2],
+     xlab="diff from test 1",ylab="diff from test 2",
+     xlim=c(-4,2),ylim=c(-4,2))
+abline(b=1,a=0)
+#Discrimination Parameters
+cor(items1[1:10,1],items2[1:10,1])
+plot(items1[1:10,1],items2[1:10,1],
+     xlab="disc from test 1",ylab="disc from test 2",
+     xlim=c(.2,1.6),ylim=c(.2,1.6))
+abline(b=1,a=0)
+```
+
+The good news here is that the two sets of item difficulty and discrimination parameter estimates are very strongly correlated, which suggests support for the property of parameter invariance. But the two sets of parameter estimates are not on the same scale. 
+
+## Equating the two tests with an anchored calibration
+
+Let's try the 3rd of the three IRT equating approaches I presented at the outset. We are going to re-calibrate the items for test 2, but this time we will anchor the first 10 items to have the same difficulty and discrimination values we estimated for test 1.
+
+```{r }
+#discrimination parameters for items 1-10 for test 1
+anchor_a <- items1[1:10,1] 
+#difficulty parameters of items 1-10 for test 1 converted into an mirt "d" location parameter
+anchor_d <- -anchor_a*items1[1:10,2]
+#Get starting values for test 2 item parameters
+sv2 <- mirt(test2, 1,  itemtype='2PL', pars = 'values',verbose=FALSE)
+#Fix first 10 item slope and location parameters
+sv2$value[sv2$name== 'a1' & sv2$parnum < 41] <- anchor_a
+sv2$value[sv2$name== 'd' & sv2$parnum < 41] <- anchor_d
+sv2$est[sv2$parnum < 41] <- FALSE
+#Set pop mean and variance as free to be estimated
+sv2$est[sv2$name == 'MEAN_1'] <- TRUE
+sv2$est[sv2$name == 'COV_11'] <- TRUE
+#Now fit the 2PL
+fit2.a<-mirt(test2,1,pars=sv2,verbose=FALSE)
+coef(fit2.a,IRTpars=TRUE,simplify=TRUE)
+items2.a<-coef(fit2.a,IRTpars=TRUE,simplify=TRUE)$items
+```
+
+Now let's compare the mean and SD of our two empirical theta distributions after the second scale has been equated to the first.
+
+```{r echo=FALSE}
+comp <- data.frame(
+  Variable = c("Test 1","Test 2 Adjusted"),
+  Mean = c(coef(fit1)$GroupPars[1],coef(fit2.a)$GroupPars[1]),
+  SD = c(sqrt(coef(fit1)$GroupPars[2]),sqrt(coef(fit2.a)$GroupPars[2]))
+)
+comp %>%
+  kable("html") %>%
+  kable_styling(full_width = FALSE)
+```
+
+You can see we now pretty close to the true generating values of the thetas for the hypothetical students taking test 2. And we can also check to see that the item parameter estimates for the 10 common items on each test are the same--we forced this to be so!
+
+```{r common adjusted}
+#Difficulty Parameters
+cor(items1[1:10,2],items2.a[1:10,2])
+plot(items1[1:10,2],items2.a[1:10,2],
+     xlab="diff from test 1",ylab="diff from test 2 adjusted",
+     xlim=c(-4,2),ylim=c(-4,2))
+abline(b=1,a=0)
+#Discrimination Parameters
+cor(items1[1:10,1],items2.a[1:10,1])
+plot(items1[1:10,1],items2.a[1:10,1],
+     xlab="disc from test 1",ylab="disc from test 2 adjusted")
+abline(b=1,a=0)
+```
+
+The more interesting comparison is of the unique items (11-20) on test2 before and after anchoring the scale with the item parameter estimates for items 1-10 from test 1.
+
+```{r test 2 unique}
+#Difficulty Parameters
+cor(items2[11:20,2],items2.a[11:20,2])
+plot(items2[11:20,2],items2.a[11:20,2],
+     xlab="diff from test 2 original",ylab="diff from test 2 adjusted",
+     xlim=c(-4,2),ylim=c(-4,2))
+abline(b=1,a=0)
+#Discrimination Parameters
+cor(items2[11:20,1],items2.a[11:20,1])
+plot(items2[11:20,1],items2.a[11:20,1],
+     xlab="disc from test 1 original",ylab="disc from test 2 adjusted",
+     xlim=c(.2,2.2),ylim=c(.2,2.2))
+abline(b=1,a=0)
+```
+
+With the two test forms now equated, we could now get estimates of theta from each and they would be comparable.
+
+```{r }
+th1.eap<-fscores(fit1)
+th2.a.eap<-fscores(fit2.a)
+par(mfrow=c(1,2))
+hist(th1.eap,xlim=c(-2,3),main="Test 1",col="blue")
+hist(th2.a.eap,xlim=c(-2,3),main="Test 2",col="darkgreen")  
+```
+
+### On Your Own
+
+1. Does this approach and results make sense to you? Give it some thought.
+2. Compare the estimated and item parameters to their generating values--how did we do?
+3. Should we be concerned that we are underestimating the true SD of the theta distribution we generated for students taking test 2?
+4. Would we do better if we had more unique items? Better items in some sense?
+
+## Concurrent Calibration
+
+The first thing we need to do is to restructure the data from the two tests into a single dataframe. 
+
+```{r }
+test1<-as.data.frame(simdata(a=a1,d=d1,Theta=th1,itemtype='dich'))
+test2<-as.data.frame(simdata(a=a2,d=d2,Theta=th2,itemtype='dich'))
+# Get the item names of the last 10 columns
+last_10_items <- colnames(test2)[(ncol(test2) - 9):ncol(test2)]
+# Define new item names to they are distinct from items in test1 
+new_labels <- paste0("Item_", (ncol(test2) + 1):(ncol(test2) + 10))
+# Update the item labels for test2
+colnames(test2)[(ncol(test2) - 9):ncol(test2)] <- new_labels
+#Create a test-group variable so we can tell cases apart after merge
+group<-c(rep("Test1",500),rep("Test2",500))
+test1<-mutate(test1,group=1)
+test2<-mutate(test2,group=2)
+#Define common items that are basis for merge
+common_items<-paste0("Item_", 1:10)
+# Merge the two tests on using common items and group var columns
+full_dat<-merge(test1,test2, by = c("group",common_items), all.x= TRUE, all.y = TRUE)
+dat<-full_dat[,-1]
+```
+
+Notice the structure of the new dataframe `full_dat`. For the first 500 cases (students taking test 1), we have observations for items 1-20 (observations for items 21-30 are missing by design) and for the next 500 cases (students taking test 2), we have observations for items 11-30 (observations for items 1-10 are missing by design). Now we are ready to do a concurrent multigroup calibration using mirt.
+
+```{r }
+cc<-multipleGroup(dat,model=1, group = group, itemtype = '2PL',
+                  invariance = c('intercepts','slopes','free_var','free_means'),verbose=FALSE)
+
+out.cc<-coef(cc, simplify=TRUE,IRTpars=TRUE)
+out.cc
+#Item Parameters ans Pop Estimates for Students Taking Test 1
+#out.cc$Test1$items
+#Item Parameters ans Pop Estimates for Students Taking Test 1
+#out.cc$Test2$items
+```
+
+In the multigroup concurrent calibration, the mean and variance of the reference group (test1 in this case) is set to be 0 and 1, while mean and variance of the focus group is freely estimated. You can see these in the results above, and can also call them directly by invoking `out.cc$Test2$means` (population mean) and `out.cc$Test2$cov` (population variance). The conclusions we draw about the mean and variance of students taking test 2 vs test 1 is very similar to what we found when doing the anchored calibration approach. Let's compare the item parameters we get from our concurrent calibration to the ones we got from doing two separate calibrations of test 1 and test 2 earlier.
+
+```{r }
+#Compare common item difficulty estimates
+plot(items1[1:10,2],out.cc$Test1$items[1:10,2],xlab="Separate",ylab="Concurrent",
+     main="Common Item Diff: Test 1",
+     xlim=c(-3,1.5),ylim=c(-3,1.5))
+abline(b=1,a=0)
+plot(items2[1:10,2],out.cc$Test1$items[1:10,2],xlab="Separate",ylab="Concurrent",
+     main="Common Item Diff: Test 2",
+     xlim=c(-3,1.5),ylim=c(-3,1.5))
+abline(b=1,a=0)
+#Compare common item discrimination estimates
+plot(items1[1:10,1],out.cc$Test1$items[1:10,1],xlab="Separate",ylab="Concurrent",
+     main="Common Item Disc: Test 1",
+     xlim=c(.4,1.8),ylim=c(.4,1.8))
+abline(b=1,a=0)
+plot(items2[1:10,1],out.cc$Test1$items[1:10,1],xlab="Separate",ylab="Concurrent",
+     main="Common Item Disc: Test 2",
+     xlim=c(.4,1.8),ylim=c(.4,1.8))
+abline(b=1,a=0)
+#Compare test-specific item difficulty estimates
+plot(items1[,2],out.cc$Test1$items[1:20,2],xlab="Separate",ylab="Concurrent",
+     main="Unique Item Diff: Test 1",
+     xlim=c(-1,2),ylim=c(-1,2))
+abline(b=1,a=0)
+plot(items2[,2],out.cc$Test2$items[c(1:10,21:30),2],xlab="Separate",ylab="Concurrent",
+     main="Unique Item Diff: Test 2",
+     xlim=c(-1,2),ylim=c(-1,2))
+abline(b=1,a=0)
+#Compare test-specific item discrimination estimates
+plot(items1[,1],out.cc$Test1$items[1:20,1],xlab="Separate",ylab="Concurrent",
+     main="Unique Item Disc: Test 1",
+     xlim=c(.2,2),ylim=c(.2,2))
+abline(b=1,a=0)
+plot(items2[,1],out.cc$Test2$items[c(1:10,21:30),1],xlab="Separate",ylab="Concurrent",
+     main="Unique Item Disc: Test 2",
+     xlim=c(.2,2),ylim=c(.2,2))
+abline(b=1,a=0)
+```
+
+

@@ -1,0 +1,745 @@
+---
+title: "Foundations of Test Equating and Linking"
+author: "Derek Briggs with Claude Code (Sonnet 4.6)"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Introduction
+
+In testing programs that administer tests on a periodic basis, an argument needs to be advanced that the same construct is being measured across different occasions, different test forms, and different cohorts of examinees. When the College Board releases a new SAT test form each year, it needs to ensure that a score of 650 in that year means the same thing as a score of 650 the year before. A certification board that administers multiple versions of an exam for security reasons has to ensure that candidates are not advantaged or disadvantaged by which version they happened to receive. These concerns---about fairness, score validity, and meaningful comparison---motivate the practice of **test equating and linking**.
+
+This document provides the conceptual and practical foundation for understanding how equating works. It covers three areas:
+
+1. **Terminology and requirements** for test equating and linking, so you can use these concepts precisely
+2. **Classical methods** of equating, including linear and equipercentile approaches, implemented using a simulated NEAT design in base R
+3. **IRT-based linking**, focusing on the scale indeterminacy problem and three common approaches for resolving it: separate calibration, concurrent calibration, and anchored calibration
+
+The simulation used throughout this document deliberately mirrors the one in the companion tutorial *IRT Equating Using mirt*. By the time you work through that document, the data structure and problem setup will be familiar.
+
+**Prerequisites:** This document assumes you're comfortable with the basics of item response theory, including the 2-parameter logistic model, parameter invariance, and calibration using the `mirt` package in R.
+
+---
+
+# Key Concepts and Terminology
+
+## Equating, Linking, Scaling, and Concordance
+
+These four terms are often confused because they all involve placing scores from different tests onto a common scale. The distinctions are important.
+
+**Equating** is the most demanding form of score comparability. For two test forms to be equated, they must (a) measure the same construct, (b) have the same reliability, and (c) have been designed to be interchangeable. After equating, a score on Form X and its equated equivalent on Form Y carry the same meaning. Lord (1980) articulated several formal requirements for equating; these are summarized below.
+
+**Linking** is a broader term that applies when two scores are placed on a common scale but the conditions for equating are not fully met. For example, placing scores from tests at different grade levels on a common developmental scale is a form of *linking*, not equating, because the tests differ in content, difficulty, and construct coverage. (Later we'll find out that this example gets referred to in the literature as *vertical scaling*.) Linking acknowledges a statistical relationship but does not claim interchangeability.
+
+**Scaling** refers to the process of constructing a score scale for a single test. For example, converting a raw number-correct score to a scale score (e.g., 200--800) is a scaling procedure. It is not equating.
+
+**Concordance** (sometimes called projection) refers to statistical relationships between scores on tests that measure *different constructs* (e.g., SAT and ACT composite scores). A concordance table allows rough comparisons but cannot support claims of interchangeability.
+
+In this document, we use *equating* when the technical requirements are approximately met (as in multiple parallel forms of the same test) and *linking* as the broader concept. When discussing IRT methods specifically, the term *IRT linking* is common even when the goal is score equating.
+
+## Requirements for Equating
+
+Lord (1980) proposed five requirements for a proper equating. These are worth knowing because they tell you when equating is---and is not---appropriate.
+
+1. **Same construct.** Both forms must measure the same construct. If Form X includes a writing section and Form Y does not, equating is not appropriate.
+
+2. **Equity.** After equating, it should not matter (in expectation) which form a student took. A student who takes the easier form and receives a higher raw score should have their equated score adjusted downward so that the equated score reflects ability, not form difficulty.
+
+3. **Symmetry.** If Form X is equated to Form Y, then the inverse relationship should hold: equating Form Y to Form X should give the reverse transformation.
+
+4. **Group invariance.** The equating function should produce the same results regardless of which subgroup of examinees is used to estimate it. If the equating function differs for high-ability vs. low-ability examinees, it is not doing its job.
+
+5. **Observed score equating.** Classical equating is defined in terms of observed scores (i.e., number correct or scaled scores), not latent scores. This distinguishes it from IRT-based linking, which operates on the latent ($\theta$) scale.
+
+These requirements are demanding, and in practice they are approximated rather than perfectly satisfied. Whether approximations are acceptable depends on the stakes and intended use of the scores.
+
+---
+
+# Data Collection Designs
+
+The choice of equating method depends on the data collection design---who took which form, and whether any items were shared. There are three main designs.
+
+## Equivalent Groups Design
+
+In the **equivalent groups (EG)** design, examinees are randomly assigned to Form X or Form Y. Because random assignment makes the two groups equivalent in ability (in expectation), any mean difference in scores reflects a difference in form difficulty. This is a strong and clean design but requires that random assignment is feasible---which is often not the case in operational testing.
+
+## Single Group and Counterbalanced Designs
+
+In the **single group (SG)** design, all examinees take both forms. This eliminates group differences entirely. The main risk is order effects: the second form may appear easier simply because examinees have warmed up, or harder because they are fatigued. The **counterbalanced** design addresses this by giving half the examinees Form X first and the other half Form Y first, allowing order effects to be estimated.
+
+## Non-Equivalent Groups with Anchor Test (NEAT)
+
+The **non-equivalent groups with anchor test (NEAT)** design is the most common in operational testing. Its structure is:
+
+- **Group 1** takes **Form X** plus a set of **anchor items** (also called *common items* or the *internal/external anchor*)
+- **Group 2** takes **Form Y** plus the same anchor items
+- Groups 1 and 2 are **not** assumed to be equivalent in ability
+
+The anchor items appear on both forms and serve as a statistical bridge. Because all examinees responded to the anchor items, the anchor scores allow us to adjust for ability differences between the groups.
+
+The quality of a NEAT equating depends heavily on the anchor items. Anchors should:
+
+- Represent the content and statistical properties of the full test (a *mini-test*)
+- Make up at least 20% of the total test length (a common guideline)
+- Function consistently across both groups (no differential item functioning)
+
+**All examples in this document use a NEAT design**, consistent with the companion tutorial.
+
+---
+
+# Simulating a NEAT Design
+
+We begin by setting up a simulated dataset. This uses the same parameters and random seed as the companion document *IRT Equating Using mirt*, so you will recognize this setup when you encounter it again.
+
+**Design summary:**
+
+- Two test forms, each with 20 items
+- Items 1--10 are anchor items (same true parameters on both forms)
+- Items 11--20 are unique to each form
+- Group 1 ($n = 500$) takes Form 1; true ability $\theta_1 \sim N(0, 1)$
+- Group 2 ($n = 500$) takes Form 2; true ability $\theta_2 \sim N(0.5, 0.64)$
+
+Group 2 students have higher average ability and less variability than Group 1 students. This non-equivalence is the central challenge that equating must address.
+
+```{r simulate}
+library(mirt)
+library(dplyr)
+library(kableExtra)
+
+set.seed(17)
+
+# Item difficulty parameters (IRT b-parameterization)
+b1 <- rnorm(20)                       # Form 1: 20 difficulty parameters
+b2 <- c(b1[1:10], rnorm(10))         # Form 2: same anchor difficulties + 10 unique
+
+# Item discrimination parameters (IRT a-parameterization)
+a1 <- runif(20, .5, 2)
+a2 <- c(a1[1:10], runif(10, .5, 2)) # Form 2: same anchor discriminations + 10 unique
+
+# Convert to mirt slope-intercept parameterization
+d1 <- -a1 * b1
+d2 <- -a2 * b2
+
+# True person abilities
+th1 <- rnorm(500, 0, 1)       # Group 1: N(0, 1)
+th2 <- rnorm(500, 0.5, 0.8)  # Group 2: N(0.5, 0.8) -- higher mean, less spread
+
+# Simulate item response matrices
+test1 <- as.data.frame(simdata(a = a1, d = d1, Theta = th1, itemtype = 'dich'))
+test2 <- as.data.frame(simdata(a = a2, d = d2, Theta = th2, itemtype = 'dich'))
+```
+
+Now compute total scores and anchor scores for each group.
+
+```{r scores}
+# Total number-correct scores (range: 0-20)
+total1 <- rowSums(test1)
+total2 <- rowSums(test2)
+
+# Anchor item scores (items 1-10, range: 0-10)
+anchor1 <- rowSums(test1[, 1:10])
+anchor2 <- rowSums(test2[, 1:10])
+
+# Descriptive statistics
+desc <- data.frame(
+  Statistic = c("Mean total score", "SD total score",
+                "Mean anchor score", "SD anchor score",
+                "True ability mean (θ)", "True ability SD (θ)"),
+  Form1_Grp1 = c(round(mean(total1), 2), round(sd(total1), 2),
+                 round(mean(anchor1), 2), round(sd(anchor1), 2),
+                 0.0, 1.0),
+  Form2_Grp2 = c(round(mean(total2), 2), round(sd(total2), 2),
+                 round(mean(anchor2), 2), round(sd(anchor2), 2),
+                 0.5, 0.8)
+)
+
+kable(desc, col.names = c("Statistic", "Form 1 (Group 1)", "Form 2 (Group 2)"),
+      align = "lcc") |>
+  kable_styling(full_width = FALSE)
+```
+
+Group 2 students score higher on average on both the total test and the anchor items, which is consistent with their higher true ability. Any raw comparison of Form 1 and Form 2 score distributions confounds form difficulty with group ability---equating is designed to disentangle these.
+
+---
+
+# Classical Equating Methods
+
+Classical equating methods operate on **number-correct scores**. They ask: if a student earns a score of $x$ on Form 1, what score on Form 2 represents the same level of performance?
+
+We write this equated equivalent as $eY(x)$---standard notation in the equating literature, where $Y$ indicates the target scale (Form 2) and $e$ signals that the result is an equated score rather than a raw score. The equating function $eY(x)$ maps every possible Form 1 score to its Form 2 equivalent.
+
+The three classical approaches covered here---mean, linear, and equipercentile equating---differ in how much of the score distribution they use to define "same level of performance."
+
+## Linear Equating
+
+We will consider three classical equating methods in order of increasing complexity: mean equating, linear equating, and equipercentile equating.
+
+### Mean Equating
+
+**Mean equating** is the simplest possible approach. It assumes the only difference between the two forms is their average difficulty. A score on Form 1 is adjusted by the mean difference between the two forms:
+
+$$eY(x) = x + (\mu_Y - \mu_X)$$
+
+If Form 2 is harder on average (students need to perform better on Form 1 to match a given Form 2 score), then $\mu_Y < \mu_X$ and Form 1 scores are adjusted downward. Mean equating is rarely used in practice because it assumes the standard deviations of the two forms are identical---an assumption that almost never holds exactly.
+
+**Chained mean equating under NEAT.** With non-equivalent groups, we chain through the anchor in two steps:
+
+*Step 1 (Group 1):* Find the anchor equivalent of Form 1 score $x$ by shifting by the mean difference between anchor and total scores in Group 1:
+$$a(x) = x + (\mu_{A_1} - \mu_X)$$
+
+*Step 2 (Group 2):* Find the Form 2 equivalent of that anchor score by shifting by the mean difference between Form 2 total and anchor scores in Group 2:
+$$eY(a) = a + (\mu_Y - \mu_{A_2})$$
+
+Substituting Step 1 into Step 2:
+$$eY(x) = x + (\mu_{A_1} - \mu_X) + (\mu_Y - \mu_{A_2})$$
+
+The equated Form 2 score is just the Form 1 score shifted by a constant.
+
+### Linear Equating
+
+**Linear equating** goes further by accounting for differences in both the mean *and* spread of the two score distributions. The key idea is that a score on Form 1 should be equated to the Form 2 score that sits at the *same relative position* in its distribution. Formally, we set the two z-scores equal:
+
+$$\frac{x - \mu_X}{\sigma_X} = \frac{eY(x) - \mu_Y}{\sigma_Y}$$
+
+Solving for $eY(x)$:
+
+$$eY(x) = \mu_Y + \frac{\sigma_Y}{\sigma_X}(x - \mu_X)$$
+
+This can be written as a linear function with two linking constants:
+
+$$eY(x) = A \cdot x + B, \quad \text{where} \quad A = \frac{\sigma_Y}{\sigma_X}, \quad B = \mu_Y - A \cdot \mu_X$$
+
+The constant $A$ rescales Form 1 scores to account for differences in spread; $B$ shifts them to account for differences in the mean. Note that when $A = 1$, linear equating reduces to mean equating.
+
+**Chained linear equating under NEAT.** With non-equivalent groups, we apply the same z-score logic twice, using the anchor as a bridge.
+
+*Step 1 (Group 1):* Set the Form 1 z-score equal to the anchor z-score, using Group 1's statistics, and solve for the anchor equivalent $a$:
+$$\frac{x - \mu_X}{\sigma_X} = \frac{a - \mu_{A_1}}{\sigma_{A_1}} \quad \Rightarrow \quad a = \mu_{A_1} + \frac{\sigma_{A_1}}{\sigma_X}(x - \mu_X)$$
+
+*Step 2 (Group 2):* Set the anchor z-score equal to the Form 2 z-score, using Group 2's statistics, and solve for $eY(x)$:
+$$\frac{a - \mu_{A_2}}{\sigma_{A_2}} = \frac{eY - \mu_Y}{\sigma_Y} \quad \Rightarrow \quad eY = \mu_Y + \frac{\sigma_Y}{\sigma_{A_2}}(a - \mu_{A_2})$$
+
+Substituting Step 1 into Step 2 gives $eY(x) = A \cdot x + B$ with:
+$$A = \frac{\sigma_Y \cdot \sigma_{A_1}}{\sigma_{A_2} \cdot \sigma_X}, \qquad B = \mu_Y + \frac{\sigma_Y}{\sigma_{A_2}}(\mu_{A_1} - \mu_{A_2}) - A \cdot \mu_X$$
+
+```{r linear-equating}
+# Distributional statistics
+mu_X  <- mean(total1);  sd_X  <- sd(total1)
+mu_Y  <- mean(total2);  sd_Y  <- sd(total2)
+mu_A1 <- mean(anchor1); sd_A1 <- sd(anchor1)
+mu_A2 <- mean(anchor2); sd_A2 <- sd(anchor2)
+
+# Chained mean equating constant
+int_mean   <- (mu_A1 - mu_X) + (mu_Y - mu_A2)
+
+# Chained linear equating constants (A and B)
+A_lin <- (sd_Y * sd_A1) / (sd_A2 * sd_X)
+B_lin <- mu_Y + (sd_Y / sd_A2) * (mu_A1 - mu_A2) - A_lin * mu_X
+
+cat("Mean equating   -- shift:", round(int_mean, 4), "\n")
+cat("Linear equating -- A:", round(A_lin, 4), " B:", round(B_lin, 4), "\n")
+
+# Equated Form 2 equivalents for all possible Form 1 scores
+x_vals       <- 0:20
+equated_mean <- x_vals + int_mean
+equated_lin  <- A_lin * x_vals + B_lin
+```
+
+The constant $A$ greater than 1 indicates Form 1 score units are smaller relative to Form 2 (Form 1 has more spread); $A$ less than 1 indicates the reverse. The constant $B$ captures the mean-level shift after rescaling.
+
+```{r linear-plot}
+par(mar = c(4, 4, 3, 1))
+plot(x_vals, equated_lin, type = "l", lwd = 2, col = "steelblue",
+     xlab = "Form 1 Score (x)", ylab = "Equated Form 2 Score  eY(x)",
+     main = "Chained Mean and Linear Equating: Form 1 to Form 2",
+     xlim = c(0, 20), ylim = c(0, 20))
+lines(x_vals, equated_mean, lwd = 2, col = "darkorange", lty = 2)
+abline(a = 0, b = 1, lty = 3, col = "gray60")
+legend("topleft",
+       legend = c("Linear equating", "Mean equating", "Identity (no adjustment)"),
+       col = c("steelblue", "darkorange", "gray60"),
+       lty = c(1, 2, 3), lwd = c(2, 2, 1), bty = "n")
+```
+
+The identity line ($eY(x) = x$) shows what would happen with no equating. The mean equating line is parallel to the identity line (constant shift); linear equating has a different slope, reflecting the adjustment for differences in spread as well as the mean. When the two methods agree closely, it suggests the two forms have similar score distributions.
+
+## Equipercentile Equating
+
+**Equipercentile equating** is more general than linear equating: instead of matching only means and standard deviations, it matches entire distributions. A Form 1 score $x$ is equated to the Form 2 score that has the *same percentile rank* in its distribution. Formally, scores $x$ and $y^*$ are **equipercentile equivalents** when:
+$$F_X(x) = F_Y(y^*)$$
+where $F_X$ and $F_Y$ are the cumulative distribution functions (CDFs) of scores on Form 1 and Form 2. The equating function is therefore:
+$$eY(x) = F_Y^{-1}(F_X(x))$$
+where $F_Y^{-1}$ is the quantile function (inverse CDF) of the Form 2 distribution. Because this maps percentile ranks directly, equipercentile equating can accommodate any shape of score distribution---not just differences in mean and SD.
+
+**Chained equipercentile equating under NEAT.** As with chained linear equating, we bridge through the anchor in two steps:
+
+1. In Group 1: find the anchor score that has the same percentile rank as Form 1 score $x$
+2. In Group 2: find the Form 2 score that has the same percentile rank as that anchor score
+
+The chain gives: Form 1 score $\rightarrow$ $F_X(x)$ $\rightarrow$ anchor equivalent $\rightarrow$ $F_{A_2}(\cdot)$ $\rightarrow$ Form 2 equivalent.
+
+Because we are working with discrete score distributions (integer scores), the resulting equating function is also discrete. In operational settings, **smoothing** is applied to reduce the irregularities that arise from sampling variability in the empirical CDFs. Two common approaches are:
+
+- **Pre-smoothing:** Fit a log-linear model to the observed score frequencies before equating. The model can be constrained to reproduce a specified number of score distribution moments exactly, creating a smooth approximation to the empirical CDF.
+- **Post-smoothing (cubic spline):** Compute the equipercentile function from the raw empirical CDFs, then fit a cubic spline to smooth the resulting equating function.
+
+Smoothing is standard practice in operational equating programs but is omitted from our implementation here for simplicity.
+
+```{r equipercentile-equating}
+# Chained equipercentile equating function
+chain_epct <- function(x_val, total_from, anchor_from, anchor_to, total_to) {
+  # Step 1: percentile of x_val in Form 1 distribution (Group 1)
+  p1     <- mean(total_from <= x_val)
+  # Step 2: anchor score at same percentile in Group 1
+  a_eq   <- quantile(anchor_from, p1, type = 1)
+  # Step 3: percentile of that anchor score in Group 2 anchor distribution
+  p2     <- mean(anchor_to <= a_eq)
+  # Step 4: Form 2 score at same percentile in Group 2
+  y_eq   <- quantile(total_to, p2, type = 1)
+  return(as.numeric(y_eq))
+}
+
+# Apply to all possible Form 1 scores
+equated_epct <- sapply(x_vals, chain_epct,
+                       total_from  = total1,
+                       anchor_from = anchor1,
+                       anchor_to   = anchor2,
+                       total_to    = total2)
+```
+
+```{r epct-plot}
+par(mar = c(4, 4, 3, 1))
+plot(x_vals, equated_epct, type = "b", lwd = 2, col = "firebrick", pch = 16,
+     xlab = "Form 1 Score (x)", ylab = "Equated Form 2 Score  eY(x)",
+     main = "Chained Equipercentile Equating: Form 1 to Form 2",
+     xlim = c(0, 20), ylim = c(0, 20))
+abline(a = 0, b = 1, lty = 2, col = "gray60")
+legend("topleft", legend = c("Equipercentile equating", "Identity (no adjustment)"),
+       col = c("firebrick", "gray60"), lty = c(1, 2), lwd = c(2, 1),
+       pch = c(16, NA), bty = "n")
+```
+
+Notice the step-function character of the equipercentile result---a consequence of working with discrete score distributions. In operational testing, the function would be smoothed before reporting.
+
+## Comparing the Three Classical Approaches
+
+It is instructive to see all three equating functions on the same plot.
+
+```{r compare-classical}
+par(mar = c(4, 4, 3, 1))
+plot(x_vals, equated_lin, type = "l", lwd = 2, col = "steelblue",
+     xlab = "Form 1 Score (x)", ylab = "Equated Form 2 Score",
+     main = "Mean, Linear, and Equipercentile Equating",
+     xlim = c(0, 20), ylim = c(0, 20))
+lines(x_vals, equated_mean, lwd = 2, col = "darkorange", lty = 2)
+lines(x_vals, equated_epct, lwd = 2, col = "firebrick", lty = 1)
+points(x_vals, equated_epct, col = "firebrick", pch = 16, cex = 0.7)
+abline(a = 0, b = 1, lty = 3, col = "gray60")
+legend("topleft",
+       legend = c("Linear", "Mean", "Equipercentile", "Identity"),
+       col = c("steelblue", "darkorange", "firebrick", "gray60"),
+       lty = c(1, 2, 1, 3), lwd = c(2, 2, 2, 1), pch = c(NA, NA, 16, NA), bty = "n")
+```
+
+The mean equating function is a straight line parallel to the identity (a constant shift). Linear equating also produces a straight line but with a different slope, accommodating differences in spread as well as the mean. All three methods agree most in the middle of the score range; equipercentile equating can diverge at the extremes where data are sparse.
+
+Let us also compare the distribution of equated Form 1 scores to the actual Form 2 score distribution.
+
+```{r compare-distributions}
+# Apply equating function to observed Form 1 scores
+equated_obs_lin  <- A_lin * total1 + B_lin
+equated_obs_epct <- equated_epct[total1 + 1]  # +1 because scores start at 0
+
+par(mfrow = c(1, 3), mar = c(4, 4, 3, 1))
+hist(total2, breaks = 15, col = "lightgreen", main = "Form 2 Scores (Group 2)",
+     xlab = "Score", xlim = c(0, 20), freq = FALSE)
+hist(equated_obs_lin, breaks = 15, col = "lightblue", main = "Equated Form 1 (Linear)",
+     xlab = "Equated Score", xlim = c(0, 20), freq = FALSE)
+hist(equated_obs_epct, breaks = 15, col = "lightsalmon",
+     main = "Equated Form 1 (Equipercentile)",
+     xlab = "Equated Score", xlim = c(0, 20), freq = FALSE)
+par(mfrow = c(1, 1))
+```
+
+After equating, the distribution of equated Form 1 scores should resemble the Form 2 score distribution. The equipercentile method, by design, matches percentile ranks and so should produce closer distributional agreement; the linear method matches means and SDs but may not match higher moments (skewness, kurtosis) as well.
+
+---
+
+# Limitations of Classical Methods
+
+Classical equating methods have several well-known limitations that motivate IRT-based approaches.
+
+**Group dependence.** Even though chained equating accounts for group differences through the anchor, the equating function still depends on the specific samples used to estimate it. If the samples are small or unusual, the equating function will be poorly estimated. IRT-based methods, which exploit parameter invariance, are more robust to sample composition.
+
+**Score discreteness and range restrictions.** Number-correct scores are bounded (0 to maximum) and discrete. Equipercentile equating is inherently unstable at score extremes where data are sparse, necessitating smoothing. Linear equating can produce equated scores outside the valid range.
+
+**No item-level information.** Classical methods treat the total score as a sufficient statistic. They have no way to use information about individual item quality. If some items function differently across groups (DIF), classical methods cannot detect or correct for this.
+
+**Scale dependence.** Classical equating functions depend on the specific score scale used. If scores are transformed (e.g., from a 20-point scale to a 0--100 scale), the equating function must be recalculated.
+
+**IRT-based equating** addresses all of these limitations, at the cost of stronger model assumptions. The remainder of this document focuses on IRT approaches.
+
+---
+
+# IRT Linking: The Scale Indeterminacy Problem
+
+## Parameter Invariance and Its Implication
+
+Recall from your earlier study of IRT that item parameters are theoretically *invariant* across groups. Under the 2PL model, the probability of a correct response depends only on the item parameters $(a_j, b_j)$ and the examinee's ability $\theta$:
+
+$$P(X_{ij} = 1 \mid \theta_i) = \frac{1}{1 + e^{-a_j(\theta_i - b_j)}}$$
+
+The values of $a_j$ and $b_j$ are properties of the item, not of the group of examinees used to estimate them. This means that, in principle, we could calibrate Form 1 with Group 1 and Form 2 with Group 2 and get item parameters that are *on the same scale* and *directly comparable*.
+
+In practice, however, this does not automatically happen. The reason is **scale indeterminacy**.
+
+## Why Two Separate Calibrations Are Not on the Same Scale
+
+The IRT model does not specify an absolute origin or unit for the $\theta$ scale. To see why, consider applying the linear transformation $\theta^* = A\theta + B$ (with $A > 0$), which means $\theta = (\theta^* - B)/A$. Substituting into the 2PL model:
+
+$$P(X=1 \mid \theta^*) = \frac{1}{1 + e^{-a\!\left(\frac{\theta^*-B}{A} - b\right)}} = \frac{1}{1 + e^{-\frac{a}{A}\left(\theta^* - (Ab+B)\right)}}$$
+
+This is still a valid 2PL model, but with reparameterized item parameters:
+$$a^* = \frac{a}{A}, \qquad b^* = Ab + B$$
+
+The predicted response probabilities are *identical* under $(\theta, a, b)$ and $(\theta^*, a^*, b^*)$. The data cannot distinguish between the two parameterizations because both fit equally well. This is the root of the indeterminacy: the scale of $\theta$ is arbitrary and must be fixed externally. The standard convention in `mirt` is to fix the mean and variance of the population distribution to 0 and 1 for the reference group. When this is done separately for Group 1 and Group 2, the two resulting $\theta$ scales are anchored to *different* points.
+
+Concretely: Group 1's scale is defined so that the *Group 1* distribution has mean 0 and SD 1. Group 2's scale is defined so that the *Group 2* distribution has mean 0 and SD 1. Since the two groups have different true ability distributions, these two "zeros" do not correspond to the same ability level. The item parameters from the two calibrations are therefore not directly comparable.
+
+Let's see this problem in practice.
+
+```{r separate-calibration}
+# Calibrate Form 1 (Group 1 data)
+fit1 <- mirt(test1, 1, itemtype = "2PL", verbose = FALSE)
+
+# Calibrate Form 2 (Group 2 data) -- independently, separate scale
+fit2 <- mirt(test2, 1, itemtype = "2PL", verbose = FALSE)
+
+# Extract item parameters in IRT (a, b) parameterization
+items1 <- coef(fit1, IRTpars = TRUE, simplify = TRUE)$items
+items2 <- coef(fit2, IRTpars = TRUE, simplify = TRUE)$items
+
+# Column 1 = discrimination (a), Column 2 = difficulty (b)
+# Compare anchor item (1:10) difficulty estimates from the two calibrations
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+plot(items1[1:10, 2], items2[1:10, 2],
+     xlab = "b (Form 1 calibration)", ylab = "b (Form 2 calibration)",
+     main = "Anchor Item Difficulty:\nSeparate Calibrations",
+     pch = 16, col = "purple",
+     xlim = c(-3, 2), ylim = c(-3, 2))
+abline(a = 0, b = 1, lty = 2, col = "gray50")
+
+plot(items1[1:10, 1], items2[1:10, 1],
+     xlab = "a (Form 1 calibration)", ylab = "a (Form 2 calibration)",
+     main = "Anchor Item Discrimination:\nSeparate Calibrations",
+     pch = 16, col = "purple",
+     xlim = c(0.2, 2.2), ylim = c(0.2, 2.2))
+abline(a = 0, b = 1, lty = 2, col = "gray50")
+par(mfrow = c(1, 1))
+```
+
+The anchor items have the same *true* parameters on both forms (by construction). But the two sets of estimates are not on the same scale: they are correlated but shifted relative to one another. The dashed identity line shows where points *would* fall if the scales were aligned. IRT linking is the process of finding the transformation that brings the two scales into alignment.
+
+---
+
+# IRT Linking: Separate Calibration with Transformation
+
+The most transparent IRT linking approach is **separate calibration followed by a scale transformation**. The steps are:
+
+1. Calibrate each form separately with `mirt` (as done above)
+2. Use the anchor item parameters to estimate the transformation constants $A$ and $B$ that map the Form 2 scale to the Form 1 scale
+3. Apply the transformation to all Form 2 item parameters and person ability estimates
+
+The transformation has a simple linear form: if $\theta_1$ denotes ability on the Form 1 scale and $\theta_2$ denotes ability on the Form 2 scale, then:
+
+$$\theta_1 = A \cdot \theta_2 + B$$
+
+The same transformation implies:
+
+$$b_1 = A \cdot b_2 + B \qquad \text{and} \qquad a_1 = \frac{a_2}{A}$$
+
+for each anchor item. Knowing (or estimating) $A$ and $B$ allows us to re-express all Form 2 parameters on the Form 1 scale.
+
+Two classical methods for estimating $A$ and $B$ from the anchor items are described below.
+
+## Mean-Mean Method
+
+The **mean-mean method** estimates $A$ from the anchor item discriminations and $B$ from the anchor item difficulties:
+
+$$\hat{A}_{MM} = \frac{\overline{a_1}}{\overline{a_2}}, \qquad \hat{B}_{MM} = \overline{b_1} - \hat{A}_{MM} \cdot \overline{b_2}$$
+
+where $\overline{a_1}$ and $\overline{b_1}$ are the means of the discrimination and difficulty estimates for the anchor items from the Form 1 calibration, and similarly for Form 2.
+
+The rationale for $\hat{A}_{MM}$: since $a_1 = a_2/A$, we have $A = a_2/a_1$ for each anchor item, and the mean gives a stable estimate. The rationale for $\hat{B}_{MM}$: since $b_1 = Ab_2 + B$, once $A$ is known, $B$ is the mean difference between adjusted Form 1 and Form 2 difficulties.
+
+```{r mean-mean}
+# Anchor item parameters from each separate calibration
+a1_anc <- items1[1:10, 1];  b1_anc <- items1[1:10, 2]
+a2_anc <- items2[1:10, 1];  b2_anc <- items2[1:10, 2]
+
+# Mean-Mean linking constants
+A_mm <- mean(a1_anc) / mean(a2_anc)
+B_mm <- mean(b1_anc) - A_mm * mean(b2_anc)
+
+cat("Mean-Mean:  A =", round(A_mm, 4), " B =", round(B_mm, 4), "\n")
+```
+
+## Mean-Sigma Method
+
+The **mean-sigma method** estimates $A$ from the *standard deviations* of the anchor item difficulties (rather than the mean discriminations):
+
+$$\hat{A}_{MS} = \frac{\text{SD}(b_{1}^{\text{anchor}})}{\text{SD}(b_{2}^{\text{anchor}})}, \qquad \hat{B}_{MS} = \overline{b_1} - \hat{A}_{MS} \cdot \overline{b_2}$$
+
+The rationale: the transformation $b_1 = Ab_2 + B$ implies that the standard deviations of the difficulty parameters satisfy $\text{SD}(b_1) = A \cdot \text{SD}(b_2)$. The mean-sigma method uses this relationship to estimate $A$ without relying on discrimination estimates, which tend to be less stable than difficulty estimates.
+
+```{r mean-sigma}
+# Mean-Sigma linking constants
+A_ms <- sd(b1_anc) / sd(b2_anc)
+B_ms <- mean(b1_anc) - A_ms * mean(b2_anc)
+
+cat("Mean-Sigma: A =", round(A_ms, 4), " B =", round(B_ms, 4), "\n")
+```
+
+Note that $A > 1$ means the Form 2 scale is more compressed (has less spread in difficulties) than the Form 1 scale; we need to stretch it. $B > 0$ means the Form 2 scale is shifted downward relative to Form 1; we need to shift it upward. Both reflect the fact that Group 2 students are higher-ability, which causes `mirt` to place the Form 2 item parameters at lower locations on its independently-anchored scale.
+
+## Characteristic Curve Methods
+
+The mean-mean and mean-sigma methods summarize the anchor item relationship through simple moments. More sophisticated approaches minimize the *discrepancy between item or test characteristic curves* across the two forms.
+
+**Haebara's method** (Haebara, 1980) finds $A$ and $B$ that minimize the sum of squared differences between the item characteristic curves (ICCs) for each anchor item $j$, integrated over the $\theta$ scale:
+$$\sum_{j=1}^{k} \int_{-\infty}^{\infty} \left[P_j(\theta \mid a_{1j}, b_{1j}) - P_j\!\left(\theta \mid \tfrac{a_{2j}}{A}, Ab_{2j}+B\right)\right]^2 d\theta$$
+
+**Stocking and Lord's method** (1983) uses the *test* characteristic curve (TCC)---the sum of ICCs across anchor items---rather than individual ICCs. This makes the method less sensitive to any single poorly-fitting anchor item.
+
+Both methods require numerical optimization rather than closed-form solutions and are generally preferred over moment-based methods in high-stakes operational settings because they use the full information in the item response functions rather than just their means and standard deviations. The moment-based methods we implement below are simpler and often perform comparably when item parameters are well-estimated.
+
+## Applying the Transformation
+
+With the linking constants in hand, we transform the Form 2 item parameters and person ability estimates onto the Form 1 scale.
+
+```{r apply-transformation}
+# --- Apply Mean-Sigma transformation (chosen here; Mean-Mean is analogous) ---
+
+# Transform Form 2 item parameters to Form 1 scale
+b2_transformed <- A_ms * items2[, 2] + B_ms   # difficulty
+a2_transformed <- items2[, 1] / A_ms           # discrimination
+
+# Get EAP theta estimates from each calibration
+th1_eap <- fscores(fit1)[, 1]
+th2_eap <- fscores(fit2)[, 1]
+
+# Transform Form 2 thetas to Form 1 scale
+th2_transformed <- A_ms * th2_eap + B_ms
+
+cat("Form 2 theta after transformation -- Mean:", round(mean(th2_transformed), 3),
+    " SD:", round(sd(th2_transformed), 3), "\n")
+cat("True generating values for Group 2  -- Mean: 0.5   SD: 0.8\n")
+```
+
+The transformed Form 2 theta distribution should now be centered around 0.5 and have a standard deviation near 0.8, matching the true generating values for Group 2.
+
+## Evaluating the Transformation
+
+Let us check how well the linking worked by comparing the transformed anchor item parameters to the Form 1 estimates.
+
+```{r evaluate-transformation}
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+
+# Difficulty: anchor items only
+plot(items1[1:10, 2], b2_transformed[1:10],
+     xlab = "b (Form 1 calibration)", ylab = "b (Form 2, transformed)",
+     main = "Anchor Difficulty After\nMean-Sigma Transformation",
+     pch = 16, col = "darkgreen",
+     xlim = c(-3, 2), ylim = c(-3, 2))
+abline(a = 0, b = 1, lty = 2, col = "gray50")
+
+# Discrimination: anchor items only
+plot(items1[1:10, 1], a2_transformed[1:10],
+     xlab = "a (Form 1 calibration)", ylab = "a (Form 2, transformed)",
+     main = "Anchor Discrimination After\nMean-Sigma Transformation",
+     pch = 16, col = "darkgreen",
+     xlim = c(0.2, 2.2), ylim = c(0.2, 2.2))
+abline(a = 0, b = 1, lty = 2, col = "darkgreen")
+par(mfrow = c(1, 1))
+```
+
+```{r theta-distributions}
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+hist(th1_eap, breaks = 20, col = "lightblue",
+     main = "Form 1 Theta (Group 1)", xlab = expression(hat(theta)),
+     xlim = c(-3, 3), freq = FALSE)
+hist(th2_transformed, breaks = 20, col = "lightgreen",
+     main = "Form 2 Theta (Group 2)\nTransformed to Form 1 Scale",
+     xlab = expression(hat(theta)), xlim = c(-3, 3), freq = FALSE)
+par(mfrow = c(1, 1))
+```
+
+After transformation, the Form 2 theta distribution is shifted and rescaled to reflect the true ability advantage of Group 2. Both sets of theta estimates are now on the same scale and can be meaningfully compared.
+
+### Comparing Mean-Mean and Mean-Sigma
+
+```{r compare-mm-ms}
+# Transform using both methods and compare
+th2_mm <- A_mm * th2_eap + B_mm
+th2_ms <- A_ms * th2_eap + B_ms
+
+compare_methods <- data.frame(
+  Method = c("True (generating)", "No transformation", "Mean-Mean", "Mean-Sigma"),
+  Mean_theta2 = c(0.500, round(mean(th2_eap), 3),
+                  round(mean(th2_mm), 3), round(mean(th2_ms), 3)),
+  SD_theta2   = c(0.800, round(sd(th2_eap), 3),
+                  round(sd(th2_mm), 3), round(sd(th2_ms), 3))
+)
+
+kable(compare_methods, col.names = c("Method", "Mean (θ₂)", "SD (θ₂)"),
+      align = "lcc") |>
+  kable_styling(full_width = FALSE)
+```
+
+"No transformation" shows what happens when you naively use the separate-calibration theta estimates without linking---the mean is near 0 and SD near 1 because mirt anchored the Group 2 scale independently. After applying either linking method, the estimates are much closer to the true generating values.
+
+---
+
+# IRT Linking: Concurrent Calibration
+
+**Concurrent calibration** avoids the two-step separate-calibrate-then-link approach by fitting a single IRT model to the combined data from both forms simultaneously.
+
+The data are structured as follows:
+
+- Form 1 students have responses to all 30 items but are missing responses for the 10 items unique to Form 2 (missing by design, not by chance)
+- Form 2 students have responses to all 30 items but are missing responses for the 10 items unique to Form 1
+
+Treating the form-specific items as missing-at-random, a multigroup IRT model is fit with the constraint that the anchor item parameters are the *same* across groups. The mean and variance of one group (the reference group) are fixed at 0 and 1, and those of the other group are freely estimated.
+
+Concurrent calibration has several advantages over separate calibration with transformation:
+
+- It uses all available data in a single step, potentially yielding more efficient estimates
+- The linking is implicit---no separate transformation step is required
+- It is straightforward to implement in `mirt` using `multipleGroup()`
+
+However, it also has potential drawbacks. If the IRT model fits poorly for some items, misfit in one form can propagate to the other. The assumption that anchor item parameters are invariant across groups is embedded in the model---if it is violated (e.g., due to DIF), the concurrent calibration will produce biased results.
+
+The companion tutorial *IRT Equating Using mirt* demonstrates concurrent calibration in full detail using the same simulated dataset introduced here.
+
+---
+
+# IRT Linking: Anchored Calibration
+
+**Anchored calibration** occupies a middle ground between separate and concurrent calibration. The procedure is:
+
+1. Calibrate Form 1 using Group 1 data (as in separate calibration), establishing the reference scale
+2. Calibrate Form 2 using Group 2 data, but **fix** the anchor item parameters to the values estimated in Step 1
+3. Allow the mean and variance of the Group 2 ability distribution to be freely estimated
+
+By fixing the anchor item parameters in Step 2, the Form 2 calibration inherits the Form 1 scale directly. No separate transformation step is needed. The freely estimated Group 2 population parameters (mean and variance) then reflect where Group 2 students fall on the Form 1 scale.
+
+This approach is conceptually simple and computationally straightforward. Its main limitation is that any error in the Form 1 anchor item estimates is propagated directly into the Form 2 calibration---there is no averaging over estimates from both forms as in concurrent calibration.
+
+In `mirt`, anchored calibration is implemented by specifying starting values for the anchor item parameters and then constraining them not to be estimated (setting `est = FALSE`). The companion tutorial demonstrates this in detail.
+
+---
+
+# Summary: Comparing the Three IRT Approaches
+
+The table below summarizes the key characteristics, assumptions, and trade-offs of the three IRT linking approaches.
+
+```{r comparison-table}
+comparison <- data.frame(
+  Feature = c(
+    "Number of calibration steps",
+    "Explicit transformation constants (A, B)?",
+    "Reference scale defined by",
+    "Uses all data jointly?",
+    "Sensitive to DIF in anchor items?",
+    "Error in anchor items propagates?",
+    "Implemented in companion tutorial?"
+  ),
+  Separate = c(
+    "Two (+ transformation step)",
+    "Yes -- estimated from anchor items",
+    "Form 1 calibration (fixed 0/1)",
+    "No",
+    "Yes (can check via parameter agreement)",
+    "Partially (two-way averaging)",
+    "Partially (scale shown; linking constants here)"
+  ),
+  Concurrent = c(
+    "One (joint)",
+    "No -- implicit in joint model",
+    "Reference group (fixed 0/1)",
+    "Yes",
+    "Yes (constraint violation)",
+    "Bidirectional (estimates averaged)",
+    "Yes (full implementation)"
+  ),
+  Anchored = c(
+    "Two (Form 1 then Form 2)",
+    "No -- Form 1 scale adopted directly",
+    "Form 1 calibration (fixed 0/1)",
+    "No",
+    "Yes (bias in Form 2 estimates)",
+    "Yes (one-directional)",
+    "Yes (full implementation)"
+  )
+)
+
+kable(comparison,
+      col.names = c("Feature", "Separate + Transformation",
+                    "Concurrent", "Anchored"),
+      align = "lccc") |>
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) |>
+  column_spec(1, bold = TRUE)
+```
+
+In practice, when the IRT model fits well and the anchor items are functioning as intended, all three methods tend to produce similar results. Differences arise when model assumptions are violated, samples are small, or anchor item quality is poor. Simulation studies (e.g., Kolen & Brennan, 2014; Kim & Hanson, 2002) generally suggest that concurrent calibration is slightly more efficient when the model fits, while separate calibration with transformation is more transparent and easier to diagnose.
+
+---
+
+# On Your Own
+
+The following questions are designed to deepen your understanding of the methods covered here. Some require additional thought or small R experiments; others ask you to connect concepts across sections.
+
+1. **Classical methods.** Linear equating produces a smooth function by construction. Equipercentile equating is more flexible but can be erratic at score extremes. Under what circumstances would you expect the two methods to produce very similar results? When would you expect them to diverge the most?
+
+2. **Anchor item quality.** In the simulation, the anchor items were a random sample of 10 items from the 2PL model. In practice, anchor items are chosen carefully to be content-representative and statistically stable. What properties of anchor items (item-level statistics you have studied) would you look for to ensure a high-quality anchor?
+
+3. **Scale indeterminacy.** After running separate calibrations, check the estimated means and variances of the two population distributions:
+    ```r
+    coef(fit1)$GroupPars
+    coef(fit2)$GroupPars
+    ```
+    Explain why both groups appear to have mean 0 and variance 1, even though the true generating distributions were different.
+
+4. **Linking constants.** The mean-mean method uses anchor item discriminations to estimate $A$, while mean-sigma uses only difficulties. Discrimination parameters are generally estimated with more error than difficulty parameters. Based on this, which method would you expect to be more stable, and why?
+
+5. **Evaluating the linking.** After applying the mean-sigma transformation, plot the difficulty estimates for the *unique* items on Form 2 (items 11--20) before and after transformation. What does this tell you about the effect of the linking on items that were not used to estimate $A$ and $B$?
+    ```r
+    plot(items2[11:20, 2], b2_transformed[11:20],
+         xlab = "Original (Form 2 scale)",
+         ylab = "Transformed (Form 1 scale)")
+    abline(a = 0, b = 1, lty = 2)
+    ```
+
+6. **Extending to the companion tutorial.** The companion document *IRT Equating Using mirt* implements anchored and concurrent calibration using the same dataset. After completing the companion tutorial, revisit the summary table above and verify that the two approaches produce similar estimates of the Group 2 population mean and variance.
+
+---
+
+# References
+
+Kolen, M. J. (1988). *Traditional equating methodology* (NCME Instructional Module). Educational Measurement: Issues and Practice, 7(4), 29--36.
+
+Kolen, M. J., & Brennan, R. L. (2014). *Test equating, scaling, and linking: Methods and practices* (3rd ed.). Springer.
+
+Livingston, S. A. (2004). *Equating test scores (without IRT)*. Educational Testing Service.
+
+Lord, F. M. (1980). *Applications of item response theory to practical testing problems*. Lawrence Erlbaum Associates.
+

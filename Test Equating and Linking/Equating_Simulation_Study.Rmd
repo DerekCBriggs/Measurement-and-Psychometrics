@@ -1,0 +1,305 @@
+---
+title: "Simulation Study: Bias and RMSE of IRT Equating Methods"
+author: "Derek Briggs"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Motivation
+
+In the companion tutorial (*IRT Equating using mirt*), we applied five equating methods to a single simulated NEAT dataset and found that every method underestimated the true standard deviation of the Group 2 ability distribution ($\sigma = 0.8$). The estimated SDs ranged from about 0.51 (mean-sigma) to 0.72 (concurrent calibration). Was this a fluke of one random dataset, or does it reflect a systematic tendency?
+
+To find out, we repeat the simulation 100 times with the **same true item parameters** but freshly generated ability values and response data each time. For each replication we record the estimated Group 2 population mean and SD from each equating method, then summarize the results in terms of **bias** and **root mean squared error (RMSE)**.
+
+---
+
+## Setup
+
+We use the same item parameter configuration as the companion tutorial: two 20-item forms sharing 10 anchor items (items 1--10), with Group 1 abilities drawn from $N(0, 1)$ and Group 2 abilities from $N(0.5, 0.8)$. The item parameters are generated once and held fixed across all replications.
+
+```{r fixed-parameters}
+library(mirt)
+library(dplyr)
+library(kableExtra)
+
+# Generate fixed item parameters (same seed as companion tutorial)
+set.seed(17)
+b1 <- rnorm(20)
+b2 <- c(b1[1:10], rnorm(10))
+a1 <- runif(20, .5, 2)
+a2 <- c(a1[1:10], runif(10, .5, 2))
+d1 <- -a1 * b1
+d2 <- -a2 * b2
+
+# True Group 2 population parameters (our target)
+true_mean <- 0.5
+true_sd   <- 0.8
+```
+
+---
+
+## Helper Functions
+
+We need the Stocking-Lord function from the companion tutorial and a wrapper that runs one complete replication.
+
+```{r helper-functions}
+# 2PL ICC and TCC
+icc_2pl <- function(theta, a, b) 1 / (1 + exp(-a * (theta - b)))
+tcc_2pl <- function(theta, a, b) {
+  sapply(theta, function(th) sum(icc_2pl(th, a, b)))
+}
+
+# Stocking-Lord linking
+stocking_lord <- function(a1, b1, a2, b2,
+                          theta = seq(-4, 4, by = 0.1),
+                          start_A = NULL, start_B = NULL) {
+  tcc_target <- tcc_2pl(theta, a1, b1)
+  sl_criterion <- function(par) {
+    A <- par[1]; B <- par[2]
+    tcc_source <- tcc_2pl(theta, a2 / A, A * b2 + B)
+    sum((tcc_target - tcc_source)^2)
+  }
+  if (is.null(start_A)) start_A <- mean(a2) / mean(a1)
+  if (is.null(start_B)) start_B <- mean(b1) - start_A * mean(b2)
+  result <- optim(c(start_A, start_B), sl_criterion, method = "Nelder-Mead")
+  list(A = result$par[1], B = result$par[2])
+}
+```
+
+The workhorse function below generates data, fits all five equating methods, and returns the estimated Group 2 mean and SD from each.
+
+```{r run-one-rep}
+run_one_rep <- function(a1, d1, a2, d2, n = 500) {
+  # Generate new ability values
+  th1 <- rnorm(n, 0, 1)
+  th2 <- rnorm(n, 0.5, 0.8)
+
+  # Simulate response data
+  test1 <- as.data.frame(simdata(a = a1, d = d1, Theta = th1, itemtype = "dich"))
+  test2 <- as.data.frame(simdata(a = a2, d = d2, Theta = th2, itemtype = "dich"))
+
+  # --- Separate calibrations ---
+  fit1 <- mirt(test1, 1, itemtype = "2PL", verbose = FALSE)
+  fit2 <- mirt(test2, 1, itemtype = "2PL", verbose = FALSE)
+  items1 <- coef(fit1, IRTpars = TRUE, simplify = TRUE)$items
+  items2 <- coef(fit2, IRTpars = TRUE, simplify = TRUE)$items
+
+  a1_anc <- items1[1:10, 1]; b1_anc <- items1[1:10, 2]
+  a2_anc <- items2[1:10, 1]; b2_anc <- items2[1:10, 2]
+
+  # Mean-mean
+  A_mm <- mean(a2_anc) / mean(a1_anc)
+  B_mm <- mean(b1_anc) - A_mm * mean(b2_anc)
+
+  # Mean-sigma
+  A_ms <- sd(b1_anc) / sd(b2_anc)
+  B_ms <- mean(b1_anc) - A_ms * mean(b2_anc)
+
+  # Stocking-Lord
+  sl   <- stocking_lord(a1_anc, b1_anc, a2_anc, b2_anc)
+  A_sl <- sl$A; B_sl <- sl$B
+
+  # --- Anchored calibration ---
+  anchor_a <- items1[1:10, 1]
+  anchor_d <- -anchor_a * items1[1:10, 2]
+  sv2 <- mirt(test2, 1, itemtype = "2PL", pars = "values", verbose = FALSE)
+  sv2$value[sv2$name == "a1" & sv2$parnum < 41] <- anchor_a
+  sv2$value[sv2$name == "d"  & sv2$parnum < 41] <- anchor_d
+  sv2$est[sv2$parnum < 41] <- FALSE
+  sv2$est[sv2$name == "MEAN_1"] <- TRUE
+  sv2$est[sv2$name == "COV_11"] <- TRUE
+  fit2.a   <- mirt(test2, 1, pars = sv2, verbose = FALSE)
+  anc_mean <- coef(fit2.a)$GroupPars[1]
+  anc_sd   <- sqrt(coef(fit2.a)$GroupPars[2])
+
+  # --- Concurrent calibration ---
+  test1c <- test1; test2c <- test2
+  new_labels <- paste0("Item_", (ncol(test2c) + 1):(ncol(test2c) + 10))
+  colnames(test2c)[(ncol(test2c) - 9):ncol(test2c)] <- new_labels
+  test1c$group <- 1; test2c$group <- 2
+  grp <- c(rep("Test1", n), rep("Test2", n))
+  common_items <- paste0("Item_", 1:10)
+  full_dat <- merge(test1c, test2c, by = c("group", common_items),
+                    all.x = TRUE, all.y = TRUE)
+  dat <- full_dat[, -1]
+  cc     <- multipleGroup(dat, model = 1, group = grp, itemtype = "2PL",
+                          invariance = c("intercepts", "slopes",
+                                         "free_var", "free_means"),
+                          verbose = FALSE)
+  out.cc  <- coef(cc, simplify = TRUE, IRTpars = TRUE)
+  cc_mean <- out.cc$Test2$means[1]
+  cc_sd   <- sqrt(out.cc$Test2$cov[1])
+
+  # Return results
+  c(mm_mean = B_mm, mm_sd = A_mm,
+    ms_mean = B_ms, ms_sd = A_ms,
+    sl_mean = B_sl, sl_sd = A_sl,
+    anc_mean = anc_mean, anc_sd = anc_sd,
+    cc_mean = cc_mean, cc_sd = cc_sd)
+}
+```
+
+---
+
+## Running the Simulation
+
+We run 100 replications. Each replication generates new ability values and response data, holding the item parameters fixed.
+
+```{r run-simulation, cache=TRUE}
+n_reps  <- 100
+results <- matrix(NA, nrow = n_reps, ncol = 10)
+colnames(results) <- c("mm_mean", "mm_sd", "ms_mean", "ms_sd",
+                        "sl_mean", "sl_sd", "anc_mean", "anc_sd",
+                        "cc_mean", "cc_sd")
+
+set.seed(2026)
+t_start <- Sys.time()
+
+for (i in 1:n_reps) {
+  out <- tryCatch(
+    run_one_rep(a1, d1, a2, d2, n = 500),
+    error = function(e) rep(NA, 10)
+  )
+  results[i, ] <- out
+  if (i %% 100 == 0) cat("Replication", i, "of", n_reps, "\n")
+}
+
+t_end <- Sys.time()
+cat("\nTotal time:", round(difftime(t_end, t_start, units = "mins"), 1), "minutes\n")
+cat("Failed replications:", sum(is.na(results[, 1])), "of", n_reps, "\n")
+
+results <- as.data.frame(results)
+```
+
+---
+
+## Results
+
+### Bias and RMSE
+
+**Bias** is the average difference between the estimate and the true value (positive bias = overestimation). **RMSE** is the square root of the average squared error, combining bias and variability.
+
+```{r bias-rmse}
+# Remove any failed replications
+res <- results[complete.cases(results), ]
+n_valid <- nrow(res)
+
+# Compute bias and RMSE for each method
+methods <- c("Mean-Mean", "Mean-Sigma", "Stocking-Lord", "Anchored", "Concurrent")
+mean_cols <- c("mm_mean", "ms_mean", "sl_mean", "anc_mean", "cc_mean")
+sd_cols   <- c("mm_sd",   "ms_sd",   "sl_sd",   "anc_sd",   "cc_sd")
+
+bias_mean <- sapply(mean_cols, function(x) mean(res[[x]] - true_mean))
+bias_sd   <- sapply(sd_cols,   function(x) mean(res[[x]] - true_sd))
+rmse_mean <- sapply(mean_cols, function(x) sqrt(mean((res[[x]] - true_mean)^2)))
+rmse_sd   <- sapply(sd_cols,   function(x) sqrt(mean((res[[x]] - true_sd)^2)))
+
+summary_tab <- data.frame(
+  Method    = methods,
+  Bias_Mean = round(bias_mean, 4),
+  RMSE_Mean = round(rmse_mean, 4),
+  Bias_SD   = round(bias_sd, 4),
+  RMSE_SD   = round(rmse_sd, 4)
+)
+
+summary_tab |>
+  kable("html",
+        row.names = FALSE,
+        col.names = c("Method",
+                       "Bias", "RMSE",
+                       "Bias", "RMSE")) |>
+  kable_styling(full_width = FALSE) |>
+  add_header_above(c(" " = 1,
+                      "Group 2 Mean (true = 0.5)" = 2,
+                      "Group 2 SD (true = 0.8)" = 2))
+```
+
+```{r valid-count, echo=FALSE}
+cat(n_valid, "of", n_reps, "replications completed successfully.\n")
+```
+
+### Sampling Distributions
+
+The histograms below show the distribution of estimated Group 2 mean and SD across all replications. The dashed vertical line marks the true value.
+
+```{r histograms, fig.height=8}
+par(mfrow = c(5, 2), mar = c(4, 4, 2, 1))
+colors <- c("darkgreen", "purple", "firebrick", "steelblue", "darkorange")
+
+for (j in seq_along(methods)) {
+  # Mean
+  hist(res[[mean_cols[j]]], breaks = 40, freq = FALSE,
+       main = paste(methods[j], "-- Mean"),
+       xlab = expression(hat(mu)[2]),
+       col = adjustcolor(colors[j], alpha = 0.4), border = "white",
+       xlim = c(-0.2, 1.2))
+  abline(v = true_mean, lty = 2, lwd = 2)
+
+  # SD
+  hist(res[[sd_cols[j]]], breaks = 40, freq = FALSE,
+       main = paste(methods[j], "-- SD"),
+       xlab = expression(hat(sigma)[2]),
+       col = adjustcolor(colors[j], alpha = 0.4), border = "white",
+       xlim = c(0.0, 1.6))
+  abline(v = true_sd, lty = 2, lwd = 2)
+}
+
+par(mfrow = c(1, 1))
+```
+
+### Summary Statistics Across Replications
+
+```{r summary-stats}
+summ <- data.frame(
+  Method     = rep(methods, 2),
+  Parameter  = c(rep("Mean", 5), rep("SD", 5)),
+  True       = c(rep(true_mean, 5), rep(true_sd, 5)),
+  Median_Est = c(sapply(mean_cols, function(x) median(res[[x]])),
+                 sapply(sd_cols,   function(x) median(res[[x]]))),
+  Q25        = c(sapply(mean_cols, function(x) quantile(res[[x]], 0.25)),
+                 sapply(sd_cols,   function(x) quantile(res[[x]], 0.25))),
+  Q75        = c(sapply(mean_cols, function(x) quantile(res[[x]], 0.75)),
+                 sapply(sd_cols,   function(x) quantile(res[[x]], 0.75)))
+)
+
+summ |>
+  mutate(across(where(is.numeric), ~ round(.x, 3))) |>
+  kable("html",
+        col.names = c("Method", "Parameter", "True", "Median", "Q25", "Q75")) |>
+  kable_styling(full_width = FALSE) |>
+  collapse_rows(columns = 2, valign = "top")
+```
+
+---
+
+## Discussion
+
+The bias and RMSE results from 100 replications answer the motivating question: **is the underestimation of the Group 2 SD systematic, or a one-time fluke?**
+
+Key findings to look for:
+
+- **Mean recovery**: Which methods are approximately unbiased for the Group 2 mean? Which show the smallest RMSE?
+- **SD recovery**: Is there systematic negative bias for the Group 2 SD across all methods? How severe is it, and which method is least biased?
+- **Variability**: The RMSE captures both bias and sampling variability. A method with small bias but large variability may have worse RMSE than a slightly biased but stable method.
+- **Mean-sigma instability**: The sampling distribution of the mean-sigma estimates likely shows much wider spread (higher RMSE) than the other methods, consistent with the sensitivity to extreme $\hat{b}$ values we observed in the companion tutorial.
+
+In the psychometric literature, Kolen and Brennan (2014, Section 6.3.4) report that the characteristic curve methods (Stocking-Lord, Haebara) produce more stable results than the moment-based methods (mean-mean, mean-sigma), and that concurrent calibration tends to outperform separate calibration when the IRT model fits the data. The results of this simulation allow us to evaluate these claims in a concrete setting.
+
+---
+
+## On Your Own
+
+1. Examine the bias and RMSE table. Is the negative bias in the SD estimate a property of all methods, or just some? What does this tell us about the difficulty of recovering the population variance from this particular set of anchor items?
+2. Which method has the best overall performance (considering both mean and SD recovery)? Is there a clear winner, or does it depend on what you prioritize?
+3. Try increasing the sample size from 500 to 2,000 per group. Does the SD bias decrease? What about the RMSE?
+4. Try reducing the anchor set to 5 items (e.g., items 1--5). How does this affect the bias and RMSE of each method?
+5. The item parameters were generated randomly and may not be ideal for equating purposes. What properties would you want in a set of anchor items to get the best equating results?
