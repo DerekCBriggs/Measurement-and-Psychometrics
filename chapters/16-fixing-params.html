@@ -6,8 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Derek Briggs">
-<meta name="dcterms.date" content="2026-04-19">
+<meta name="author" content="Derek C. Briggs and Claude Code (Opus 4.6 &amp; 4.7)">
 
 <title>16&nbsp; Fixing Item Parameters in mirt – Psychometric Modeling with IRT</title>
 <style>
@@ -383,16 +382,10 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Derek Briggs </p>
+             <p>Derek C. Briggs and Claude Code (Opus 4.6 &amp; 4.7) </p>
           </div>
   </div>
     
-    <div>
-    <div class="quarto-title-meta-heading">Published</div>
-    <div class="quarto-title-meta-contents">
-      <p class="date">April 19, 2026</p>
-    </div>
-  </div>
   
     
   </div>
@@ -1108,105 +1101,104 @@ F1 0.578</code></pre>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Fixing Item Parameters in mirt"</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> "Derek Briggs"</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "`r Sys.Date()`"</span></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="an">output:</span><span class="co"> html_document</span></span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="in">```{r inject-rootdir, include=FALSE}</span></span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_knit<span class="sc">$</span><span class="fu">set</span>(<span class="at">root.dir =</span> <span class="st">"/Users/briggsd/Library/CloudStorage/Dropbox/Github/Measurement and Psychometrics/Test Equating and Linking/R Markdown Tutorials"</span>)</span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="in">```{r setup, include=FALSE}</span></span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">echo =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a><span class="fu">## Introduction</span></span>
-<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>The purpose of this tutorial test is to show how to fix the values of various item parameters in mirt. There are lots of reasons you might want to do this--I'll get into this later. </span>
-<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a><span class="fu">## The starting values for item (and person) parameters in mirt</span></span>
-<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>For now let me just show how this works using the data from Embretson &amp; Reise, Chapter 7, Tables 7.2 &amp; 7.3.</span>
-<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a><span class="in">```{r }</span></span>
-<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mirt)</span>
-<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>d<span class="ot">&lt;-</span><span class="fu">read.csv</span>(<span class="st">"/Users/briggsd/Library/CloudStorage/Dropbox/Courses/EDUC 8720/Data Sets/Misc/ER_data_tab7-2.csv"</span>)</span>
-<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a>Instead of calibrating the 2PL, I'm going to run the following command</span>
-<span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-31"><a href="#cb25-31" aria-hidden="true" tabindex="-1"></a><span class="in">```{r }</span></span>
-<span id="cb25-32"><a href="#cb25-32" aria-hidden="true" tabindex="-1"></a>sv1 <span class="ot">&lt;-</span> <span class="fu">mirt</span>(d, <span class="dv">1</span>,  <span class="at">itemtype=</span><span class="st">'2PL'</span>, <span class="at">pars =</span> <span class="st">'values'</span>,<span class="at">verbose=</span><span class="cn">FALSE</span>)</span>
-<span id="cb25-33"><a href="#cb25-33" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-34"><a href="#cb25-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-35"><a href="#cb25-35" aria-hidden="true" tabindex="-1"></a>Let's have a look at the first 8 rows this object</span>
-<span id="cb25-36"><a href="#cb25-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-37"><a href="#cb25-37" aria-hidden="true" tabindex="-1"></a><span class="in">```{r }</span></span>
-<span id="cb25-38"><a href="#cb25-38" aria-hidden="true" tabindex="-1"></a>sv1[<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>,] </span>
-<span id="cb25-39"><a href="#cb25-39" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-40"><a href="#cb25-40" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>This table has 4 rows for each of the first 2 of 10 items in the ER data. </span>
-<span id="cb25-41"><a href="#cb25-41" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>Each row corresponds to a different item parameter that it would be possible to specify, and these are listed under the "name" column: a1 is item discrimination, d is location (in mirt's slope-intercept form), g is the lower asymptote (guessing parameter) and u is an upper asymptote (yes, there is actually a 4PL model). </span>
-<span id="cb25-42"><a href="#cb25-42" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>Notice that each item parameter also has a "value" column. These represent "starting values" before mirt invokes the MMLE/EM algorithm. Because we set itemtype to 2PL, the g and u parameters are set to 0 and 1.</span>
-<span id="cb25-43"><a href="#cb25-43" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>The "lbound" and "ubound" columns specify the lower and upper bound for possible values of each parameter. Notice that right now there are no bounds on values that can be estimated for a1 and d.</span>
-<span id="cb25-44"><a href="#cb25-44" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>The "est" column is very important. It indicates whether or not a given item and parameter combination will be estimated. Right now, this is set to TRUE for all a1 and d item parameters, but FALSE for all g and u parameters</span>
-<span id="cb25-45"><a href="#cb25-45" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>Finally, we have the "prior_1" and "prior_2" columns. Right now these are all empty, but mirt gives us the flexibility to specify a unique Bayesian prior distribution for each item parameter.</span>
-<span id="cb25-46"><a href="#cb25-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-47"><a href="#cb25-47" aria-hidden="true" tabindex="-1"></a>I also want to show you the last two rows of sv1</span>
-<span id="cb25-48"><a href="#cb25-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-49"><a href="#cb25-49" aria-hidden="true" tabindex="-1"></a><span class="in">```{r }</span></span>
-<span id="cb25-50"><a href="#cb25-50" aria-hidden="true" tabindex="-1"></a>sv1[<span class="dv">41</span><span class="sc">:</span><span class="dv">42</span>,] </span>
-<span id="cb25-51"><a href="#cb25-51" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-52"><a href="#cb25-52" aria-hidden="true" tabindex="-1"></a>These are the only rows in the table that don't correspond to item parameters. Instead, these are the mean and variance of the person ability distribution (assuming we are specifying a normal distribution for ability, which is the default in mirt). Note that these values, by default are set to 0 and 1 to identify the scale.</span>
-<span id="cb25-53"><a href="#cb25-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-54"><a href="#cb25-54" aria-hidden="true" tabindex="-1"></a><span class="fu">## Replicating the first column of ER's Table 7.3</span></span>
-<span id="cb25-55"><a href="#cb25-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-56"><a href="#cb25-56" aria-hidden="true" tabindex="-1"></a>Now, in the ER example in Table 7.3, they are getting ML estimates ("scores") of theta for their 23 examinees after imposing different assumptions about the true values of the item parameters in each case. I want to show you how to replicate what they did with mirt by fixing values in the sv1 object I just introduced. </span>
-<span id="cb25-57"><a href="#cb25-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-58"><a href="#cb25-58" aria-hidden="true" tabindex="-1"></a>For the first column, all discrimination values are fixed at 1 and item difficulty goes -2 to 2 mostly in increments of .5 logits.</span>
-<span id="cb25-59"><a href="#cb25-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-60"><a href="#cb25-60" aria-hidden="true" tabindex="-1"></a><span class="in">```{r }</span></span>
-<span id="cb25-61"><a href="#cb25-61" aria-hidden="true" tabindex="-1"></a><span class="co">#custom discrimination and easiness values</span></span>
-<span id="cb25-62"><a href="#cb25-62" aria-hidden="true" tabindex="-1"></a>sv1<span class="sc">$</span>value[sv1<span class="sc">$</span>name <span class="sc">==</span> <span class="st">'a1'</span>] <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span>,<span class="dv">10</span>) <span class="co">#Creates a vector of 10 1's</span></span>
-<span id="cb25-63"><a href="#cb25-63" aria-hidden="true" tabindex="-1"></a>sv1<span class="sc">$</span>value[sv1<span class="sc">$</span>name <span class="sc">==</span> <span class="st">'d'</span>] <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">1</span><span class="sc">*</span><span class="fu">c</span>(<span class="sc">-</span><span class="dv">2</span>,<span class="sc">-</span><span class="fl">1.5</span>,<span class="sc">-</span><span class="dv">1</span>,<span class="sc">-</span>.<span class="dv">5</span>,<span class="dv">0</span>,<span class="dv">0</span>,.<span class="dv">5</span>,<span class="dv">1</span>,<span class="fl">1.5</span>,<span class="dv">2</span>) <span class="co">#Multiplied by -1 to make this easiness</span></span>
-<span id="cb25-64"><a href="#cb25-64" aria-hidden="true" tabindex="-1"></a><span class="co">#Fix the parameters to these starting values, do NOT estimate them</span></span>
-<span id="cb25-65"><a href="#cb25-65" aria-hidden="true" tabindex="-1"></a>sv1<span class="sc">$</span>est <span class="ot">&lt;-</span> <span class="cn">FALSE</span></span>
-<span id="cb25-66"><a href="#cb25-66" aria-hidden="true" tabindex="-1"></a><span class="co">#Set pop mean and variance as free to be estimated</span></span>
-<span id="cb25-67"><a href="#cb25-67" aria-hidden="true" tabindex="-1"></a>sv1<span class="sc">$</span>est[sv1<span class="sc">$</span>name <span class="sc">==</span> <span class="st">'MEAN_1'</span>] <span class="ot">&lt;-</span> <span class="cn">TRUE</span></span>
-<span id="cb25-68"><a href="#cb25-68" aria-hidden="true" tabindex="-1"></a>sv1<span class="sc">$</span>est[sv1<span class="sc">$</span>name <span class="sc">==</span> <span class="st">'COV_11'</span>] <span class="ot">&lt;-</span> <span class="cn">TRUE</span></span>
-<span id="cb25-69"><a href="#cb25-69" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-70"><a href="#cb25-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-71"><a href="#cb25-71" aria-hidden="true" tabindex="-1"></a>Do you see what we are doing here? Let's see how the sv1 object has changed </span>
-<span id="cb25-72"><a href="#cb25-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-73"><a href="#cb25-73" aria-hidden="true" tabindex="-1"></a><span class="in">```{r }</span></span>
-<span id="cb25-74"><a href="#cb25-74" aria-hidden="true" tabindex="-1"></a>sv1[<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>,] </span>
-<span id="cb25-75"><a href="#cb25-75" aria-hidden="true" tabindex="-1"></a>sv1[<span class="dv">41</span><span class="sc">:</span><span class="dv">42</span>,] </span>
-<span id="cb25-76"><a href="#cb25-76" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-77"><a href="#cb25-77" aria-hidden="true" tabindex="-1"></a>When we fit the 2PL under these constraints, we aren't estimating any item parameters. The only thing getting estimated is the population mean and variance. Then we go straight to estimating thetas.</span>
-<span id="cb25-78"><a href="#cb25-78" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-79"><a href="#cb25-79" aria-hidden="true" tabindex="-1"></a><span class="in">```{r }</span></span>
-<span id="cb25-80"><a href="#cb25-80" aria-hidden="true" tabindex="-1"></a>fit<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="fu">mirt</span>(d, <span class="dv">1</span>, <span class="at">pars =</span> sv1,<span class="at">verbose=</span> <span class="cn">FALSE</span>)</span>
-<span id="cb25-81"><a href="#cb25-81" aria-hidden="true" tabindex="-1"></a>coef.fit<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="fu">coef</span>(fit<span class="fl">.1</span>, <span class="at">IRTpars=</span><span class="cn">TRUE</span>, <span class="at">simplify=</span><span class="cn">TRUE</span>)</span>
-<span id="cb25-82"><a href="#cb25-82" aria-hidden="true" tabindex="-1"></a>coef.fit<span class="fl">.1</span></span>
-<span id="cb25-83"><a href="#cb25-83" aria-hidden="true" tabindex="-1"></a><span class="co"># The estimated population SD</span></span>
-<span id="cb25-84"><a href="#cb25-84" aria-hidden="true" tabindex="-1"></a><span class="fu">sqrt</span>(<span class="fu">coef</span>(fit<span class="fl">.1</span>)<span class="sc">$</span>GroupPars[<span class="dv">2</span>]) </span>
-<span id="cb25-85"><a href="#cb25-85" aria-hidden="true" tabindex="-1"></a>theta_mle1 <span class="ot">&lt;-</span> <span class="fu">fscores</span>(fit<span class="fl">.1</span>, <span class="at">method =</span> <span class="st">"ML"</span>, <span class="at">full.scores.SE =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb25-86"><a href="#cb25-86" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(theta_mle1,<span class="dv">2</span>)</span>
-<span id="cb25-87"><a href="#cb25-87" aria-hidden="true" tabindex="-1"></a><span class="co">#An estimate of marginal reliability</span></span>
-<span id="cb25-88"><a href="#cb25-88" aria-hidden="true" tabindex="-1"></a>num <span class="ot">&lt;-</span> <span class="fu">mean</span>(theta_mle1[,<span class="dv">2</span>]) <span class="co">#Average SEM of thetas</span></span>
-<span id="cb25-89"><a href="#cb25-89" aria-hidden="true" tabindex="-1"></a>den <span class="ot">&lt;-</span> <span class="fu">var</span>(theta_mle1[,<span class="dv">1</span>]) <span class="co">#Total observed Variance of estimated thetas</span></span>
-<span id="cb25-90"><a href="#cb25-90" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">-</span> num<span class="sc">/</span>den <span class="co">#Proportion of Observed Variance that is "real" variance</span></span>
-<span id="cb25-91"><a href="#cb25-91" aria-hidden="true" tabindex="-1"></a><span class="fu">sqrt</span>((<span class="dv">1</span> <span class="sc">-</span> num<span class="sc">/</span>den)<span class="sc">*</span>den) <span class="co">#The "true" standard deviation of theta (compare to estimated pop SD)</span></span>
-<span id="cb25-92"><a href="#cb25-92" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-93"><a href="#cb25-93" aria-hidden="true" tabindex="-1"></a>You can see that this replicates the results in columns for $\alpha=1$ in ER's Table 7.3.</span>
-<span id="cb25-94"><a href="#cb25-94" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-95"><a href="#cb25-95" aria-hidden="true" tabindex="-1"></a><span class="fu">## For you to try</span></span>
-<span id="cb25-96"><a href="#cb25-96" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-97"><a href="#cb25-97" aria-hidden="true" tabindex="-1"></a>For you to try on your own: use the approach above to replicate ER's columns for $\alpha=2$ and $\alpha=2.5$.</span>
-<span id="cb25-98"><a href="#cb25-98" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-99"><a href="#cb25-99" aria-hidden="true" tabindex="-1"></a><span class="fu">## mirt.specify.partable in the R package sirt </span></span>
-<span id="cb25-100"><a href="#cb25-100" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-101"><a href="#cb25-101" aria-hidden="true" tabindex="-1"></a>There is an even nicer way to specify these values using a function in the package sirt called mirt.specify.partable. To see how it works, first install the sirt package, load it, and then type ?mirt.specify.partable for an illustration of how this works.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> "Derek C. Briggs and Claude Code (Opus 4.6 &amp; 4.7)"</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="an">output:</span><span class="co"> html_document</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="in">```{r inject-rootdir, include=FALSE}</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_knit<span class="sc">$</span><span class="fu">set</span>(<span class="at">root.dir =</span> <span class="st">"/Users/briggsd/Library/CloudStorage/Dropbox/Github/Measurement and Psychometrics/Test Equating and Linking/R Markdown Tutorials"</span>)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="in">```{r setup, include=FALSE}</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">echo =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a><span class="fu">## Introduction</span></span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>The purpose of this tutorial test is to show how to fix the values of various item parameters in mirt. There are lots of reasons you might want to do this--I'll get into this later. </span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a><span class="fu">## The starting values for item (and person) parameters in mirt</span></span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>For now let me just show how this works using the data from Embretson &amp; Reise, Chapter 7, Tables 7.2 &amp; 7.3.</span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a><span class="in">```{r }</span></span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mirt)</span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>d<span class="ot">&lt;-</span><span class="fu">read.csv</span>(<span class="st">"/Users/briggsd/Library/CloudStorage/Dropbox/Courses/EDUC 8720/Data Sets/Misc/ER_data_tab7-2.csv"</span>)</span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a>Instead of calibrating the 2PL, I'm going to run the following command</span>
+<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a><span class="in">```{r }</span></span>
+<span id="cb25-31"><a href="#cb25-31" aria-hidden="true" tabindex="-1"></a>sv1 <span class="ot">&lt;-</span> <span class="fu">mirt</span>(d, <span class="dv">1</span>,  <span class="at">itemtype=</span><span class="st">'2PL'</span>, <span class="at">pars =</span> <span class="st">'values'</span>,<span class="at">verbose=</span><span class="cn">FALSE</span>)</span>
+<span id="cb25-32"><a href="#cb25-32" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-33"><a href="#cb25-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-34"><a href="#cb25-34" aria-hidden="true" tabindex="-1"></a>Let's have a look at the first 8 rows this object</span>
+<span id="cb25-35"><a href="#cb25-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-36"><a href="#cb25-36" aria-hidden="true" tabindex="-1"></a><span class="in">```{r }</span></span>
+<span id="cb25-37"><a href="#cb25-37" aria-hidden="true" tabindex="-1"></a>sv1[<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>,] </span>
+<span id="cb25-38"><a href="#cb25-38" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-39"><a href="#cb25-39" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>This table has 4 rows for each of the first 2 of 10 items in the ER data. </span>
+<span id="cb25-40"><a href="#cb25-40" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>Each row corresponds to a different item parameter that it would be possible to specify, and these are listed under the "name" column: a1 is item discrimination, d is location (in mirt's slope-intercept form), g is the lower asymptote (guessing parameter) and u is an upper asymptote (yes, there is actually a 4PL model). </span>
+<span id="cb25-41"><a href="#cb25-41" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>Notice that each item parameter also has a "value" column. These represent "starting values" before mirt invokes the MMLE/EM algorithm. Because we set itemtype to 2PL, the g and u parameters are set to 0 and 1.</span>
+<span id="cb25-42"><a href="#cb25-42" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>The "lbound" and "ubound" columns specify the lower and upper bound for possible values of each parameter. Notice that right now there are no bounds on values that can be estimated for a1 and d.</span>
+<span id="cb25-43"><a href="#cb25-43" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>The "est" column is very important. It indicates whether or not a given item and parameter combination will be estimated. Right now, this is set to TRUE for all a1 and d item parameters, but FALSE for all g and u parameters</span>
+<span id="cb25-44"><a href="#cb25-44" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>Finally, we have the "prior_1" and "prior_2" columns. Right now these are all empty, but mirt gives us the flexibility to specify a unique Bayesian prior distribution for each item parameter.</span>
+<span id="cb25-45"><a href="#cb25-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-46"><a href="#cb25-46" aria-hidden="true" tabindex="-1"></a>I also want to show you the last two rows of sv1</span>
+<span id="cb25-47"><a href="#cb25-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-48"><a href="#cb25-48" aria-hidden="true" tabindex="-1"></a><span class="in">```{r }</span></span>
+<span id="cb25-49"><a href="#cb25-49" aria-hidden="true" tabindex="-1"></a>sv1[<span class="dv">41</span><span class="sc">:</span><span class="dv">42</span>,] </span>
+<span id="cb25-50"><a href="#cb25-50" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-51"><a href="#cb25-51" aria-hidden="true" tabindex="-1"></a>These are the only rows in the table that don't correspond to item parameters. Instead, these are the mean and variance of the person ability distribution (assuming we are specifying a normal distribution for ability, which is the default in mirt). Note that these values, by default are set to 0 and 1 to identify the scale.</span>
+<span id="cb25-52"><a href="#cb25-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-53"><a href="#cb25-53" aria-hidden="true" tabindex="-1"></a><span class="fu">## Replicating the first column of ER's Table 7.3</span></span>
+<span id="cb25-54"><a href="#cb25-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-55"><a href="#cb25-55" aria-hidden="true" tabindex="-1"></a>Now, in the ER example in Table 7.3, they are getting ML estimates ("scores") of theta for their 23 examinees after imposing different assumptions about the true values of the item parameters in each case. I want to show you how to replicate what they did with mirt by fixing values in the sv1 object I just introduced. </span>
+<span id="cb25-56"><a href="#cb25-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-57"><a href="#cb25-57" aria-hidden="true" tabindex="-1"></a>For the first column, all discrimination values are fixed at 1 and item difficulty goes -2 to 2 mostly in increments of .5 logits.</span>
+<span id="cb25-58"><a href="#cb25-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-59"><a href="#cb25-59" aria-hidden="true" tabindex="-1"></a><span class="in">```{r }</span></span>
+<span id="cb25-60"><a href="#cb25-60" aria-hidden="true" tabindex="-1"></a><span class="co">#custom discrimination and easiness values</span></span>
+<span id="cb25-61"><a href="#cb25-61" aria-hidden="true" tabindex="-1"></a>sv1<span class="sc">$</span>value[sv1<span class="sc">$</span>name <span class="sc">==</span> <span class="st">'a1'</span>] <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span>,<span class="dv">10</span>) <span class="co">#Creates a vector of 10 1's</span></span>
+<span id="cb25-62"><a href="#cb25-62" aria-hidden="true" tabindex="-1"></a>sv1<span class="sc">$</span>value[sv1<span class="sc">$</span>name <span class="sc">==</span> <span class="st">'d'</span>] <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">1</span><span class="sc">*</span><span class="fu">c</span>(<span class="sc">-</span><span class="dv">2</span>,<span class="sc">-</span><span class="fl">1.5</span>,<span class="sc">-</span><span class="dv">1</span>,<span class="sc">-</span>.<span class="dv">5</span>,<span class="dv">0</span>,<span class="dv">0</span>,.<span class="dv">5</span>,<span class="dv">1</span>,<span class="fl">1.5</span>,<span class="dv">2</span>) <span class="co">#Multiplied by -1 to make this easiness</span></span>
+<span id="cb25-63"><a href="#cb25-63" aria-hidden="true" tabindex="-1"></a><span class="co">#Fix the parameters to these starting values, do NOT estimate them</span></span>
+<span id="cb25-64"><a href="#cb25-64" aria-hidden="true" tabindex="-1"></a>sv1<span class="sc">$</span>est <span class="ot">&lt;-</span> <span class="cn">FALSE</span></span>
+<span id="cb25-65"><a href="#cb25-65" aria-hidden="true" tabindex="-1"></a><span class="co">#Set pop mean and variance as free to be estimated</span></span>
+<span id="cb25-66"><a href="#cb25-66" aria-hidden="true" tabindex="-1"></a>sv1<span class="sc">$</span>est[sv1<span class="sc">$</span>name <span class="sc">==</span> <span class="st">'MEAN_1'</span>] <span class="ot">&lt;-</span> <span class="cn">TRUE</span></span>
+<span id="cb25-67"><a href="#cb25-67" aria-hidden="true" tabindex="-1"></a>sv1<span class="sc">$</span>est[sv1<span class="sc">$</span>name <span class="sc">==</span> <span class="st">'COV_11'</span>] <span class="ot">&lt;-</span> <span class="cn">TRUE</span></span>
+<span id="cb25-68"><a href="#cb25-68" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-69"><a href="#cb25-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-70"><a href="#cb25-70" aria-hidden="true" tabindex="-1"></a>Do you see what we are doing here? Let's see how the sv1 object has changed </span>
+<span id="cb25-71"><a href="#cb25-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-72"><a href="#cb25-72" aria-hidden="true" tabindex="-1"></a><span class="in">```{r }</span></span>
+<span id="cb25-73"><a href="#cb25-73" aria-hidden="true" tabindex="-1"></a>sv1[<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>,] </span>
+<span id="cb25-74"><a href="#cb25-74" aria-hidden="true" tabindex="-1"></a>sv1[<span class="dv">41</span><span class="sc">:</span><span class="dv">42</span>,] </span>
+<span id="cb25-75"><a href="#cb25-75" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-76"><a href="#cb25-76" aria-hidden="true" tabindex="-1"></a>When we fit the 2PL under these constraints, we aren't estimating any item parameters. The only thing getting estimated is the population mean and variance. Then we go straight to estimating thetas.</span>
+<span id="cb25-77"><a href="#cb25-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-78"><a href="#cb25-78" aria-hidden="true" tabindex="-1"></a><span class="in">```{r }</span></span>
+<span id="cb25-79"><a href="#cb25-79" aria-hidden="true" tabindex="-1"></a>fit<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="fu">mirt</span>(d, <span class="dv">1</span>, <span class="at">pars =</span> sv1,<span class="at">verbose=</span> <span class="cn">FALSE</span>)</span>
+<span id="cb25-80"><a href="#cb25-80" aria-hidden="true" tabindex="-1"></a>coef.fit<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="fu">coef</span>(fit<span class="fl">.1</span>, <span class="at">IRTpars=</span><span class="cn">TRUE</span>, <span class="at">simplify=</span><span class="cn">TRUE</span>)</span>
+<span id="cb25-81"><a href="#cb25-81" aria-hidden="true" tabindex="-1"></a>coef.fit<span class="fl">.1</span></span>
+<span id="cb25-82"><a href="#cb25-82" aria-hidden="true" tabindex="-1"></a><span class="co"># The estimated population SD</span></span>
+<span id="cb25-83"><a href="#cb25-83" aria-hidden="true" tabindex="-1"></a><span class="fu">sqrt</span>(<span class="fu">coef</span>(fit<span class="fl">.1</span>)<span class="sc">$</span>GroupPars[<span class="dv">2</span>]) </span>
+<span id="cb25-84"><a href="#cb25-84" aria-hidden="true" tabindex="-1"></a>theta_mle1 <span class="ot">&lt;-</span> <span class="fu">fscores</span>(fit<span class="fl">.1</span>, <span class="at">method =</span> <span class="st">"ML"</span>, <span class="at">full.scores.SE =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb25-85"><a href="#cb25-85" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(theta_mle1,<span class="dv">2</span>)</span>
+<span id="cb25-86"><a href="#cb25-86" aria-hidden="true" tabindex="-1"></a><span class="co">#An estimate of marginal reliability</span></span>
+<span id="cb25-87"><a href="#cb25-87" aria-hidden="true" tabindex="-1"></a>num <span class="ot">&lt;-</span> <span class="fu">mean</span>(theta_mle1[,<span class="dv">2</span>]) <span class="co">#Average SEM of thetas</span></span>
+<span id="cb25-88"><a href="#cb25-88" aria-hidden="true" tabindex="-1"></a>den <span class="ot">&lt;-</span> <span class="fu">var</span>(theta_mle1[,<span class="dv">1</span>]) <span class="co">#Total observed Variance of estimated thetas</span></span>
+<span id="cb25-89"><a href="#cb25-89" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">-</span> num<span class="sc">/</span>den <span class="co">#Proportion of Observed Variance that is "real" variance</span></span>
+<span id="cb25-90"><a href="#cb25-90" aria-hidden="true" tabindex="-1"></a><span class="fu">sqrt</span>((<span class="dv">1</span> <span class="sc">-</span> num<span class="sc">/</span>den)<span class="sc">*</span>den) <span class="co">#The "true" standard deviation of theta (compare to estimated pop SD)</span></span>
+<span id="cb25-91"><a href="#cb25-91" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-92"><a href="#cb25-92" aria-hidden="true" tabindex="-1"></a>You can see that this replicates the results in columns for $\alpha=1$ in ER's Table 7.3.</span>
+<span id="cb25-93"><a href="#cb25-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-94"><a href="#cb25-94" aria-hidden="true" tabindex="-1"></a><span class="fu">## For you to try</span></span>
+<span id="cb25-95"><a href="#cb25-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-96"><a href="#cb25-96" aria-hidden="true" tabindex="-1"></a>For you to try on your own: use the approach above to replicate ER's columns for $\alpha=2$ and $\alpha=2.5$.</span>
+<span id="cb25-97"><a href="#cb25-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-98"><a href="#cb25-98" aria-hidden="true" tabindex="-1"></a><span class="fu">## mirt.specify.partable in the R package sirt </span></span>
+<span id="cb25-99"><a href="#cb25-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-100"><a href="#cb25-100" aria-hidden="true" tabindex="-1"></a>There is an even nicer way to specify these values using a function in the package sirt called mirt.specify.partable. To see how it works, first install the sirt package, load it, and then type ?mirt.specify.partable for an illustration of how this works.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 

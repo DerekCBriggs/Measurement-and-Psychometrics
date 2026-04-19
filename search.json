@@ -54,7 +54,7 @@
     "href": "index.html#how-to-use-this-book",
     "title": "Psychometric Modeling with IRT",
     "section": "How to Use This Book",
-    "text": "How to Use This Book\n\nRead linearly if you are taking the course—each chapter builds on earlier ones.\nJump around if you are using this as a reference after the course—the Index of Key Terms at the end is designed for that.\nClone the repository if you want to knit the chapters yourself. The original R Markdown files live in topic-specific folders in the Measurement and Psychometrics repository; the chapters here are copies that preserve each tutorial’s working directory so that the data files load correctly.\nDo not treat this as a substitute for the required readings. Functional literacy requires both the conceptual grounding the readings provide and the computational fluency the tutorials build.\n\nDerek C. Briggs University of Colorado Boulder Spring 2026",
+    "text": "How to Use This Book\n\nRead linearly if you are taking the course—each chapter builds on earlier ones.\nJump around if you are using this as a reference after the course—the Index of Key Terms at the end is designed for that.\nClone the repository if you want to knit the chapters yourself. The original R Markdown files live in topic-specific folders in the Measurement and Psychometrics repository; the chapters here are copies that preserve each tutorial’s working directory so that the data files load correctly.\nDo not treat this as a substitute for the required readings. Functional literacy requires both the conceptual grounding the readings provide and the computational fluency the tutorials build.\n\nDerek C. Briggs University of Colorado Boulder April 19, 2026",
     "crumbs": [
       "Preface"
     ]
