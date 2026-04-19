@@ -1,0 +1,58 @@
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "Psychometric Modeling with IRT"
+  subtitle: "A Companion Compilation for EDUC 8720 (Spring 2026)"
+  author: "Derek C. Briggs"
+  date: today
+  search: true
+  repo-url: https://github.com/DerekCBriggs/Measurement-and-Psychometrics
+  repo-branch: master
+  chapters:
+    - index.qmd
+    - chapters/01-reliability.Rmd
+    - chapters/02-classical-item-analysis.Rmd
+    - part: "Basics of IRT"
+      chapters:
+        - chapters/03-deriving-icc.Rmd
+        - chapters/04-interpreting-iccs.Rmd
+        - chapters/05-tcc-info-sem.Rmd
+        - chapters/06-assumptions-properties.Rmd
+        - chapters/07-normal-ogive.Rmd
+    - chapters/08-mirt-commands.Rmd
+    - chapters/09-rasch-paradigm.Rmd
+    - chapters/10-scale-constraints.Rmd
+    - part: "Parameter Estimation"
+      chapters:
+        - chapters/11-person-estimation.Rmd
+        - chapters/12-jmle.Rmd
+        - chapters/13-mmle.Rmd
+    - chapters/14-model-fit.Rmd
+    - chapters/15-polytomous.Rmd
+    - part: "Applications of IRT"
+      chapters:
+        - chapters/16-fixing-params.Rmd
+        - chapters/17-linking-equating.Rmd
+        - chapters/18-dif.Rmd
+        - chapters/19-vertical-scaling.Rmd
+        - chapters/20-cat.Rmd
+        - chapters/21-mirt.Rmd
+    - key-terms.qmd
+
+bibliography: []
+
+execute:
+  freeze: auto
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    code-fold: show
+    code-tools: true
+    number-sections: true
+    fig-cap-location: bottom
+    tbl-cap-location: top

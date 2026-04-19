@@ -1,0 +1,6 @@
+/.quarto/
+**/*.quarto_ipynb
+_book/
+_freeze/
+**/*_files/
+Syllabus_ED8720_spr26_011226.txt

@@ -1,0 +1,24 @@
+﻿Topic,Rmd File
+Introduction,to be written
+Reliability and the Classical Test Theory Model,Understanding-Reliability.Rmd
+Classical Item Analysis,1_Classical_Item_Analysis.Rmd
+Basics of IRT: Part 1 (Deriving the ICC),2_Deriving_the_ICC.Rmd
+Basics of IRT: Part 2 (ICC Interpretations),3_Interpreting_ICCs.Rmd
+Basics of IRT: Part 3 (Information),4_TCC_Information_SEM.Rmd
+Basics of IRT: Part 4 (Model Assumptions & Properties),5_IRT_Assumptions_Properties.Rmd
+Basics of IRT: Optional (Understanding the Normal Ogive),6_Understanding_Normal_Ogive.Rmd
+Guide to commands for unidimensional IRT models in mirt,Basic_mirt_commands.Rmd
+The Rasch Model Paradigm ,4_The_Rasch_Model_Paradigm.Rmd
+Scale Constraints in mirt,Scale-Constraints-in-mirt.Rmd
+Person Parameter Estimation,Person_Parameter_Estimation.Rmd
+Item Parameter Estimation (JMLE),Item_Parameter_Estimation_JMLE.Rmd
+Item Parameter Estimation (MMLE),Item_Parameter_Estimation_MMLE.Rmd
+Evaluating Model Fit,Evaluating_IRT_Model_Fit.Rmd
+IRT Models for Polytomously Scored Items,Polytomous_IRT_Models_Tutorial.Rmd
+Fixing item parameters in mirt,Fixing_Item_Parameters_mirt.Rmd
+IRT Linking and Equating ,IRT-Equating-in-mirt.Rmd
+Differential Item Functioning,Differential_Item_Functioning.Rmd
+Vertical Scaling,Vertical_Scaling_in_mirt.Rmd
+Computerized Adaptive Testing,Computerized_Adaptive_Testing.Rmd
+Multidimensional IRT,Compensatory MIRT in mirt.Rmd
+Index,to be written

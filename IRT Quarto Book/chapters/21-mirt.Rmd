@@ -1,0 +1,151 @@
+---
+title: "Compensatory MIRT models in the mirt package"
+author: "Derek Briggs"
+date: "2024-04-28"
+output: html_document
+---
+
+```{r inject-rootdir, include=FALSE}
+knitr::opts_knit$set(root.dir = "/Users/briggsd/Library/CloudStorage/Dropbox/Github/Measurement and Psychometrics/Multidimensional IRT/R Markdown Tutorials")
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+The purpose of this document is to show how to specify and interpret a compensatory MIRT model. An important aspect of what I'll be doing here is providing an illustration using empirical rather than simulated data. In textbook presentations such as Reckase (2009; 2016) simulated data is used and this can mask some really tricky decision points when working with these models. When calibrating test items with unidimensional model using mirt, not that much can go wrong if you just accept function defaults. As we'll see, that is not true in the multidimensional context.
+
+## The Data
+
+The data we'll be using are a subset taken from a study published by Jon Weeks. We have 4,493 students in grades 6 though 9 who took one of four forms of a test designed to measure six "foundational reading skills". There were a total of 199 unique items across all forms, but to keep things manageable from a pedagogical point of view, we are only going to focus on the items that were written to elicit evidence of a student's (1) morphological awareness--using knowledge of word parts to identify which words fits the meaning and syntax of a sentence [MA], and (2) sentence processing--building meaning from sentences by understanding causal connectors, pronouns, and relationships among terms [SEN]. There are a total of 29 MA items and 22 SEN items. We will only look at the first 10 MA and SEN items. 
+
+## Descriptives
+
+```{r }
+#Install these if necessary
+library(mirt)
+library(psych)
+library(plink)
+
+#Import Data
+ir <- read.csv("/Users/briggsd/Library/CloudStorage/Dropbox/Github/Measurement and Psychometrics/Multidimensional IRT/Data/RISE_IR.csv")
+dat<-ir[,c(89:98,118:127)] #Subset of MA and SEN items
+#Classical item stats
+itemstats(dat)
+ma.tot<-apply(dat[,1:10],1,sum)
+sen.tot<-apply(dat[,11:20],1,sum)
+cor(ma.tot,sen.tot)
+#Parallel Analysis
+fa.parallel(dat, fa = "both", cor = "poly")
+```
+
+You can see from the outset we have pretty good theoretical and empirical reasons to think that a compensatory MIRT model might make sense here. 
+
+## Compensatory M2PL
+
+OK, let's start by fitting both a unidimensional 2PL and a multidimensional version using the defaults in `mirt`.
+
+### Fitting the Model
+
+```{r }
+#Unidimensional 2PL
+out1 <- mirt(dat,1,verbose=FALSE)
+pars1 <- coef(out1, IRTpars=TRUE, simplify=TRUE)
+theta1 <- fscores(out1)
+#M2PL
+out2 <- mirt(dat,2,verbose=FALSE)
+pars2 <- coef(out2, simplify=TRUE)
+theta2 <- fscores(out2)
+```
+
+First let's look at our m2pl item parameters
+
+```{r }
+pars2
+```
+How can we be getting negative slope parameters? And what about the lack of covariance between dimensions? Hold that thought. Reckase (2009; 2016) suggests that the best way to interpret item parameters in multidimensional space is by computing MDISC, D and angular direction. Let's do that first and see if these make sense even if the raw output seems odd.
+
+```{r }
+mdisc<-sqrt(pars2$items[,1]^2+pars2$items[,2]^2)
+D <- ifelse(pars2$items[,3]==0, 0, (-pars2$items[,3])/mdisc)
+alpha1<-acos(pars2$items[,1]/mdisc)*180/pi
+alpha2<-acos(pars2$items[,2]/mdisc)*180/pi
+mirtpars<-cbind(mdisc,D,alpha1,alpha2)
+round(mirtpars,2)
+```
+Now you can see that while the mdisc and D values don't look completely crazy, the angular directions seem uninterpretable given that we expect them to be in the first and third quadrants of a plot of dimension 1 against dimension 2. 
+
+### Orthogonal Rotation
+
+The explanation for the problem is that the default call of the `coef` command in `mirt` does not perform what is known in factor analysis as rotation. Let's see what happens when we extract the MIRT parameters using a method of orthogonal rotation known as varimax. Then let's compare the original unrotated item parameters to the rotated ones. 
+
+```{r }
+pars2v <- coef(out2, simplify=TRUE,rotate='varimax')
+compare<-cbind(pars2$items[,1:3],pars2v$items[,1:3])
+round(compare,2)
+```
+
+You can see that basically solves the problem: we no longer have any negative slope parameters for either dimension. Now let's look at mdisc, D and the directional angles. 
+
+```{r }
+mdisc<-sqrt(pars2v$items[,1]^2+pars2v$items[,2]^2)
+D <- ifelse(pars2v$items[,3]==0, 0, (-pars2v$items[,3])/mdisc)
+alpha1<-acos(pars2v$items[,1]/mdisc)*180/pi
+alpha2<-acos(pars2v$items[,2]/mdisc)*180/pi
+mirtpars<-cbind(mdisc,D,alpha1,alpha2)
+print(round(mirtpars,2))
+```
+
+Here is another approach Jon Weeks shared with me that involves essentially doing a "pre-rotation" by constraining all slope parameters to have a lower bound at 0. This might be a reasonable move if you have good theoretical reason to think your item response surface for each item should be monotonically increasing as values on each $\theta$ increase. But I find that if we do this and then do varimax rotation, we basically get the same result as we would just doing the varimax rotation without the constraint. 
+
+```{r }
+# Extract object to specify model constraints
+constraints <- mirt(dat,2, pars="values")
+# Impose a constraint where all slopes are positive
+constraints$lbound[constraints$name %in% c("a1","a2")] <- 0
+out2c <- mirt(dat,2,pars=constraints,verbose=FALSE)
+pars2c <- coef(out2c, simplify=TRUE, rotate='varimax')
+compare<-cbind(pars2v$items[,1:3],pars2c$items[,1:3])
+round(compare,2)
+```
+
+### Plots
+
+Actually, I think this is where it makes the most sense to use Jon's approach: when you want to generate plots of test information, test characteristic surface, SEM, and item characteristic surfaces. Because the plots all call the output from the model run. To see more about mirt plot options, type `?mirt::plot` (SingleGroupClass-method) in R Console.
+
+```{r }
+plot(out2c, type = "info")
+plot(out2c, type = "score")
+plot(out2c, type = "SE")
+plot(out2c, type = "trace",which.items=c(1,20))
+```
+ 
+### Oblique Rotation
+
+And here is where things get more complicated. So far we have been doing orthogonal rotation which means we are assuming two two dimensions are uncorrelated. But surely they are correlated. So we can also let each axis rotate by a different amount. But it seems to me that once we do this it no longer makes much sense to try to interpret those directional alphas from the Reckase article. Anyway, let's have a look.
+
+```{r }
+pars2o <- coef(out2, simplify=TRUE, rotate='oblimin')
+compare<-cbind(pars2v$items[,1:3],pars2o$items[,1:3])
+mdisc<-sqrt(pars2o$items[,1]^2+pars2o$items[,2]^2)
+D <- ifelse(pars2o$items[,3]==0, 0, (-pars2o$items[,3])/mdisc)
+alpha1<-acos(pars2o$items[,1]/mdisc)*180/pi
+alpha2<-acos(pars2o$items[,2]/mdisc)*180/pi
+mirtpars<-cbind(mdisc,D,alpha1,alpha2)
+print(round(mirtpars,2))
+```
+
+By the way, oblimin rotation and a representation in terms of factor loadings is the default when you use the summary command.
+
+```{r }
+summary(out2, suppress = 0.25)
+#same thing as summary(out2, rotate = "oblimin", suppress = 0.25)
+```
+Notice at the bottom of this output we also see an estimate of the intercorrelation between factors. This is .75. But this value is much smaller than what we get when we look at the intercorrelation between eap theta estimates. I am not sure why, it is something I need to investigate.
+
+```{r }
+cor(theta2)
+plot(theta2)
+```

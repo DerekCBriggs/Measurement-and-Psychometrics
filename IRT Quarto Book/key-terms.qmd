@@ -1,0 +1,211 @@
+# Index of Key Terms {#sec-key-terms .unnumbered}
+
+This alphabetized glossary covers the terms a student should be comfortable with at the end of EDUC 8720. Each entry links to the chapter (and, where applicable, the section) where the term is developed. Click the term to jump there.
+
+**Jump to:** [A](#A) · [B](#B) · [C](#C) · [D](#D) · [E](#E) · [F](#F) · [G](#G) · [H](#H) · [I](#I) · [J](#J) · [L](#L) · [M](#M) · [N](#N) · [O](#O) · [P](#P) · [Q](#Q) · [R](#R) · [S](#S) · [T](#T) · [U](#U) · [V](#V) · [W](#W)
+
+---
+
+## A {#A}
+
+[**1PL model**](chapters/04-interpreting-iccs.Rmd#the-1pl-rasch-model). One-parameter logistic IRF in which items vary only in difficulty. Equivalent to the Rasch model up to a scaling constant.
+
+[**2PL model**](chapters/04-interpreting-iccs.Rmd#the-2pl-model). Two-parameter logistic IRF that adds a discrimination parameter $a$, allowing ICCs to differ in slope.
+
+[**3PL model**](chapters/04-interpreting-iccs.Rmd#the-3pl-model). Three-parameter logistic IRF that adds a lower-asymptote ("guessing") parameter $c$ to handle multiple-choice items.
+
+[**Anchor items**](chapters/17-linking-equating.Rmd#simulating-a-non-equivalent-group-anchor-test-neat-design). Items common to two forms used to put them on a common scale in a NEAT design.
+
+[**Anchored calibration**](chapters/17-linking-equating.Rmd). A single concurrent run of `mirt` with anchor-item parameters fixed from a prior calibration.
+
+## B {#B}
+
+[**Bias (item bias)**](chapters/18-dif.Rmd#item-bias). A validity judgment: an item functions differentially *and* the differential functioning is attributable to a construct-irrelevant source.
+
+## C {#C}
+
+[**Classical Item Analysis**](chapters/02-classical-item-analysis.Rmd). The diagnostic examination of item statistics (difficulty, discrimination, distractor behavior) prior to fitting an IRT model.
+
+[**Classical Test Theory (CTT)**](chapters/01-reliability.Rmd#true-score-theory). The measurement framework in which observed scores are decomposed into true score plus random error.
+
+[**Compensatory MIRT**](chapters/21-mirt.Rmd#compensatory-m2pl). A multidimensional IRT model in which low ability on one dimension can be offset by high ability on another.
+
+[**Computerized Adaptive Testing (CAT)**](chapters/20-cat.Rmd). A test administration in which each examinee receives a personalized sequence of items chosen in real time to maximize measurement precision.
+
+[**Concurrent calibration**](chapters/17-linking-equating.Rmd). A single-run equating strategy in which item parameters from multiple forms are estimated simultaneously on a common metric.
+
+[**Content constraints (CAT)**](chapters/20-cat.Rmd). Rules that enforce coverage of content specifications during adaptive item selection.
+
+[**Cronbach's alpha**](chapters/01-reliability.Rmd#cronbachs-alpha). A lower bound on reliability under the assumption of essentially tau-equivalent forms; the most commonly reported internal-consistency index.
+
+## D {#D}
+
+[**Differential Item Functioning (DIF)**](chapters/18-dif.Rmd#differential-item-functioning). A statistical finding that examinees from different groups with equal ability have different probabilities of a correct response.
+
+[**Discrimination parameter ($a$)**](chapters/04-interpreting-iccs.Rmd#the-2pl-model). The slope of the ICC at its inflection point; controls how sharply the probability of a correct response changes with $\theta$.
+
+[**Distractor analysis**](chapters/02-classical-item-analysis.Rmd#activity-1-classical-item-statistics). Examination of the performance of incorrect multiple-choice options to detect miskeyed or non-functioning distractors.
+
+## E {#E}
+
+[**EAP (Expected A Posteriori)**](chapters/11-person-estimation.Rmd). The mean of the posterior distribution of $\theta$ given a response pattern; the default person-score estimator in `mirt`.
+
+[**EM algorithm**](chapters/13-mmle.Rmd). The Expectation-Maximization algorithm used in MMLE to alternate between imputing expected latent trait values and re-estimating item parameters.
+
+[**Equating**](chapters/17-linking-equating.Rmd). Adjusting the scores from alternate forms so that they are interchangeable, satisfying Lord's equating criteria.
+
+[**Equipercentile equating**](chapters/17-linking-equating.Rmd). A non-parametric equating method that matches scores at equal percentile ranks.
+
+[**ETS delta**](chapters/18-dif.Rmd#the-ets-delta-statistic). A log-transformation of the Mantel-Haenszel odds ratio with thresholds (A/B/C) for classifying DIF severity.
+
+## F {#F}
+
+[**Fisher information**](chapters/11-person-estimation.Rmd). The expected curvature of the log-likelihood; the basis of item and test information functions.
+
+[**Fixing item parameters**](chapters/16-fixing-params.Rmd). Using `mirt`'s `pars = values` and related mechanisms to constrain selected item parameters during estimation.
+
+## G {#G}
+
+[**Generalized Partial Credit Model (GPCM)**](chapters/15-polytomous.Rmd). A polytomous IRT model that extends the PCM by allowing items to vary in discrimination.
+
+[**Graded Response Model (GRM)**](chapters/15-polytomous.Rmd). Samejima's polytomous IRT model for ordered categories, formulated via cumulative category boundaries.
+
+[**Guessing parameter ($c$)**](chapters/04-interpreting-iccs.Rmd#the-3pl-model). The lower asymptote of the ICC; the probability of a correct response as $\theta \to -\infty$.
+
+## H {#H}
+
+[**Haebara method**](chapters/17-linking-equating.Rmd). A characteristic-curve linking method that minimizes the squared difference between anchor-item ICCs across forms.
+
+## I {#I}
+
+[**Impact**](chapters/18-dif.Rmd#item-impact). A between-group difference in expected item performance that reflects real ability differences, not bias.
+
+[**Information function (item)**](chapters/05-tcc-info-sem.Rmd#part-2-item-information-functions). The expected curvature of the log-likelihood at a given $\theta$; the item's contribution to measurement precision.
+
+[**Information function (test)**](chapters/05-tcc-info-sem.Rmd#part-3-test-information-function). The sum of item information functions; its inverse square root is the CSEM for $\theta$.
+
+[**Invariance (parameter)**](chapters/06-assumptions-properties.Rmd). The IRT property that item parameters do not depend on the sample of examinees, and person parameters do not depend on the set of items.
+
+[**Item Bank**](chapters/20-cat.Rmd#building-an-item-bank). The calibrated pool of items from which a CAT algorithm selects.
+
+[**Item Characteristic Curve (ICC)**](chapters/03-deriving-icc.Rmd#part-3-deriving-the-icc). A function relating $\theta$ to the probability of a correct response for a given item.
+
+[**Item Difficulty ($b$)**](chapters/04-interpreting-iccs.Rmd). The location on the $\theta$ scale at which the probability of a correct response reaches its inflection point.
+
+[**Item purification**](chapters/18-dif.Rmd). The iterative DIF procedure in which flagged items are excluded from the matching criterion and the analysis is re-run.
+
+## J {#J}
+
+[**Joint Maximum Likelihood (JMLE)**](chapters/12-jmle.Rmd). A parameter-estimation strategy that estimates item and person parameters simultaneously by alternating Newton-Raphson steps.
+
+## L {#L}
+
+[**Latent trait ($\theta$)**](chapters/04-interpreting-iccs.Rmd#scores-in-ctt-vs-irt). The unobserved attribute that an IRT model places examinees on.
+
+[**Linking**](chapters/17-linking-equating.Rmd). Placing item and person parameters from separate calibrations on a common scale, usually via linear or characteristic-curve transformations.
+
+[**Local independence**](chapters/06-assumptions-properties.Rmd#assumption-1-local-independence). The IRT assumption that, conditional on $\theta$, item responses are statistically independent.
+
+[**Logistic function**](chapters/04-interpreting-iccs.Rmd#logits-and-alternative-forms). The sigmoidal link function $\{1 + \exp[-\text{logit}]\}^{-1}$ used in the 1PL/2PL/3PL.
+
+[**Logit**](chapters/10-scale-constraints.Rmd#the-logit-as-a-unit-of-measurement). The log-odds of a correct response; the linear predictor in a logistic IRT model.
+
+[**`lordif` algorithm**](chapters/18-dif.Rmd). Iterative ordinal-logistic-regression DIF detection with IRT-based matching criterion and purification, implemented in the R package of the same name.
+
+## M {#M}
+
+[**Mantel-Haenszel**](chapters/18-dif.Rmd#the-mantel-haenszel-approach). A contingency-table DIF procedure that computes a common odds ratio across ability-matched strata.
+
+[**MAP (Maximum A Posteriori)**](chapters/11-person-estimation.Rmd). The mode of the posterior of $\theta$ given a response pattern.
+
+[**Marginal Maximum Likelihood (MMLE)**](chapters/13-mmle.Rmd). A parameter-estimation strategy that integrates $\theta$ out of the joint likelihood using a prior, then maximizes via EM.
+
+[**Mean-mean linking**](chapters/17-linking-equating.Rmd#mean-mean-method). A linking transformation based on matching the means of anchor-item $b$'s and $a$'s across forms.
+
+[**Mean-sigma linking**](chapters/17-linking-equating.Rmd#mean-sigma-method). A linking transformation based on matching means and standard deviations of anchor-item $b$'s across forms.
+
+[**`mirt`**](chapters/08-mirt-commands.Rmd). The R package for multidimensional item response theory that we use for almost all estimation and plotting.
+
+[**Multidimensional IRT (MIRT)**](chapters/21-mirt.Rmd). IRT models in which the latent trait is a vector $\boldsymbol{\theta}$ rather than a scalar.
+
+## N {#N}
+
+[**NEAT design**](chapters/17-linking-equating.Rmd#simulating-a-non-equivalent-group-anchor-test-neat-design). Non-Equivalent groups with Anchor Test—a data collection design in which two samples take different forms linked by common items.
+
+[**Newton-Raphson**](chapters/12-jmle.Rmd#newton-raphson-in-the-person-step). The iterative optimization algorithm used in JMLE estimation steps.
+
+[**Nominal Response Model (NRM)**](chapters/15-polytomous.Rmd). Bock's polytomous IRT model for unordered response categories.
+
+[**Normal ogive**](chapters/07-normal-ogive.Rmd). The CDF of a standard normal; an alternative to the logistic as the IRF link function.
+
+[**Non-uniform DIF**](chapters/18-dif.Rmd#uniform-vs.-non-uniform-dif). A DIF pattern in which the two groups' ICCs cross — the item favors different groups at different $\theta$ levels.
+
+## O {#O}
+
+[**Oblique rotation**](chapters/21-mirt.Rmd#oblique-rotation). A factor rotation that allows dimensions to be correlated (e.g., oblimin, promax).
+
+## P {#P}
+
+[**Parallel forms**](chapters/01-reliability.Rmd#parallel-test-forms). Tests assumed to have identical true scores and identical error variances across examinees.
+
+[**Partial Credit Model (PCM)**](chapters/15-polytomous.Rmd#partial-credit-model-pcm). Masters' polytomous IRT model for ordered categories built from adjacent-category logits.
+
+[**Person Parameter Estimation**](chapters/11-person-estimation.Rmd). Estimation of $\theta$ for each examinee using MLE, MAP, or EAP.
+
+[**Point-biserial correlation**](chapters/02-classical-item-analysis.Rmd#activity-1-classical-item-statistics). The correlation between a dichotomous item score and the total test score; a classical discrimination index.
+
+[**Posterior distribution**](chapters/11-person-estimation.Rmd). The distribution of $\theta$ given the observed responses, combining the prior and the likelihood.
+
+[**Prior distribution**](chapters/11-person-estimation.Rmd). The assumed population distribution of $\theta$ (typically $\mathcal{N}(0,1)$) used in Bayesian person scoring and in MMLE.
+
+## Q {#Q}
+
+[**Quadrature**](chapters/13-mmle.Rmd#quadrature-making-integration-concrete). Numerical integration over a set of support points with associated weights; used in MMLE to integrate over the latent trait.
+
+## R {#R}
+
+[**Rasch model**](chapters/09-rasch-paradigm.Rmd). The 1-parameter logistic model; from the Rasch tradition, a requirement for fundamental measurement rather than a special case of the 2PL.
+
+[**Rating Scale Model (RSM)**](chapters/15-polytomous.Rmd). Andrich's polytomous model in which threshold locations are constrained to be the same across items.
+
+[**Reliability coefficient**](chapters/01-reliability.Rmd#the-concept-of-a-reliability-coefficient). The proportion of observed-score variance attributable to true-score variance.
+
+## S {#S}
+
+[**Scale indeterminacy**](chapters/09-rasch-paradigm.Rmd#part-3-scale-indeterminacy). The fact that the IRT $\theta$ metric is identified only up to a linear transformation; requires an anchoring choice.
+
+[**Scale constraints (mirt)**](chapters/10-scale-constraints.Rmd). The specific identification choices in `mirt` (mean-variance on $\theta$ or anchoring on an item) that pin down the metric.
+
+[**SEM (Standard Error of Measurement, CTT)**](chapters/01-reliability.Rmd#to-estimate-the-standard-error-of-measurement). $s_X\sqrt{1-r_{xx'}}$; the classical measure of individual-score imprecision.
+
+[**SEM / CSEM (IRT)**](chapters/05-tcc-info-sem.Rmd#part-3-test-information-function). The conditional standard error of measurement, computed from the test information function as $1/\sqrt{I(\theta)}$.
+
+[**Spearman-Brown formula**](chapters/01-reliability.Rmd#the-spearman-brown-formula). Projects how reliability changes when test length is multiplied by a factor $k$.
+
+[**Specific objectivity**](chapters/09-rasch-paradigm.Rmd). Rasch's requirement that comparisons between persons be independent of the items used, and vice versa.
+
+[**Stocking-Lord method**](chapters/17-linking-equating.Rmd#stocking-lord-method). A characteristic-curve linking method that minimizes the squared difference between anchor-item TCCs across forms.
+
+## T {#T}
+
+[**Test Characteristic Curve (TCC)**](chapters/05-tcc-info-sem.Rmd#part-1-test-characteristic-curves). The sum of item ICCs as a function of $\theta$; the expected test score.
+
+[**Thurstone's method of absolute scaling**](chapters/19-vertical-scaling.Rmd#thurstones-method-of-absolute-scaling). A classical vertical-scaling technique based on linking grade-level $z$-scores on common items.
+
+[**True score**](chapters/01-reliability.Rmd#true-score-theory). The expected value of an examinee's observed score over hypothetical parallel administrations.
+
+## U {#U}
+
+[**Unidimensionality**](chapters/06-assumptions-properties.Rmd#assumption-2-appropriate-dimensionality). The IRT assumption that a single latent trait accounts for the responses.
+
+[**Uniform DIF**](chapters/18-dif.Rmd#uniform-vs.-non-uniform-dif). A DIF pattern in which the ICCs of the two groups are parallel — one group is uniformly favored across $\theta$.
+
+## V {#V}
+
+[**Varimax rotation**](chapters/21-mirt.Rmd#orthogonal-rotation). An orthogonal rotation that maximizes the variance of squared loadings within each factor.
+
+[**Vertical scaling**](chapters/19-vertical-scaling.Rmd). Construction of a score scale that spans multiple grade levels so longitudinal growth can be described.
+
+## W {#W}
+
+[**Wright map / Item-person map**](chapters/09-rasch-paradigm.Rmd). A joint visualization of item difficulties and person abilities on the same logit scale.
