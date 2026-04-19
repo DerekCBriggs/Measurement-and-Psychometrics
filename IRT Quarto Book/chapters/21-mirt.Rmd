@@ -1,8 +1,14 @@
 ---
-title: "Compensatory MIRT models in the mirt package"
-author: "Derek Briggs"
-date: "2024-04-28"
-output: html_document
+title: "An Introduction to Multidimensional IRT with mirt"
+author: "Derek Briggs & Claude Code (Opus 4.6)"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: show
 ---
 
 ```{r inject-rootdir, include=FALSE}
@@ -10,142 +16,778 @@ knitr::opts_knit$set(root.dir = "/Users/briggsd/Library/CloudStorage/Dropbox/Git
 ```
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
-## Introduction
+# Introduction
 
-The purpose of this document is to show how to specify and interpret a compensatory MIRT model. An important aspect of what I'll be doing here is providing an illustration using empirical rather than simulated data. In textbook presentations such as Reckase (2009; 2016) simulated data is used and this can mask some really tricky decision points when working with these models. When calibrating test items with unidimensional model using mirt, not that much can go wrong if you just accept function defaults. As we'll see, that is not true in the multidimensional context.
+Most of what we have done so far in this course has assumed that a single latent variable, $\theta$, is enough to account for the probabilities with which examinees respond correctly to items on a test. But for many tests, this **unidimensionality assumption** is a strong---and sometimes indefensible---claim. A reading test might tap vocabulary knowledge, sentence processing, and passage comprehension. A math test might mix computational fluency, conceptual reasoning, and modeling. If more than one latent construct is really driving performance, then treating the data as unidimensional can distort item parameters, person scores, and (especially) inferences about growth.
 
-## The Data
+**Multidimensional item response theory (MIRT)** relaxes the unidimensionality assumption by letting each examinee be located in a $D$-dimensional latent space, $\boldsymbol{\theta} = (\theta_1, \theta_2, \ldots, \theta_D)$. Items may measure one dimension cleanly, several dimensions jointly, or a different combination of dimensions than the items next to them on the test form. The goal of this tutorial is to make the shift from unidimensional IRT to MIRT feel like a natural extension---while being honest about a handful of tricky decision points that simulated textbook examples tend to mask.
 
-The data we'll be using are a subset taken from a study published by Jon Weeks. We have 4,493 students in grades 6 though 9 who took one of four forms of a test designed to measure six "foundational reading skills". There were a total of 199 unique items across all forms, but to keep things manageable from a pedagogical point of view, we are only going to focus on the items that were written to elicit evidence of a student's (1) morphological awareness--using knowledge of word parts to identify which words fits the meaning and syntax of a sentence [MA], and (2) sentence processing--building meaning from sentences by understanding causal connectors, pronouns, and relationships among terms [SEN]. There are a total of 29 MA items and 22 SEN items. We will only look at the first 10 MA and SEN items. 
+This tutorial covers:
+
+- The compensatory multidimensional 2PL model (M2PL) and its relationship to the unidimensional 2PL
+- The distinction between **compensatory** and **partially compensatory** MIRT models
+- **Between-item** (simple structure) and **within-item** multidimensionality
+- Fitting an exploratory M2PL in `mirt` using empirical data from Weeks (2018)
+- Why the raw output is typically uninterpretable, and what rotation does about it
+- Interpreting item parameters through **MDISC**, **MDIFF**, and **directional angles** (Reckase, 2009, 2016)
+- Confirmatory and bifactor MIRT models as alternatives
+- When dimensionality matters---especially for constructs like reading that may shift across grades
+
+**Prerequisites:** Familiarity with the unidimensional 2PL model, basic factor analysis concepts, and using `mirt` for parameter estimation. Chapters 12 of Reckase (2016) and the Weeks (2018) application paper are the two readings that pair best with this tutorial.
+
+```{r load-packages}
+library(mirt)
+library(psych)
+library(kableExtra)
+```
+
+---
+
+# From Unidimensional to Multidimensional IRT
+
+## The Compensatory M2PL
+
+Recall the unidimensional 2PL model:
+
+$$P(u_{ij} = 1 \mid \theta_j) = \frac{\exp(a_i \theta_j + d_i)}{1 + \exp(a_i \theta_j + d_i)}$$
+
+where $a_i$ is the discrimination for item $i$, $d_i = -a_i b_i$ is the intercept (difficulty on the logit scale), and $\theta_j$ is examinee $j$'s location on the latent continuum.
+
+The **compensatory M2PL** generalizes this by replacing the scalar $a_i$ and $\theta_j$ with vectors:
+
+$$P(u_{ij} = 1 \mid \boldsymbol{\theta}_j) = \frac{\exp(\mathbf{a}_i' \boldsymbol{\theta}_j + d_i)}{1 + \exp(\mathbf{a}_i' \boldsymbol{\theta}_j + d_i)}$$
+
+where $\mathbf{a}_i = (a_{i1}, a_{i2}, \ldots, a_{iD})$ is the $D \times 1$ vector of **slope** (discrimination) parameters, one per dimension, and $\boldsymbol{\theta}_j = (\theta_{j1}, \ldots, \theta_{jD})$ is the examinee's location vector. The scalar intercept $d_i$ still governs item difficulty.
+
+The model is called **compensatory** because of the additive form of the exponent: a low value on one dimension can be offset by a high value on another dimension, producing the same probability of a correct response. In the two-dimensional case,
+
+$$a_{i1}\theta_{j1} + a_{i2}\theta_{j2} + d_i = k$$
+
+defines a **straight line** in $(\theta_1, \theta_2)$ space; every $(\theta_1, \theta_2)$ pair on that line has the same probability of a correct response. These **equiprobability contours** are the multidimensional analog of the point on the unidimensional $\theta$ scale where $P = 0.5$.
+
+## Compensatory vs. Partially Compensatory
+
+The main alternative to the compensatory model is the **partially compensatory** (sometimes called **noncompensatory**) model, first proposed by Sympson (1978). Its form for two dimensions is:
+
+$$P(u_{ij} = 1 \mid \boldsymbol{\theta}_j) = \prod_{d=1}^{D} \frac{\exp(a_{id}(\theta_{jd} - b_{id}))}{1 + \exp(a_{id}(\theta_{jd} - b_{id}))}$$
+
+The distinguishing feature is the **product** of unidimensional probabilities: the overall probability of a correct response is bounded above by the smallest of the component probabilities. If an examinee is very low on dimension 1, no amount of strength on dimension 2 can rescue the response. In a reading context, you can imagine a word-decoding item that genuinely requires *both* lexical and morphological skills---a student weak on either cannot succeed by compensating with the other.
+
+Throughout this tutorial, we focus on the compensatory model, which is the workhorse of applied MIRT work and the default in `mirt`. Reckase (2016, Section 12.2) works through both forms in detail.
+
+## Between-Item vs. Within-Item Multidimensionality
+
+A separate question---independent of whether the model is compensatory---is *which* items load on *which* dimensions.
+
+- **Between-item multidimensionality (BIMD)**, also called **simple structure**: each item loads on exactly one dimension. The items cluster into subsets, each measuring a distinct construct. This is what Thurstone called simple structure in the factor analysis tradition.
+- **Within-item multidimensionality (WIMD)**: items are allowed to load on multiple dimensions. An item can measure a blend of constructs.
+
+BIMD is effectively a collection of unidimensional tests sharing a common group of examinees. WIMD is the more general case and is what the compensatory M2PL is designed to model when fit exploratorily.
+
+The distinction is easiest to see as a **path diagram**. In the figure below, rectangles are observed items, ovals are latent dimensions, and arrows are factor loadings. *Reading only the solid arrows gives you a BIMD (simple-structure) model*: each item loads on exactly one dimension. *Reading the solid arrows plus the dashed arrows gives you a WIMD model*: two items now load on both dimensions.
+
+```{r bimd-wimd-diagram, echo=FALSE, fig.width=7, fig.height=5.5}
+# Helpers to draw an oval and a rounded box
+draw_oval <- function(cx, cy, rx, ry, ...) {
+  theta <- seq(0, 2 * pi, length.out = 200)
+  polygon(cx + rx * cos(theta), cy + ry * sin(theta), ...)
+}
+
+par(mar = c(1, 1, 3, 1))
+plot(NULL, xlim = c(0, 10), ylim = c(0, 10), axes = FALSE,
+     xlab = "", ylab = "", asp = 1,
+     main = "BIMD (solid only) vs. WIMD (solid + dashed)")
+
+# Items (left column)
+item_x <- 2
+item_w <- 1.2
+item_h <- 0.9
+item_ys <- c(8.5, 6.5, 4.5, 2.5)
+for (i in seq_along(item_ys)) {
+  rect(item_x - item_w / 2, item_ys[i] - item_h / 2,
+       item_x + item_w / 2, item_ys[i] + item_h / 2,
+       col = "white", border = "black", lwd = 1.5)
+  text(item_x, item_ys[i], paste0("Item ", i), cex = 1.0)
+}
+
+# Latent dimensions (right column): DIM 1 up top, DIM 2 at bottom
+dim_x <- 7.5
+dim_rx <- 1.1
+dim_ry <- 0.75
+dim_ys <- c(7.5, 3.5)
+dim_labels <- c(expression(theta[1]), expression(theta[2]))
+for (k in 1:2) {
+  draw_oval(dim_x, dim_ys[k], dim_rx, dim_ry,
+            col = "lightblue", border = "black", lwd = 1.5)
+  text(dim_x, dim_ys[k], dim_labels[k], cex = 1.4)
+}
+
+# Arrow: from left edge of DIM oval to right edge of Item rectangle
+# (standard SEM convention: arrows point from latent -> observed)
+item_edge <- function(yi) c(item_x + item_w / 2, yi)
+dim_edge  <- function(yk) c(dim_x - dim_rx, yk)
+draw_arrow <- function(yi, yk, lty = 1, col = "black", lwd = 1.5) {
+  from <- dim_edge(yk); to <- item_edge(yi)
+  arrows(from[1], from[2], to[1], to[2],
+         length = 0.08, lty = lty, col = col, lwd = lwd)
+}
+
+# Solid lines (BIMD loadings)
+draw_arrow(item_ys[1], dim_ys[1])   # Item 1 -> theta1
+draw_arrow(item_ys[2], dim_ys[1])   # Item 2 -> theta1
+draw_arrow(item_ys[3], dim_ys[2])   # Item 3 -> theta2
+draw_arrow(item_ys[4], dim_ys[2])   # Item 4 -> theta2
+
+# Dashed lines (WIMD cross-loadings)
+draw_arrow(item_ys[2], dim_ys[2], lty = 2, col = "firebrick")  # Item 2 -> theta2
+draw_arrow(item_ys[3], dim_ys[1], lty = 2, col = "firebrick")  # Item 3 -> theta1
+
+legend("bottom", horiz = TRUE, inset = -0.02,
+       legend = c("BIMD loading (solid)", "WIMD cross-loading (dashed)"),
+       lty = c(1, 2), col = c("black", "firebrick"),
+       lwd = 1.5, cex = 0.9, bty = "n")
+```
+
+As Thurstone first observed in the factor-analysis tradition, BIMD is the cleaner case to interpret: each item belongs to a single latent dimension, and the test essentially partitions into subscales. WIMD is more realistic for many achievement tests, because the cognitive demands of real items rarely fall cleanly on one axis.
+
+A third dimension of this typology is whether the analysis is **exploratory** (every item is eligible to load on every dimension; the data decide) or **confirmatory** (some loadings are fixed to zero on theoretical grounds, defining a measurement model in advance). We will fit both in this tutorial.
+
+---
+
+# The RISE Data
+
+We use data from the **Reading Inventory and Student Evaluation (RISE)**, a diagnostic battery of foundational reading skills analyzed in Weeks (2018). The full RISE battery has 199 unique items across four parallel forms given to students in grades 6 through 9. It was designed to measure six component skills:
+
+- **WRDC** --- Word recognition and decoding
+- **VOC** --- Vocabulary
+- **MA** (MORPH) --- Morphological awareness
+- **SEN** --- Sentence processing
+- **MAZE** (EFFIC) --- Efficiency of basic reading comprehension
+- **RC** (RCOMP) --- Reading comprehension
+
+Our file `RISE_IR.csv` contains dichotomously-scored responses from 4,493 students to all 199 items. To keep the pedagogy manageable---and to focus on two subscales with good theoretical reasons to be distinct but correlated---we work with just the first 10 **morphological awareness (MA)** items and the first 10 **sentence processing (SEN)** items. That gives us a 20-item, 4493-student dataset well-suited to a two-dimensional compensatory model.
+
+```{r import-data}
+ir <- read.csv("../Data/RISE_IR.csv")
+dat <- ir[, c(89:98, 118:127)]   # first 10 MA + first 10 SEN
+dim(dat)
+colnames(dat)
+```
 
 ## Descriptives
 
-```{r }
-#Install these if necessary
-library(mirt)
-library(psych)
-library(plink)
-
-#Import Data
-ir <- read.csv("/Users/briggsd/Library/CloudStorage/Dropbox/Github/Measurement and Psychometrics/Multidimensional IRT/Data/RISE_IR.csv")
-dat<-ir[,c(89:98,118:127)] #Subset of MA and SEN items
-#Classical item stats
+```{r descriptives}
 itemstats(dat)
-ma.tot<-apply(dat[,1:10],1,sum)
-sen.tot<-apply(dat[,11:20],1,sum)
-cor(ma.tot,sen.tot)
-#Parallel Analysis
+```
+
+The $p$-values (mean scores, in the `mean` column of `itemstats`) span a reasonable difficulty range, and the item-total correlations look pretty good with a few notable exceptions. Now let's look at the correlation between the two subscale total scores:
+
+```{r subscale-cor}
+ma_tot  <- apply(dat[, 1:10], 1, sum)
+sen_tot <- apply(dat[, 11:20], 1, sum)
+cor(ma_tot, sen_tot)
+```
+
+A raw-score correlation around .59 is moderate: the two subscales are clearly related but far from redundant. Keep in mind that this is an *observed* correlation between two short, noisy subtests, so it is attenuated by measurement error. The underlying **latent** correlation between the two skills will be higher---we will recover an estimate of it below when we fit the M2PL and inspect the inter-factor correlation. Either way, this is the sweet spot where a multidimensional model may add value: the subscales are reliable enough to support separate measurement, but they are not so weakly related that a single composite would be obviously misleading.
+
+## Parallel Analysis
+
+Before fitting any IRT model, it is useful to check how many dimensions the data are likely to support. A **parallel analysis** (Horn, 1965) compares the eigenvalues of the observed item correlation matrix to those from random data of the same size. Dimensions worth retaining are those whose observed eigenvalue exceeds the corresponding random-data eigenvalue.
+
+```{r parallel-analysis, fig.width=6, fig.height=5}
 fa.parallel(dat, fa = "both", cor = "poly")
 ```
 
-You can see from the outset we have pretty good theoretical and empirical reasons to think that a compensatory MIRT model might make sense here. 
+The scree plot results are interesting is that you can either read them as support for an assumption of "essential undimensionality" (since there is a hige drop from the first to second eigenvalue) or as support for retaining more than one factor (since there are multiple secondary factors that appear "statistically significant"). In this case, we have some good theoretical reasons to treat these two sets of items as reflecting different dimensions, and the empirical results don't rule this out. So let's proceed with the specification of a two-dimensional compensatory M2PL.
 
-## Compensatory M2PL
+---
 
-OK, let's start by fitting both a unidimensional 2PL and a multidimensional version using the defaults in `mirt`.
+# Fitting the M2PL in mirt
 
-### Fitting the Model
+## Unidimensional Baseline
 
-```{r }
-#Unidimensional 2PL
-out1 <- mirt(dat,1,verbose=FALSE)
-pars1 <- coef(out1, IRTpars=TRUE, simplify=TRUE)
+As a reference point, let's first fit a unidimensional 2PL so that we have a baseline set of item parameters and scores to compare against.
+
+```{r unidim-fit}
+out1 <- mirt(dat, 1, verbose = FALSE)
+pars1 <- coef(out1, IRTpars = TRUE, simplify = TRUE)
 theta1 <- fscores(out1)
-#M2PL
-out2 <- mirt(dat,2,verbose=FALSE)
-pars2 <- coef(out2, simplify=TRUE)
+round(pars1$items, 2)
+```
+
+Nothing here should be surprising: every item has a single positive discrimination ($a$) and a difficulty ($b$) on the logit scale.
+
+## M2PL: The Default Call
+
+Now let's fit the two-dimensional compensatory model using the defaults in `mirt`:
+
+```{r m2pl-default}
+out2 <- mirt(dat, 2, verbose = FALSE)
+pars2 <- coef(out2, simplify = TRUE)
 theta2 <- fscores(out2)
+round(pars2$items, 2)
 ```
 
-First let's look at our m2pl item parameters
+Look carefully at the columns `a1` and `a2`. Most items have **negative slope parameters on one or both of the two dimensions**. That doesn't make a lot of intuitive sense, right? It would be tempting to throw out the model on the spot. But hold that thought---it turns out the raw parameter output from a default call to `mirt` is not yet in a form that admits easy substantive interpretation.
 
-```{r }
-pars2
-```
-How can we be getting negative slope parameters? And what about the lack of covariance between dimensions? Hold that thought. Reckase (2009; 2016) suggests that the best way to interpret item parameters in multidimensional space is by computing MDISC, D and angular direction. Let's do that first and see if these make sense even if the raw output seems odd.
+Also notice that the covariance between dimensions (`COV_21`) is fixed at 0 and the means and variances of the dimensions are fixed at 0 and 1. This is how `mirt` defines the metric for the exploratory solution: $\boldsymbol{\theta} \sim N(\mathbf{0}, \mathbf{I})$.
 
-```{r }
-mdisc<-sqrt(pars2$items[,1]^2+pars2$items[,2]^2)
-D <- ifelse(pars2$items[,3]==0, 0, (-pars2$items[,3])/mdisc)
-alpha1<-acos(pars2$items[,1]/mdisc)*180/pi
-alpha2<-acos(pars2$items[,2]/mdisc)*180/pi
-mirtpars<-cbind(mdisc,D,alpha1,alpha2)
-round(mirtpars,2)
-```
-Now you can see that while the mdisc and D values don't look completely crazy, the angular directions seem uninterpretable given that we expect them to be in the first and third quadrants of a plot of dimension 1 against dimension 2. 
+## Interpreting M2PL Parameters: MDISC, MDIFF, and Direction
 
-### Orthogonal Rotation
+Reckase (2009, 2016) argues that slope and intercept estimates are rarely the best way to describe how an MIRT item is functioning. Instead, three derived quantities do a better job of summarizing the geometry of each item's response surface:
 
-The explanation for the problem is that the default call of the `coef` command in `mirt` does not perform what is known in factor analysis as rotation. Let's see what happens when we extract the MIRT parameters using a method of orthogonal rotation known as varimax. Then let's compare the original unrotated item parameters to the rotated ones. 
+- **Multidimensional discrimination (MDISC):** $\text{MDISC}_i = \sqrt{\sum_{d=1}^{D} a_{id}^2}$. This is the length of the item's slope vector. It plays the role of $a$ in the unidimensional 2PL: a higher value means the response surface is steeper at its steepest point.
 
-```{r }
-pars2v <- coef(out2, simplify=TRUE,rotate='varimax')
-compare<-cbind(pars2$items[,1:3],pars2v$items[,1:3])
-round(compare,2)
-```
+- **Multidimensional difficulty (MDIFF or $D$):** $D_i = -d_i / \text{MDISC}_i$. This is the (signed) distance from the origin of the latent space to the item's 0.5 equiprobability contour, measured along the direction of steepest slope. Larger positive values correspond to harder items; negative values to easier ones.
 
-You can see that basically solves the problem: we no longer have any negative slope parameters for either dimension. Now let's look at mdisc, D and the directional angles. 
+- **Directional angles ($\alpha_d$):** $\alpha_{id} = \arccos(a_{id} / \text{MDISC}_i)$, converted to degrees. The angle between the item's direction of best measurement and each coordinate axis. An item with $\alpha_1 = \alpha_2 = 45^\circ$ measures both dimensions equally well. An item with $\alpha_1 = 10^\circ, \alpha_2 = 80^\circ$ is nearly pure $\theta_1$.
 
-```{r }
-mdisc<-sqrt(pars2v$items[,1]^2+pars2v$items[,2]^2)
-D <- ifelse(pars2v$items[,3]==0, 0, (-pars2v$items[,3])/mdisc)
-alpha1<-acos(pars2v$items[,1]/mdisc)*180/pi
-alpha2<-acos(pars2v$items[,2]/mdisc)*180/pi
-mirtpars<-cbind(mdisc,D,alpha1,alpha2)
-print(round(mirtpars,2))
+### Illustration: A Single Hypothetical Item
+
+Before we apply these definitions to all 20 items of the M2PL fit, let's build intuition with a single hypothetical item. Consider an item with $a_1 = 0.55$, $a_2 = 0.30$, and $d = -0.88$. Let's use these parameters to compute MDISC, MDIFF, and Direction and see how these can be interpreted visually.
+
+```{r hypo-mdisc}
+a1_hyp <- 0.55
+a2_hyp <- 0.30
+d_hyp  <- -0.88
+
+mdisc_hyp  <- sqrt(a1_hyp^2 + a2_hyp^2)
+D_hyp      <- -d_hyp / mdisc_hyp
+alpha1_hyp <- acos(a1_hyp / mdisc_hyp) * 180 / pi
+alpha2_hyp <- acos(a2_hyp / mdisc_hyp) * 180 / pi
+
+cat(sprintf("MDISC = %.2f\nMDIFF = %.2f\nalpha_1 = %.0f degrees\nalpha_2 = %.0f degrees\n",
+            mdisc_hyp, D_hyp, alpha1_hyp, alpha2_hyp))
 ```
 
-Here is another approach Jon Weeks shared with me that involves essentially doing a "pre-rotation" by constraining all slope parameters to have a lower bound at 0. This might be a reasonable move if you have good theoretical reason to think your item response surface for each item should be monotonically increasing as values on each $\theta$ increase. But I find that if we do this and then do varimax rotation, we basically get the same result as we would just doing the varimax rotation without the constraint. 
+So this is a moderately discriminating, above-average-difficulty item whose direction of best measurement leans toward $\theta_1$ (only $29^\circ$ off the $\theta_1$ axis).
 
-```{r }
-# Extract object to specify model constraints
-constraints <- mirt(dat,2, pars="values")
-# Impose a constraint where all slopes are positive
-constraints$lbound[constraints$name %in% c("a1","a2")] <- 0
-out2c <- mirt(dat,2,pars=constraints,verbose=FALSE)
-pars2c <- coef(out2c, simplify=TRUE, rotate='varimax')
-compare<-cbind(pars2v$items[,1:3],pars2c$items[,1:3])
-round(compare,2)
+#### The Equiprobability Contour Plot
+
+We can see where the item "lives" in the latent space by plotting its equiprobability contours---the locus of $(\theta_1, \theta_2)$ pairs that produce each probability of a correct response. For the compensatory M2PL, these are straight lines.
+
+```{r hypo-contour, echo=FALSE, fig.width=6.5, fig.height=6}
+t1_grid <- seq(-3, 3, length.out = 200)
+t2_grid <- seq(-3, 3, length.out = 200)
+P_grid <- outer(t1_grid, t2_grid, function(t1, t2) {
+  plogis(a1_hyp * t1 + a2_hyp * t2 + d_hyp)
+})
+
+par(mar = c(4, 4, 3, 1))
+contour(t1_grid, t2_grid, P_grid,
+        levels = seq(0.1, 0.9, by = 0.1),
+        xlab = expression(theta[1]),
+        ylab = expression(theta[2]),
+        main = expression("Equiprobability Contours: " *
+                          a[1]*"="*0.55 * ", " *
+                          a[2]*"="*0.30 * ", " *
+                          d*"="*-0.88),
+        asp = 1, col = "gray40")
+# Highlight the 0.5 contour
+contour(t1_grid, t2_grid, P_grid, levels = 0.5, add = TRUE,
+        lwd = 3, col = "firebrick", drawlabels = FALSE)
+abline(h = 0, v = 0, lty = 2, col = "gray70")
+legend("bottomright", legend = "P = 0.5 contour",
+       lwd = 3, col = "firebrick", bty = "n", cex = 0.9)
 ```
 
-### Plots
+Two features of this plot tell the MIRT story in a single image:
 
-Actually, I think this is where it makes the most sense to use Jon's approach: when you want to generate plots of test information, test characteristic surface, SEM, and item characteristic surfaces. Because the plots all call the output from the model run. To see more about mirt plot options, type `?mirt::plot` (SingleGroupClass-method) in R Console.
+1. The contours are **parallel straight lines**. That is the compensatory model at work: any $(\theta_1, \theta_2)$ pair on a given line yields the same probability of correct response, so a higher value on one dimension compensates for a lower value on the other.
+2. The contours get **closer together** as the response surface becomes steeper---and the direction perpendicular to the contour lines is the direction of steepest slope. That direction is what MDISC, MDIFF, and $\alpha$ all describe.
 
-```{r }
+#### The Item Vector Plot
+
+The three summary quantities---MDISC, MDIFF, and the directional angles---can be read off a single vector drawn on the latent space. The construction is worth walking through slowly, because once you understand it, MIRT item parameters will make more sense.
+
+```{r hypo-vector, echo=FALSE, fig.width=6.5, fig.height=6}
+u1 <- a1_hyp / mdisc_hyp
+u2 <- a2_hyp / mdisc_hyp
+
+# Base of item vector: sits on the 0.5 contour at distance MDIFF from origin
+x0 <- D_hyp * u1
+y0 <- D_hyp * u2
+# Tip of item vector: MDISC further along the same direction
+x1 <- x0 + mdisc_hyp * u1
+y1 <- y0 + mdisc_hyp * u2
+
+par(mar = c(4, 4, 3, 1))
+plot(NULL, xlim = c(-3, 3), ylim = c(-3, 3), asp = 1,
+     xlab = expression(theta[1]), ylab = expression(theta[2]),
+     main = "Vector Representation of the Hypothetical Item")
+abline(h = 0, v = 0, lty = 2, col = "gray70")
+
+# Draw the 0.5 contour as a dashed line
+t1_line <- seq(-3, 3, length.out = 200)
+t2_line <- (-a1_hyp * t1_line - d_hyp) / a2_hyp
+in_range <- t2_line >= -3 & t2_line <= 3
+lines(t1_line[in_range], t2_line[in_range],
+      col = "firebrick", lwd = 2, lty = 2)
+text(-2.3, (-a1_hyp * -2.3 - d_hyp) / a2_hyp + 0.25,
+     "P = 0.5 contour", col = "firebrick", pos = 4, cex = 0.85)
+
+# Arrow from origin perpendicular to the 0.5 contour, length MDIFF
+arrows(0, 0, x0, y0, length = 0.08, col = "gray30", lwd = 1.8)
+text(x0 / 2 - 0.1, y0 / 2 + 0.2,
+     sprintf("MDIFF = %.2f", D_hyp),
+     col = "gray30", cex = 0.9)
+
+# Item vector: starts at base, length MDISC
+arrows(x0, y0, x1, y1, length = 0.12, col = "steelblue", lwd = 2.8)
+text(x1 + 0.15, y1 + 0.15,
+     sprintf("MDISC = %.2f", mdisc_hyp),
+     col = "steelblue", cex = 0.9, pos = 4)
+
+# Arc marking alpha_1 between theta_1 axis and the item direction
+r_arc <- 0.55
+arc_ang <- seq(0, alpha1_hyp * pi / 180, length.out = 40)
+lines(r_arc * cos(arc_ang), r_arc * sin(arc_ang),
+      col = "black", lwd = 1.4)
+text(r_arc * cos(alpha1_hyp * pi / 360) * 1.45,
+     r_arc * sin(alpha1_hyp * pi / 360) * 1.45,
+     bquote(alpha[1] == .(round(alpha1_hyp, 0)) * degree),
+     cex = 1.0)
+
+# Mark the base of the item vector with a filled point
+points(x0, y0, pch = 16, col = "steelblue", cex = 1.1)
+```
+
+Here is how to read the figure:
+
+- The **dashed red line** is the 0.5 equiprobability contour from the previous plot---just the middle contour, now isolated.
+- The **gray arrow** runs from the origin *perpendicular* to the 0.5 contour. Its length is **MDIFF** ($= 1.40$). MDIFF is how far, measured along the direction of best measurement, the 0.5 contour sits from the origin. Positive means the item is harder than the "average" location in the space; negative means easier.
+- The **blue arrow** starts where the gray arrow ended (on the 0.5 contour) and continues in the same direction. Its length is proportional to **MDISC** ($= 0.63$). Longer arrows correspond to more discriminating items---items whose response surface is steeper.
+- The **angle $\alpha_1$** ($= 29^\circ$) is measured between the $\theta_1$ axis and the direction of the item vector. The companion angle $\alpha_2 = 90^\circ - 29^\circ = 61^\circ$ is measured against the $\theta_2$ axis. Together they tell you which "composite" of $\theta_1$ and $\theta_2$ this item is best measuring.
+
+Every compensatory M2PL item can be summarized this way: one vector in latent space, carrying everything you need to know about where the item is (MDIFF), how sharply it discriminates (MDISC), and what mixture of latent dimensions it is really measuring (the angles). Vector plots of many items at once are how practitioners visualize whether a test is measuring a consistent composite or a sprawling mixture of constructs (we will see a vector plot of all 20 RISE items in Section 6).
+
+### Computing MDISC, MDIFF, and Angles for the RISE Items
+
+With that intuition in place, let's compute these quantities for the default (unrotated) M2PL solution and see whether they recover anything interpretable:
+
+```{r unrotated-mdisc}
+mdisc  <- sqrt(pars2$items[, "a1"]^2 + pars2$items[, "a2"]^2)
+D_val  <- ifelse(pars2$items[, "d"] == 0, 0, -pars2$items[, "d"] / mdisc)
+alpha1 <- acos(pars2$items[, "a1"] / mdisc) * 180 / pi
+alpha2 <- acos(pars2$items[, "a2"] / mdisc) * 180 / pi
+
+unrot <- cbind(mdisc, D = D_val, alpha1, alpha2)
+round(unrot, 2)
+```
+
+Here is the diagnosis. `MDISC` and `D` look sensible---their magnitudes and signs are in a reasonable range. But the directional angles are all over the place, with many items measuring in the second or fourth quadrant of the $(\theta_1, \theta_2)$ plane. If both dimensions genuinely reflect reading-related skills, we expect item vectors to land in the **first quadrant** (positive on both axes), not to point toward negative values on either dimension. The angles are symptomatic of the same problem as the negative slopes: the exploratory solution is not unique.
+
+---
+
+# The Rotation Problem
+
+## Why the Raw Output Is Not Identified
+
+In a unidimensional IRT model, the scale is pinned down by fixing $\theta \sim N(0, 1)$. That is enough to identify both the slope and the intercept of every item up to a reflection (we also require $a > 0$).
+
+In MIRT, we still fix $\boldsymbol{\theta} \sim N(\mathbf{0}, \mathbf{I})$---but that is no longer sufficient. Any orthogonal rotation of the latent space preserves the mean zero, variance one, and zero covariance of the $\boldsymbol{\theta}$ vector, so all such rotations give identical model-implied probabilities. The solution we happen to get out of the estimator is one arbitrary rotation, chosen for algorithmic convenience rather than substantive interpretability.
+
+This is the exact same non-identifiability that factor analysts have grappled with for a century. The standard response is to *rotate the solution* into a form that is easier to interpret. The compensatory M2PL is, in fact, very close to an exploratory factor analysis on the item-response data, so the same rotation options apply.
+
+## Orthogonal Rotation: Varimax
+
+The simplest rotation is **orthogonal**: we rotate the coordinate axes of the latent space while keeping them at right angles to each other. This preserves the assumption that the dimensions are uncorrelated. **Varimax** is the most common orthogonal criterion; it rotates toward a solution where each item loads strongly on one dimension and near zero on the others.
+
+```{r varimax-rotation}
+pars2v <- coef(out2, simplify = TRUE, rotate = "varimax")
+compare <- cbind(pars2$items[, c("a1", "a2", "d")],
+                 pars2v$items[, c("a1", "a2", "d")])
+colnames(compare) <- c("a1_unrot", "a2_unrot", "d_unrot",
+                       "a1_vmx",   "a2_vmx",   "d_vmx")
+round(compare, 2)
+```
+
+Notice two things. First, the varimax-rotated slopes (`a1_vmx`, `a2_vmx`) are **all positive**: the rotation has resolved the negative-slope problem entirely. Second, the intercepts `d` are unchanged by orthogonal rotation, as they should be---rotation moves the axes, not the items' difficulty in the space.
+
+Now the MDISC / MDIFF / directional angle summary becomes interpretable:
+
+```{r varimax-mdisc}
+mdisc  <- sqrt(pars2v$items[, "a1"]^2 + pars2v$items[, "a2"]^2)
+D_val  <- ifelse(pars2v$items[, "d"] == 0, 0, -pars2v$items[, "d"] / mdisc)
+alpha1 <- acos(pars2v$items[, "a1"] / mdisc) * 180 / pi
+alpha2 <- acos(pars2v$items[, "a2"] / mdisc) * 180 / pi
+
+vmx_summary <- data.frame(
+  Item   = rownames(pars2v$items),
+  MDISC  = round(mdisc, 2),
+  MDIFF  = round(D_val, 2),
+  alpha1 = round(alpha1, 1),
+  alpha2 = round(alpha2, 1)
+)
+
+vmx_summary |>
+  kable("html", col.names = c("Item", "MDISC", "MDIFF (D)",
+                              "Angle θ₁ (°)", "Angle θ₂ (°)")) |>
+  kable_styling(full_width = FALSE)
+```
+
+Every angle now lies in $(0^\circ, 90^\circ)$---the first quadrant---and the MA items have angles closer to $\theta_1$ while the SEN items have angles closer to $\theta_2$. The rotated solution is telling the expected story. But notice that, interestingly, there are a number of items that seems to "load" equally on each dimension, even though they were written to be associated with either MA or SEN. 
+
+## An Alternative: Constraining Slopes to Be Non-Negative
+
+Jon Weeks (in personal communication with Derek) has suggested an alternative workflow that side-steps the rotation step for plotting purposes: constrain all slope parameters to have a lower bound of zero during estimation. This is defensible whenever there is good theoretical reason to think the item response surface should be monotonically increasing in every dimension---which for achievement items is usually the case.
+
+```{r constrained-fit}
+# Pull the default parameter table so we can edit it
+constraints <- mirt(dat, 2, pars = "values")
+
+# Set lower bound on a1 and a2 to 0
+constraints$lbound[constraints$name %in% c("a1", "a2")] <- 0
+
+# The default starting values for a1 are negative (an algorithmic convention),
+# which would sit below the new lower bound and cause the optimizer to pin
+# them at 0. Reset the starting values for all freely estimated slopes to
+# their absolute values so the optimizer starts inside the feasible region.
+is_free_slope <- constraints$name %in% c("a1", "a2") & constraints$est
+constraints$value[is_free_slope] <- abs(constraints$value[is_free_slope])
+
+out2c  <- mirt(dat, 2, pars = constraints, verbose = FALSE)
+pars2c <- coef(out2c, simplify = TRUE, rotate = "varimax")
+
+compare <- cbind(pars2v$items[, c("a1", "a2", "d")],
+                 pars2c$items[, c("a1", "a2", "d")])
+colnames(compare) <- c("a1_vmx",  "a2_vmx",  "d_vmx",
+                       "a1_cvmx", "a2_cvmx", "d_cvmx")
+round(compare, 2)
+```
+
+When combined with varimax rotation, the non-negativity constraint gives essentially the same answer as plain varimax rotation on the unconstrained fit. The practical reason to reach for the constrained fit is that it makes downstream **plotting** more intuitive: the `mirt` plot methods work directly off the fitted object, so having slopes that are already non-negative yields cleaner item-response surfaces without needing to re-rotate.
+
+One technical caveat is worth flagging: by default `mirt` initializes the exploratory a-parameters at negative starting values (about $-0.4$ in our case). If we simply add `lbound = 0` without also resetting those starting values, the optimizer begins outside the feasible region for every $a_1$, and the usual behavior is that those parameters end up pinned at $0$. That collapses the solution toward a single dimension---a silent estimation failure. Resetting starts to `abs(value)`, as we did above, is a simple and reliable way to avoid this.
+
+---
+
+# Visualizing the M2PL
+
+The `mirt` plot methods provide useful multidimensional analogs of the information, score, SE, and trace plots we have been using all semester. They work on the constrained fit because the surfaces are already in the right orientation.
+
+## Test Information Surface
+
+```{r info-surface, fig.width=6, fig.height=5}
 plot(out2c, type = "info")
+```
+
+The test information surface shows where in the $(\theta_1, \theta_2)$ space the test provides the most information about examinee location. With 20 items covering both dimensions, the surface peaks near the origin and falls off toward the corners of the space.
+
+## Test Characteristic (Score) Surface
+
+```{r score-surface, fig.width=6, fig.height=5}
 plot(out2c, type = "score")
+```
+
+The test score surface is the expected number-correct score as a function of $(\theta_1, \theta_2)$. It is a smooth, monotonically increasing surface---the multidimensional analog of the test characteristic curve.
+
+## Standard Error Surface
+
+```{r se-surface, fig.width=6, fig.height=5}
 plot(out2c, type = "SE")
-plot(out2c, type = "trace",which.items=c(1,20))
-```
- 
-### Oblique Rotation
-
-And here is where things get more complicated. So far we have been doing orthogonal rotation which means we are assuming two two dimensions are uncorrelated. But surely they are correlated. So we can also let each axis rotate by a different amount. But it seems to me that once we do this it no longer makes much sense to try to interpret those directional alphas from the Reckase article. Anyway, let's have a look.
-
-```{r }
-pars2o <- coef(out2, simplify=TRUE, rotate='oblimin')
-compare<-cbind(pars2v$items[,1:3],pars2o$items[,1:3])
-mdisc<-sqrt(pars2o$items[,1]^2+pars2o$items[,2]^2)
-D <- ifelse(pars2o$items[,3]==0, 0, (-pars2o$items[,3])/mdisc)
-alpha1<-acos(pars2o$items[,1]/mdisc)*180/pi
-alpha2<-acos(pars2o$items[,2]/mdisc)*180/pi
-mirtpars<-cbind(mdisc,D,alpha1,alpha2)
-print(round(mirtpars,2))
 ```
 
-By the way, oblimin rotation and a representation in terms of factor loadings is the default when you use the summary command.
+The SE surface is essentially the reciprocal of the square root of information. It is lowest where the test provides the most information.
 
-```{r }
+## Item Trace Surfaces
+
+```{r trace-surfaces, fig.width=9, fig.height=5}
+plot(out2c, type = "trace", which.items = c(1, 20))
+```
+
+These are the individual item response surfaces. Item 1 (an MA item) rises more steeply along $\theta_2$, and item 20 (an SEN item) rises more steeply along $\theta_1$---mirroring the axis orientation produced by varimax rotation on this run (discussed just below in the vector plot). The *contours* of these surfaces---straight lines in the compensatory model---are what give MIRT its distinctive geometric flavor.
+
+## Item Vector Plot
+
+Following Reckase (2009), we can also represent each item as a **vector** in the $(\theta_1, \theta_2)$ plane: the vector points in the direction of steepest slope and has length proportional to MDISC. The base of the vector sits on the 0.5 equiprobability contour, at distance MDIFF from the origin.
+
+```{r vector-plot, fig.width=7, fig.height=7}
+a1 <- pars2v$items[, "a1"]
+a2 <- pars2v$items[, "a2"]
+d  <- pars2v$items[, "d"]
+
+mdisc <- sqrt(a1^2 + a2^2)
+D_val <- -d / mdisc
+# Unit vector in the direction of best measurement
+u1 <- a1 / mdisc
+u2 <- a2 / mdisc
+# Base of arrow on the 0.5 contour at distance D_val from origin
+x0 <- D_val * u1
+y0 <- D_val * u2
+# Tip of arrow: scale by MDISC (makes high-discrimination items longer)
+x1 <- x0 + mdisc * u1
+y1 <- y0 + mdisc * u2
+
+item_cols <- c(rep("steelblue", 10), rep("firebrick", 10))
+
+plot(NULL, xlim = c(-2, 3), ylim = c(-2, 3),
+     xlab = expression(theta[1] ~ "(Sentence Processing)"),
+     ylab = expression(theta[2] ~ "(Morphological Awareness)"),
+     main = "M2PL Item Vectors (Varimax-Rotated)",
+     asp = 1)
+abline(h = 0, v = 0, lty = 2, col = "gray70")
+arrows(x0, y0, x1, y1, length = 0.08, lwd = 2, col = item_cols)
+text(x1, y1, labels = 1:20, pos = 4, cex = 0.75, col = item_cols)
+legend("bottomright", c("MA items (1-10)", "SEN items (11-20)"),
+       lwd = 2, col = c("steelblue", "firebrick"), cex = 0.9, bty = "n")
+```
+
+The SEN items (red) point closer to the $\theta_1$ axis; the MA items (blue) point closer to the $\theta_2$ axis. The length of each arrow reflects MDISC: longer arrows are more discriminating.
+
+> **A trap worth warning you about.** It is tempting to assume that $\theta_1$ is automatically "the first dimension I thought of" (here, MA) and $\theta_2$ is "the second one" (SEN). That assumption is wrong, and it can come back to haunt you during interpretations. Nothing in `mirt` (or in exploratory factor analysis more broadly) tells the optimizer which rotated factor should be called first. Varimax rotates to maximize the variance of squared loadings within each column; it does *not* choose an ordering, and it does *not* know the names of your subscales. In this run, it happens to orient $\theta_1$ along the SEN cluster and $\theta_2$ along the MA cluster. A slightly different starting point, a different seed, or even a different version of `mirt` could flip the ordering (and sometimes the sign) of either axis. The correct habit is to inspect the rotated slope matrix first---identify which rotated factor each *substantive* cluster of items loads on---and only then assign axis labels for the plot. If you hard-code the axis labels without checking, you can produce a figure that looks like it cleanly separates two constructs but labels them backwards.
+
+## The Validity Sector
+
+A practical question follows from these vector plots: *when is treating the test as unidimensional defensible even if the underlying data are technically multidimensional?* Wang and Reckase have argued that a test can be treated as essentially unidimensional---or at least *consistently* multidimensional---as long as no item vector lies more than about $21.8^\circ$ off the reference composite direction. This is sometimes called the **validity sector**: a cone around the dominant direction of measurement within which items are "close enough" to a single composite. If items stray outside this sector, averaging them into a single total score risks distorting what the score means. This is one of the criteria by which Weeks evaluates the RISE subtests.
+
+---
+
+# Oblique Rotation
+
+Varimax assumes that the rotated dimensions remain orthogonal. For reading skills, that is probably too strong: morphological awareness and sentence processing are almost certainly correlated in the population. An **oblique** rotation lets the rotated axes be non-orthogonal, producing both a loading matrix and an estimate of the correlation between the (rotated) factors.
+
+The most common oblique rotation is **oblimin**. It is, incidentally, what `mirt` uses by default when you ask for a factor-analytic `summary()` of an exploratory model.
+
+```{r oblique-rotation}
+pars2o <- coef(out2, simplify = TRUE, rotate = "oblimin")
+
+mdisc_o  <- sqrt(pars2o$items[, "a1"]^2 + pars2o$items[, "a2"]^2)
+D_o      <- ifelse(pars2o$items[, "d"] == 0, 0, -pars2o$items[, "d"] / mdisc_o)
+alpha1_o <- acos(pars2o$items[, "a1"] / mdisc_o) * 180 / pi
+alpha2_o <- acos(pars2o$items[, "a2"] / mdisc_o) * 180 / pi
+
+ob_summary <- data.frame(
+  Item   = rownames(pars2o$items),
+  MDISC  = round(mdisc_o, 2),
+  MDIFF  = round(D_o, 2),
+  alpha1 = round(alpha1_o, 1),
+  alpha2 = round(alpha2_o, 1)
+)
+
+rownames(ob_summary) <- NULL
+ob_summary |>
+  kable("html", row.names = FALSE,
+        col.names = c("Item", "MDISC", "MDIFF (D)",
+                      "Angle θ₁ (°)", "Angle θ₂ (°)")) |>
+  kable_styling(full_width = FALSE)
+```
+
+Under oblique rotation the directional angles are a less clean summary of what the item is doing, because the axes are no longer at right angles. Reckase's geometric interpretation was built on the orthogonal case. So in applied work the convention is: use **varimax** (or the non-negativity constraint plus varimax) when you want to interpret MDISC, MDIFF, and angles *a la* Reckase; use **oblimin** when you want a factor-loading summary with an estimated inter-factor correlation.
+
+## Factor-Loading Summary
+
+```{r factor-summary}
 summary(out2, suppress = 0.25)
-#same thing as summary(out2, rotate = "oblimin", suppress = 0.25)
 ```
-Notice at the bottom of this output we also see an estimate of the intercorrelation between factors. This is .75. But this value is much smaller than what we get when we look at the intercorrelation between eap theta estimates. I am not sure why, it is something I need to investigate.
 
-```{r }
-cor(theta2)
-plot(theta2)
+The `summary()` output gives loadings as standardized factor loadings (suppressing any below 0.25 for readability), plus an estimated correlation between the two factors. The first 10 (MA) items should load primarily on F1, the second 10 (SEN) items on F2.
+
+The inter-factor correlation (reported under "Factor correlations") here is around .75. Recall that the raw subscale total-score correlation was .59; the factor correlation is noticeably higher because it is a correlation between the *latent* dimensions rather than between observed total scores, so it is not attenuated by the measurement error in the short 10-item MA and SEN subscales. This is exactly the disattenuation we expected when we saw the raw correlation earlier.
+
+But the correlation between the two *EAP theta estimates* tells yet a third story:
+
+```{r theta-cor}
+round(cor(theta2), 3)
 ```
+
+```{r theta-scatter, fig.width=6, fig.height=6}
+plot(theta2[, 1], theta2[, 2], pch = 16, col = "steelblue",
+     xlab = expression(hat(theta)[1] ~ "(MA)"),
+     ylab = expression(hat(theta)[2] ~ "(SEN)"),
+     main = "EAP Scores: MA vs. SEN")
+abline(a = 0, b = 1, lty = 2, col = "gray60")
+```
+
+The EAP correlation is *substantially* higher than the factor correlation---not a small gap. Part of this is structural: EAP point estimates are posterior means, and for each person the posterior over $(\theta_1, \theta_2)$ is shaped by the full item-response pattern. When two dimensions measure related constructs and each subscale has only a handful of items, the posterior means for the two dimensions end up moving together---each one is being pulled by information from items that technically load on the other. The factor correlation, by contrast, is a structural parameter estimated jointly with the loadings via marginal maximum likelihood, and it recovers the latent correlation directly rather than through point estimates. When reporting the correlation *between the underlying dimensions*, the factor correlation is the cleaner quantity. When reporting how similarly two EAP subscore columns rank students, the EAP correlation is what you want---but it is not an estimate of the latent correlation.
+
+---
+
+# Confirmatory M2PL
+
+So far we have let every item load on every dimension---an **exploratory** model---and then rotated the solution into interpretability. But we have strong theoretical reason to expect that the MA items measure $\theta_1$ only and the SEN items measure $\theta_2$ only. We can impose this structure directly by fitting a **confirmatory** M2PL with simple structure: the "off-diagonal" slopes are fixed to zero, and the covariance between factors is freely estimated.
+
+This approach matches the **SS2 model** in Weeks (2018)---a two-factor simple-structure model---and it maps neatly onto the BIMD distinction we drew earlier.
+
+```{r cfa-specification}
+# Build up the constraints object from scratch
+cfa_pars <- mirt(dat, 2, pars = "values")
+
+# MA items (first 10): load on θ1 only, so a2 = 0 and not estimated
+cfa_pars$value[cfa_pars$name == "a2" & cfa_pars$item %in% colnames(dat)[1:10]] <- 0
+cfa_pars$est[  cfa_pars$name == "a2" & cfa_pars$item %in% colnames(dat)[1:10]] <- FALSE
+
+# SEN items (last 10): load on θ2 only, so a1 = 0 and not estimated
+cfa_pars$value[cfa_pars$name == "a1" & cfa_pars$item %in% colnames(dat)[11:20]] <- 0
+cfa_pars$est[  cfa_pars$name == "a1" & cfa_pars$item %in% colnames(dat)[11:20]] <- FALSE
+
+# Free the inter-factor covariance
+cfa_pars$est[cfa_pars$name == "COV_21"] <- TRUE
+
+# Give the remaining slopes a sensible starting value
+cfa_pars$value[cfa_pars$name %in% c("a1", "a2") & cfa_pars$value != 0] <- 0.5
+
+out3 <- mirt(dat, 2, pars = cfa_pars, verbose = FALSE)
+pars3 <- coef(out3, simplify = TRUE)
+round(pars3$items, 2)
+```
+
+In this parameterization every MA item has $a_2 = 0$ (by fiat) and every SEN item has $a_1 = 0$---the simple structure is built in. What gets estimated freely is the *size* of the non-zero slope for each item plus the covariance between the two factors.
+
+```{r cfa-summary}
+summary(out3)
+```
+
+---
+
+# Bifactor M2PL
+
+A third option is the **bifactor model**: every item loads on a **general factor** *and* on exactly one **specific factor**. For our data, this would mean a general reading factor (on which all 20 items load) plus a morphological-awareness specific factor (on which only MA items load) and a sentence-processing specific factor (on which only SEN items load).
+
+Bifactor models are a popular way to evaluate whether it is defensible to report a single "total" score on a test while also reporting reliable subscores. The general factor captures the shared variance; the specific factors capture subscore-specific variance net of the general factor. The `mirt` package has a dedicated `bfactor()` function for this.
+
+```{r bifactor-fit}
+# model = c(1, 1, ..., 1, 2, 2, ..., 2) says:
+#   items 1-10 load on specific factor 1, items 11-20 on specific factor 2
+# Every item automatically loads on a general factor as well.
+bf_spec <- c(rep(1, 10), rep(2, 10))
+
+# As before, constrain slopes to be non-negative
+bf_pars <- bfactor(dat, model = bf_spec, pars = "values")
+bf_pars$lbound[bf_pars$name %in% c("a1", "a2", "a3")] <- 0
+
+out4 <- bfactor(dat, model = bf_spec, pars = bf_pars, verbose = FALSE)
+pars4 <- coef(out4, simplify = TRUE)
+round(pars4$items, 2)
+```
+
+In the bifactor output, `a1` is the loading on the general factor and `a2`, `a3` are the loadings on the specific (MA, SEN) factors. Items load on the general factor plus *one* specific factor by construction. If the specific factor loadings are small and the general factor loadings dominate, that is evidence in favor of treating the test as essentially unidimensional (see the validity sector idea above). If the specific factor loadings are substantial, that is evidence that a multidimensional treatment is warranted.
+
+```{r bifactor-summary}
+summary(out4)
+```
+
+---
+
+# Comparing Model Fit
+
+We now have four competing models for this 20-item data set:
+
+1. **Unidimensional 2PL** (`out1`)
+2. **Exploratory M2PL** with two dimensions (`out2`)
+3. **Confirmatory M2PL** with simple structure (`out3`)
+4. **Bifactor M2PL** with one general plus two specific factors (`out4`)
+
+A natural first comparison is by **BIC** (Schwarz, 1978), which rewards fit and penalizes complexity:
+
+```{r bic-comparison}
+bic_tab <- data.frame(
+  Model = c("Unidimensional 2PL",
+            "Exploratory M2PL",
+            "Confirmatory M2PL (simple structure)",
+            "Bifactor M2PL"),
+  Parameters = c(extract.mirt(out1, "nest"),
+                 extract.mirt(out2, "nest"),
+                 extract.mirt(out3, "nest"),
+                 extract.mirt(out4, "nest")),
+  BIC = c(extract.mirt(out1, "BIC"),
+          extract.mirt(out2, "BIC"),
+          extract.mirt(out3, "BIC"),
+          extract.mirt(out4, "BIC"))
+)
+
+bic_tab |>
+  kable("html", col.names = c("Model", "# Parameters", "BIC")) |>
+  kable_styling(full_width = FALSE)
+```
+
+Models with lower BIC are preferred. Here, the multidimensional models typically beat the unidimensional model, with the bifactor and confirmatory models usually in close competition. In applied work, BIC should be only *one* input into the model choice, alongside theoretical plausibility, interpretability, and substantive consequences.
+
+## How Do the Ability Estimates Correlate?
+
+Another useful check is how consistent the person scores are across models:
+
+```{r theta-comparison}
+theta1 <- fscores(out1)
+theta2 <- fscores(out2)
+theta3 <- fscores(out3)
+theta4 <- fscores(out4)
+
+theta_all <- data.frame(
+  UD   = theta1[, 1],
+  E_F1 = theta2[, 1], E_F2 = theta2[, 2],
+  C_F1 = theta3[, 1], C_F2 = theta3[, 2],
+  BF_G = theta4[, 1], BF_MA = theta4[, 2], BF_SEN = theta4[, 3]
+)
+
+round(cor(theta_all), 2) |>
+  kable("html") |>
+  kable_styling(full_width = FALSE)
+```
+
+The unidimensional score correlates very highly with the general factor from the bifactor model and with each of the exploratory/confirmatory dimensions---which is a way of saying that if you only care about ranking students on "overall reading," the multidimensional structure may not change your conclusions much. The question is whether you care about more than ranking.
+
+---
+
+# When Does Multidimensionality Matter?
+
+One place multidimensionality can matter a lot is in **vertical scaling**, where the goal is to track growth across grades. If the underlying construct shifts---if reading in grade 6 emphasizes decoding and morphology while reading in grade 9 emphasizes passage comprehension---then a unidimensional vertical scale will quietly mix changes in different constructs together. Weeks (2018) shows exactly this phenomenon for the RISE data: the relative importance of different reading components changes across grades 6 through 9, and unidimensional scaling can produce misleading growth estimates in precisely the range where the construct is shifting fastest.
+
+This is the kind of substantive consequence that should drive the decision to fit a multidimensional model in the first place. MIRT is not (only) a tool for squeezing a little extra fit out of a data set; it is a tool for modeling a test in a way that is faithful to the multiple constructs it was built to measure.
+
+---
+
+# Summary
+
+| Step | What you do | What it gives you |
+|------|--------------|------------------|
+| 1. Justify dimensionality | Theory + parallel analysis + subscore correlations | Evidence that a multidimensional model is warranted |
+| 2. Fit exploratory M2PL | `mirt(dat, 2)` | A two-dimensional compensatory model |
+| 3. Rotate | Varimax (or `lbound = 0` + Varimax) | Positive slopes, interpretable angles |
+| 4. Summarize each item | MDISC, MDIFF, direction cosines | Reckase-style geometric summary |
+| 5. Plot | Information, score, SE, trace, vector plots | Visual diagnosis of the model |
+| 6. Compare oblique vs. orthogonal | `rotate = "oblimin"` + `summary()` | Factor loadings + inter-factor correlation |
+| 7. Fit confirmatory / bifactor alternatives | Edit `pars = "values"` or use `bfactor()` | Simple-structure or general+specific decomposition |
+| 8. Compare models | BIC, correlations among $\hat{\theta}$ | Quantitative and substantive model choice |
+
+**Key takeaways:**
+
+- The **compensatory M2PL** is the direct generalization of the unidimensional 2PL. It captures most of the intuition we have built up about $a$ and $d$, but the slope parameter is now a vector.
+- **Rotation is not optional.** The raw output of an exploratory M2PL is not a candidate for interpretation; it is a starting point for rotation.
+- **MDISC, MDIFF, and directional angles** are the Reckase-style summary statistics that translate rotated slope vectors into substantive descriptions of item behavior.
+- **Exploratory, confirmatory, and bifactor** models are three different answers to the question, "how should items load on dimensions?" Your choice among them should be driven by theory as much as by fit.
+- Multidimensionality matters most when the *substantive interpretation* of scores depends on separating the underlying constructs---as in vertical scaling across a developing construct.
+
+---
+
+# On Your Own
+
+1. **The WRDC/SEN comparison.** Re-run the analyses in this tutorial using the first 10 WRDC items (columns 1--10) paired with the first 10 SEN items (columns 118--127) instead of the MA/SEN pair used here. Do the two subscales appear *more* or *less* distinct? What does the inter-factor correlation tell you?
+
+2. **Effects of rotation choice.** Take the exploratory M2PL from the tutorial and compare `rotate = "varimax"`, `rotate = "oblimin"`, and `rotate = "promax"`. Which MDISC, MDIFF, and angle summaries are most sensitive to the rotation choice, and which are most stable?
+
+3. **Confirmatory vs. exploratory item parameters.** Compare the MA-only and SEN-only slopes from the confirmatory model (`out3`) with the corresponding rotated slopes from the exploratory model (`out2v`). When simple structure is imposed, do the estimated slopes get larger, smaller, or stay about the same? Why?
+
+4. **Bifactor interpretation.** Using the bifactor fit (`out4`), compute MDISC-like quantities separately for the general factor loadings and for the specific factor loadings. Which items appear to carry the most *specific* (subscore) information after accounting for the general factor? What would you conclude about the added value of subscores for this test?
+
+5. **Validity sector check.** Using the vector plot from the varimax-rotated exploratory M2PL, compute the angle each item makes with the line $\theta_1 = \theta_2$ (the reference composite of equal weighting). Are any items more than $21.8^\circ$ off that line? What fraction? What does this suggest about treating these 20 items as essentially unidimensional?
+
+6. **Partially compensatory model.** Read Section 12.2 of Reckase (2016) for the mathematical form of the partially compensatory model. Argue, on substantive grounds, whether you would expect a reading test to be better described by a compensatory or partially compensatory model. Which kinds of reading tasks would most push you toward one versus the other?
+
+7. **Construct shift.** Read the discussion in Weeks (2018) of how the relative loadings of the six RISE components change across grades 6--9. Describe in your own words what "construct shift" means here and why it creates a problem for unidimensional vertical scaling.
+
+---
+
+# References
+
+- Briggs, D. C., & Wilson, M. (2003). An introduction to multidimensional measurement using Rasch models. *Journal of Applied Measurement*, 4(1), 87--100.
+- Haberman, S. J. (2008). When can subscores have value? *Journal of Educational and Behavioral Statistics*, 33(2), 204--229.
+- Horn, J. L. (1965). A rationale and test for the number of factors in factor analysis. *Psychometrika*, 30(2), 179--185.
+- Reckase, M. D. (2009). *Multidimensional item response theory*. New York: Springer.
+- Reckase, M. D. (2016). Logistic multidimensional models. In W. J. van der Linden (Ed.), *Handbook of item response theory, Volume One: Models* (pp. 189--209). Boca Raton, FL: CRC Press.
+- Schwarz, G. (1978). Estimating the dimension of a model. *The Annals of Statistics*, 6(2), 461--464.
+- Sympson, J. B. (1978). A model for testing with multidimensional items. In D. J. Weiss (Ed.), *Proceedings of the 1977 computerized adaptive testing conference* (pp. 82--98). Minneapolis, MN: University of Minnesota.
+- Weeks, J. P. (2018). An application of multidimensional vertical scaling. *Measurement: Interdisciplinary Research and Perspectives*, 16(3), 139--154.
