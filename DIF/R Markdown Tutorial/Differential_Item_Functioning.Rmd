@@ -491,19 +491,73 @@ When examining the plots for each flagged item, pay attention to:
 - **The $\chi^2$ statistics**: The three tests (uniform, non-uniform, overall) printed on the top-left plot help classify the type of DIF.
 - **The pseudo $R^2$ values**: These measure the magnitude of DIF. Values below 0.01 are generally considered negligible.
 
+### Extracting Empirical Test- and Individual-Level Impact
+
+In addition to the plots, we can pull a few numerical summaries directly from the `lordif` object to quantify the impact of DIF on the $\hat{\theta}$ estimates. Two components are particularly useful:
+
+- `dif_result$calib$theta` --- the **initial** trait estimates, computed as if there were no DIF (common parameters for all items across groups).
+- `dif_result$calib.sparse$theta` --- the **purified** trait estimates, computed with group-specific parameters for the flagged items.
+
+Comparing these two sets of estimates tells us how much the individual (and group-mean) ability estimates change once DIF is accounted for.
+
+```{r empirical-theta-shift}
+theta_init <- dif_result$calib$theta          # ignoring DIF
+theta_pur  <- dif_result$calib.sparse$theta    # accounting for DIF
+se_pur     <- dif_result$calib.sparse$SE
+
+m_init_F <- mean(theta_init[gender_num == 1])
+m_init_M <- mean(theta_init[gender_num == 2])
+m_pur_F  <- mean(theta_pur[gender_num == 1])
+m_pur_M  <- mean(theta_pur[gender_num == 2])
+
+cat("Initial theta  (no DIF adjustment):  F =", round(m_init_F, 3),
+    " M =", round(m_init_M, 3),
+    " M - F =", round(m_init_M - m_init_F, 3), "\n")
+cat("Purified theta (DIF adjusted):       F =", round(m_pur_F, 3),
+    " M =", round(m_pur_M, 3),
+    " M - F =", round(m_pur_M - m_pur_F, 3), "\n")
+
+# The initial single-group calibration anchors the theta metric to
+# population mean 0 and SD 1, so these mean differences are already
+# in population-SD units
+
+shift <- theta_pur - theta_init
+cat("Shift (purified - initial)\n")
+cat("  Mean for F:", round(mean(shift[gender_num == 1]), 3),
+    "  Mean for M:", round(mean(shift[gender_num == 2]), 3), "\n")
+cat("  |shift| quantiles (50/75/95%):",
+    round(quantile(abs(shift), c(0.5, 0.75, 0.95)), 3), "\n")
+cat("  Max |shift|:", round(max(abs(shift)), 3), "logits\n")
+cat("  Mean CSEM (purified theta):", round(mean(se_pur), 3), "logits\n")
+```
+
 ### Test-Level Impact
 
-The test-level plots show the impact of DIF items on the test characteristic curves (TCCs). When DIF operates in opposite directions across items, the effects may cancel at the test level, resulting in minimal impact on total scores even though individual items show significant DIF.
+The test-level plots show the effect of DIF on the test characteristic curves (TCCs), and the group-mean comparison above quantifies the same thing numerically. The difference between the *initial* $\bar{\theta}_M - \bar{\theta}_F$ and the *purified* $\bar{\theta}_M - \bar{\theta}_F$ tells us how much of the apparent group gap was driven by DIF items rather than by true ability differences. To evaluate the **practical significance of DIF for aggregate group comparisons**, we express this difference in **population-SD units**. Because the initial single-group calibration identifies the latent metric with population mean 0 and SD 1, the raw mean $\hat{\theta}$ difference is already on this scale---no sample-based rescaling is needed (in fact, a sample-based denominator would be inappropriate, since EAP estimates shrink toward the prior and the pooled sample SD is systematically less than 1).
+
+- If DIF operates in opposite directions across items, the effects **cancel** at the test level: the initial and purified group-mean differences are essentially the same and the TCCs are nearly coincident.
+- If DIF is largely one-directional, the effects **amplify**: the purified difference is noticeably smaller (or larger) than the naive difference, and the TCCs clearly separate.
+
+In the CDE data, the male advantage is about `r round(m_init_M - m_init_F, 2)` SD units under the naive calibration and about `r round(m_pur_M - m_pur_F, 2)` SD units after purification. A reduction of roughly `r round((m_init_M - m_init_F) - (m_pur_M - m_pur_F), 2)` SD units---approximately `r round(100 * ((m_init_M - m_init_F) - (m_pur_M - m_pur_F)) / (m_init_M - m_init_F))`% of the apparent gap---is attributable to DIF items rather than to true ability differences. This is partial amplification: not the full cancellation we see with balanced mixed-direction DIF, but not a wash either.
 
 ### Individual-Level Impact
 
-The individual-level impact plot compares each person's initial "naive" $\hat{\theta}$ (ignoring DIF) to their "purified" $\hat{\theta}$ (accounting for DIF with group-specific item parameters). Small differences indicate that DIF has minimal practical impact on individual scores.
+The individual-level impact plot shows the initial $\hat{\theta}$ on the x-axis and the shift (purified $-$ initial) on the y-axis, in logits, with a boxplot summarizing the distribution. To judge the **practical significance of DIF for individual scores**, the relevant denominator is the **conditional standard error of measurement (CSEM)**. The CSEM already reflects the measurement uncertainty an individual estimate carries, so a DIF-induced shift much smaller than the CSEM is unlikely to change any single person's classification.
+
+For the CDE data, the median absolute shift is about `r round(median(abs(shift)), 2)` logits, the 95th percentile is `r round(quantile(abs(shift), 0.95), 2)`, and the largest single shift is about `r round(max(abs(shift)), 2)` logits. The mean CSEM of the purified $\hat{\theta}$ is about `r round(mean(se_pur), 2)` logits. Typical shifts are a small fraction of a CSEM and therefore negligible at the individual level.
+
+There is, however, an important caveat. Even when per-person shifts are tiny, their *direction* can be systematic by group. In the CDE data, the mean shift is about `r round(mean(shift[gender_num == 2]), 2)` logits for males and `r round(mean(shift[gender_num == 1]), 2)` logits for females---small, but pointing in opposite directions. Shifts that are uncorrelated across people would wash out in a group-mean comparison; **shifts that all point the same way within a group do not.** This is the mechanism through which small per-person shifts translate into the nontrivial group-level bias we saw above.
 
 ---
 
 ## Are the Differences Practically Significant?
 
-Even when items are flagged as statistically significant, the practical significance of DIF should be assessed by comparing the magnitude of score changes to the standard error of measurement (SEM). If the change in $\hat{\theta}$ attributable to DIF is much smaller than the SEM, the impact on individual decisions is negligible.
+Two benchmarks are relevant, and they answer different questions:
+
+- **Population SD of $\theta$ (= 1 by the identification constraint of the initial calibration)** --- the right denominator for **group-level** comparisons. The change in the mean $\hat{\theta}$ difference from initial to purified estimates, read directly in SD units, expresses how much of the apparent group gap is DIF-induced. This is the benchmark that matters for the validity of inferences about group differences.
+- **CSEM** --- the right denominator for **individual-level** interpretation. It reminds us that every individual estimate already carries substantial measurement error, so a shift well below the CSEM has little consequence for any one person's classification.
+
+These two benchmarks can disagree in a way that is important to understand. When DIF cancels, both benchmarks give the same answer: effects are small. When DIF **amplifies**, the CSEM benchmark can make the effect look trivial (per-person shifts remain well below the SEM) while the population-SD benchmark correctly registers the systematic group-level bias. In other words, if individual $|$shifts$|$ are small but the group-mean difference changes appreciably from initial to purified, DIF is producing a **directional bias** at the group level---individuals move only a little, but they move in the *same* direction within each group, and those small shifts accumulate in group-mean comparisons. That is exactly the scenario in which a test can look measurement-invariant at the individual level while still misleading group-level inferences, and it is the validity concern that typically matters most.
 
 ---
 

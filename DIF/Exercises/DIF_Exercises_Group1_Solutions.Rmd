@@ -1,0 +1,420 @@
+---
+title: "DIF Exercises: Group 1 — Solutions"
+author: "Derek Briggs"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Overview
+
+In this assignment you will apply the DIF detection methods covered in class to a **simulated** dataset. The data contain 2,000 examinees (1,000 per gender group), 28 dichotomous items, and a gender indicator variable (`Male`: 0 = Female, 1 = Male). Some of the items were simulated to contain DIF. Your task is to find them using both the Mantel-Haenszel approach and the `lordif` approach, and to compare the results.
+
+---
+
+# The Ground Truth
+
+Because this is simulated data, we know exactly which items contain DIF and the nature of that DIF. This section reveals the generating parameters so we can evaluate how well each detection method performs.
+
+**Impact (group ability differences):**
+
+- Female $\theta \sim N(0.8, 1.0)$
+- Male $\theta \sim N(1.2, 1.1)$
+- Males have higher mean ability and slightly more variability
+
+**DIF items:** 5 of 28 items contain DIF. The DIF is **mixed in direction** --- 3 items favor males and 2 favor females:
+
+```{r ground-truth}
+library(kableExtra)
+
+truth <- data.frame(
+  Item = c(5, 10, 15, 20, 25),
+  Direction = c("Favors Males", "Favors Males", "Favors Males",
+                "Favors Females", "Favors Females"),
+  b_shift = c("1.0 logits harder for females",
+              "0.7 logits harder for females",
+              "0.5 logits harder for females",
+              "0.5 logits harder for males",
+              "0.7 logits harder for males"),
+  DIF_Type = c("Uniform", "Uniform", "Non-uniform",
+               "Uniform", "Uniform"),
+  Notes = c("", "",
+            "Male discrimination is 0.2 higher than female",
+            "", "")
+)
+
+truth |>
+  kable("html",
+        col.names = c("Item", "Direction", "Difficulty Shift",
+                       "DIF Type", "Notes")) |>
+  kable_styling(full_width = FALSE)
+```
+
+Key features of this dataset:
+
+- The DIF is **mixed in direction**, so we would expect partial cancellation at the test level
+- Item 15 is the only item with **non-uniform DIF** (different discrimination parameters across groups) --- this will be important when comparing MH to `lordif`
+- The DIF magnitudes range from moderate (0.5 logits) to large (1.0 logit)
+- The remaining 23 items have identical parameters for males and females
+
+With this ground truth in mind, let's see what the MH and `lordif` methods recover.
+
+---
+
+# Exercise 1: Load and Explore the Data
+
+Load the dataset `DIF.data1.csv`. Examine the structure of the data using `head()`, `tail()`, `nrow()`, and `ncol()`. Convert the `Male` variable to a factor with labels "Female" and "Male".
+
+```{r exercise-1}
+# Load the data
+DIF.data <- read.csv("DIF.data1.csv")
+
+# Convert Male to a factor
+DIF.data$Male <- factor(DIF.data$Male, levels = c(0, 1),
+                        labels = c("Female", "Male"))
+
+# Explore the data
+head(DIF.data)
+tail(DIF.data)
+nrow(DIF.data)
+ncol(DIF.data)
+```
+
+**Question 1a**: How many examinees are in each gender group?
+
+> There are 1,000 females and 1,000 males, for a total of 2,000 examinees.
+
+```{r exercise-1a}
+table(DIF.data$Male)
+```
+
+**Question 1b**: Examine the unconditional proportions correct by gender for all 28 items. Which items show the largest unconditional differences between groups? List any items where the difference in proportion correct exceeds 5 percentage points.
+
+```{r exercise-1b}
+library(kableExtra)
+
+p_f <- colMeans(DIF.data[DIF.data$Male == "Female", 1:28])
+p_m <- colMeans(DIF.data[DIF.data$Male == "Male", 1:28])
+pdiff <- p_m - p_f
+
+uncond <- data.frame(
+  Item = 1:28,
+  p_Female = round(p_f, 3),
+  p_Male = round(p_m, 3),
+  Diff = round(pdiff, 3),
+  Flag = ifelse(abs(pdiff) > 0.05, "*", "")
+)
+
+uncond |>
+  kable("html",
+        col.names = c("Item", "p (Female)", "p (Male)",
+                       "Diff (M - F)", "Flag")) |>
+  kable_styling(full_width = FALSE)
+```
+
+> Many items show unconditional differences exceeding 5 percentage points. This is expected because there is **impact** in this dataset---males have higher overall ability than females. Items with the largest differences include items 10 (about 15 points), 15 (about 12 points), and 5 (about 8 points). However, unconditional differences confound DIF with impact. The MH procedure conditions on total score to disentangle the two.
+
+---
+
+# Exercise 2: DIF Analysis Using Mantel-Haenszel
+
+## 2a: Create the matching criterion
+
+Compute total scores for all examinees. Collapse total scores into decile bins using the `quantile()` function to create a grouping variable called `diftot`.
+
+```{r exercise-2a}
+# Compute total scores
+DIF.data$total <- rowSums(DIF.data[, 1:28])
+
+# Distribution of total scores
+table(DIF.data$total)
+
+# Create decile bins
+x <- quantile(DIF.data$total, probs = seq(0, 1, 0.10))
+diftot <- rep(0, nrow(DIF.data))
+for (i in 1:(length(x) - 1)) {
+  diftot[DIF.data$total >= x[i] & DIF.data$total < x[i + 1]] <- i
+}
+diftot[DIF.data$total == max(DIF.data$total)] <- length(x) - 1
+
+table(diftot)
+```
+
+## 2b: Compute MH statistics
+
+Compute the Mantel-Haenszel statistic for each of the 28 items. Extract the odds ratios and p-values.
+
+```{r exercise-2b}
+mh_or <- rep(0, 28)
+mh_pval <- rep(0, 28)
+
+for (i in 1:28) {
+  temp <- mantelhaen.test(DIF.data[, i], y = DIF.data$Male, z = diftot,
+                          alternative = "two.sided", conf.level = 0.95)
+  mh_or[i] <- temp$estimate
+  mh_pval[i] <- temp$p.value
+}
+
+# Visualize odds ratios
+hist(mh_or, breaks = 15, main = "MH Odds Ratios", xlab = "Common Odds Ratio",
+     col = "lightblue", freq = FALSE)
+abline(v = 1, col = "firebrick", lwd = 2, lty = 2)
+```
+
+## 2c: ETS delta classification
+
+Transform the MH odds ratios into ETS delta statistics. Classify each item as Level A, B, or C.
+
+```{r exercise-2c}
+delta <- -2.35 * log(mh_or)
+
+# Classification
+level <- ifelse(abs(delta) >= 1.5, "C",
+          ifelse(abs(delta) > 1, "B", "A"))
+
+# Direction: positive delta = favors females, negative delta = favors males
+direction <- ifelse(delta > 0, "Favors Females", "Favors Males")
+
+# Summary table
+mh_results <- data.frame(
+  Item = 1:28,
+  OR = round(mh_or, 3),
+  Delta = round(delta, 3),
+  p_value = round(mh_pval, 4),
+  Significant = ifelse(mh_pval < 0.05, "Yes", "No"),
+  Direction = direction,
+  Level = level
+)
+
+mh_results |>
+  kable("html") |>
+  kable_styling(full_width = FALSE)
+
+# Level counts
+cat("Level A (negligible):", sum(level == "A"), "\n")
+cat("Level B (moderate):  ", sum(level == "B"), "\n")
+cat("Level C (large):     ", sum(level == "C"), "\n")
+```
+
+**Question 2**: Based on the MH analysis, which items would you flag for DIF? For each flagged item, indicate: (a) the direction of DIF (which group is disadvantaged), (b) whether the result is statistically significant, and (c) the ETS classification level.
+
+> Five items are statistically significant (p < .05) and show varying magnitudes of DIF, but none reach level C on the ETS taxonomy:
+>
+> - **Item 5**: OR = 1.26, delta = -0.55, Level A, favors males. Statistically significant but small effect.
+> - **Item 10**: OR = 1.55, delta = -1.03, Level B, favors males. Moderate DIF --- females are disadvantaged on this item after conditioning on total score.
+> - **Item 15**: OR = 1.37, delta = -0.74, Level A, favors males. Significant but classified as negligible by ETS criteria.
+> - **Item 20**: OR = 0.54, delta = +1.45, Level B, favors females. Moderate DIF --- males are disadvantaged on this item.
+> - **Item 25**: OR = 0.70, delta = +0.84, Level A, favors females. Significant but small effect.
+>
+> Items 10 and 20 are the most concerning (Level B). Note the mixed directionality: items 5, 10, and 15 favor males, while items 20 and 25 favor females. The remaining 23 items show no evidence of DIF.
+
+---
+
+# Exercise 3: DIF Analysis Using lordif
+
+## 3a: Run lordif
+
+Reload the data (without the factor conversion) and run the `lordif` algorithm with the $\chi^2$ criterion at $\alpha$ = 0.01.
+
+```{r exercise-3a}
+library(lordif)
+
+# Reload data as numeric
+DIF.data <- read.csv("DIF.data1.csv")
+
+# Run lordif
+dif_result <- lordif(DIF.data[, 1:28], DIF.data[, 29],
+                     criterion = "Chisqr", alpha = 0.01, minCell = 5)
+```
+
+## 3b: Examine and interpret results
+
+Use `print()` to examine the flagged items and their associated statistics.
+
+```{r exercise-3b}
+print(dif_result)
+```
+
+**Question 3a**: Which items were flagged by `lordif`? How many iterations did the algorithm require?
+
+> `lordif` flagged **5 items**: 5, 10, 15, 20, and 25. The algorithm converged in **2 iterations**---the same 5 items were flagged in both iterations, so the purification process stabilized immediately.
+
+## 3c: Diagnostic plots
+
+Generate the diagnostic plots and examine them carefully.
+
+```{r exercise-3c, fig.width=8, fig.height=6, results='hide'}
+plot(dif_result, labels = c("Female", "Male"), cex = 0.7)
+```
+
+It also helps to pull a few numerical summaries directly out of the `lordif` object. The initial trait estimates (ignoring DIF) are in `dif_result$calib$theta`; the purified trait estimates (accounting for DIF) are in `dif_result$calib.sparse$theta`. Group-specific item parameters for the flagged items are in `dif_result$ipar.sparse`.
+
+```{r empirical-theta-shift}
+theta_init <- dif_result$calib$theta
+theta_pur  <- dif_result$calib.sparse$theta
+se_pur     <- dif_result$calib.sparse$SE
+grp        <- DIF.data[, 29]
+
+m_init_F <- mean(theta_init[grp == 0]); m_init_M <- mean(theta_init[grp == 1])
+m_pur_F  <- mean(theta_pur[grp == 0]);  m_pur_M  <- mean(theta_pur[grp == 1])
+
+cat("Initial theta  (no DIF adjustment):  F =", round(m_init_F, 3),
+    " M =", round(m_init_M, 3),
+    " M - F =", round(m_init_M - m_init_F, 3), "\n")
+cat("Purified theta (DIF adjusted):       F =", round(m_pur_F, 3),
+    " M =", round(m_pur_M, 3),
+    " M - F =", round(m_pur_M - m_pur_F, 3), "\n")
+cat("(The initial single-group calibration anchors the theta metric to\n")
+cat(" population mean 0 and SD 1, so these mean differences are already\n")
+cat(" in population-SD units.)\n\n")
+
+shift <- theta_pur - theta_init
+cat("Shift (purified - initial)\n")
+cat("  Mean for F:", round(mean(shift[grp == 0]), 3),
+    "  Mean for M:", round(mean(shift[grp == 1]), 3), "\n")
+cat("  |shift| quantiles (50/75/95%):",
+    round(quantile(abs(shift), c(0.5, 0.75, 0.95)), 3), "\n")
+cat("  Max |shift|:", round(max(abs(shift)), 3), "logits\n")
+cat("  Mean CSEM (purified theta):", round(mean(se_pur), 3), "logits\n")
+```
+
+**Question 3b**: For each flagged item, describe the nature of the DIF: Is it uniform or non-uniform? Which group is advantaged? How large is the effect?
+
+> Reading the lordif diagnostic plots (and cross-checking with the group-specific slope/threshold estimates in `ipar.sparse`):
+>
+> - **Item 5**: Both the female and male ICCs are nearly flat in the diagnostic panel. The estimated discrimination is $a_F \approx 0.12$ and $a_M \approx 0.09$, so the item carries almost no information about ability in either group. In that regime the difficulty parameter is only weakly identified, and the reported threshold difference (the male threshold is pushed roughly 3.4 logits below the female threshold) should not be read too literally. The plot nonetheless points to an advantage for males across the observable range. This item is essentially a flawed item from the simulation, and its instability here is a symptom of a generating slope (0.27) that is too low for 1,000 examinees per group to pin down a *b*.
+> - **Item 10**: Uniform DIF favoring males. The ICCs are roughly parallel ($a_F \approx 0.69$, $a_M \approx 0.84$), and the male curve is shifted to the left by about 0.56 logits.
+> - **Item 15**: **Non-uniform DIF.** The male ICC is noticeably steeper than the female ICC ($a_M \approx 0.86$ vs. $a_F \approx 0.49$), so the two curves cross. The thresholds are nearly the same for the two groups; the bias is in the slope, not the location. Males have an advantage in the middle of the scale that narrows at the tails.
+> - **Item 20**: Uniform DIF favoring females. The slopes are essentially identical ($a \approx 1.4$ in both groups) and the female threshold is about 0.37 logits to the left of the male threshold.
+> - **Item 25**: Uniform DIF favoring females. Slopes $\approx 0.6$ in both groups; female threshold about 0.46 logits to the left.
+>
+> *Compared to the generating values.* The true parameters were a difficulty shift of 1.0, 0.7, and 0.5 logits harder for females on items 5, 10, 15 (plus a 0.2-logit higher discrimination for males on item 15), and 0.5 and 0.7 logits harder for males on items 20 and 25. lordif recovers the direction of DIF correctly for every item, and the estimated magnitudes for items 10, 15, 20, and 25 are in the same ballpark as the truth (somewhat attenuated, as is typical when two group-specific calibrations are linked). Item 5 is the exception: its true discrimination of 0.27 is too low to support stable estimation of *b*, so the algorithm returns a much larger estimated threshold difference (~3.4 logits) than the true value (1.0 logit). This is a limitation of how the data were simulated rather than of lordif.
+
+**Question 3c**: Examine the test-level impact plots (TCCs). Does DIF appear to amplify or cancel at the test level?
+
+> The test-level impact plots show the two group-specific TCCs nearly on top of one another. To quantify this for an aggregate group comparison, we read the mean $\hat{\theta}$ difference directly in **population-SD units**, using the fact that the initial single-group calibration anchors the theta metric to SD = 1 by identification. In this dataset, $\bar{\theta}_M - \bar{\theta}_F$ is 0.275 SD units under the naive calibration and 0.272 SD units after purification---a change of about 0.003 SD. **DIF cancels at the test level.** This is the expected pattern given the mixed direction of the item-level DIF: three items (5, 10, 15) favor males and two (20, 25) favor females, and those opposing effects largely offset when scores are aggregated.
+
+**Question 3d**: Examine the individual-level impact plot. What is the typical magnitude of score change when DIF is accounted for? Is this large relative to the standard error of measurement?
+
+> The individual-level plot shows the initial $\hat{\theta}$ on the x-axis and (purified $-$ initial) $\hat{\theta}$ on the y-axis in logits, with a boxplot summarizing the distribution. The scatter is tightly clustered around zero: the median absolute shift is about 0.015 logits, the 75th percentile is 0.024, the 95th percentile is 0.043, and the largest shift is 0.091 logits. The relevant denominator at the individual level is the **conditional standard error of measurement (CSEM)**, which reflects the measurement uncertainty each individual estimate already carries; for the purified $\hat{\theta}$ here, the mean CSEM is about 0.47 logits. The typical DIF-induced shift is therefore less than 1/20th of a CSEM---a negligible practical effect for individual-level decisions.
+>
+> Both benchmarks---population SD at the group level and CSEM at the individual level---agree that DIF has essentially no practical impact on this dataset. That agreement is expected when DIF cancels: there is no systematic directional bias to accumulate at either scale. The more revealing scenario is when the two benchmarks disagree, which is taken up in Question 5.
+
+---
+
+# Exercise 4: Compare Methods
+
+**Question 4a**: Create a table or list comparing which items were flagged by MH versus `lordif`. Which items were flagged by both methods? Which were flagged by only one?
+
+```{r exercise-4}
+mh_flagged <- which(mh_pval < 0.05 & abs(delta) > 0.5)
+lordif_flagged <- which(dif_result$flag)
+
+cat("MH flagged items (p < .05 and |delta| > 0.5):", sort(mh_flagged), "\n")
+cat("lordif flagged items:                         ", sort(lordif_flagged), "\n")
+
+both <- intersect(mh_flagged, lordif_flagged)
+mh_only <- setdiff(mh_flagged, lordif_flagged)
+lordif_only <- setdiff(lordif_flagged, mh_flagged)
+
+cat("\nFlagged by both:    ", if (length(both) > 0) both else "none", "\n")
+cat("MH only:            ", if (length(mh_only) > 0) mh_only else "none", "\n")
+cat("lordif only:        ", if (length(lordif_only) > 0) lordif_only else "none", "\n")
+```
+
+> Both methods flagged the same 5 items: **5, 10, 15, 20, and 25**. There is complete agreement between MH and `lordif` for this dataset. No items were flagged by only one method.
+
+**Question 4b**: Why might the two methods disagree about certain items? Consider differences in the matching criterion, sensitivity to uniform vs. non-uniform DIF, and the iterative purification process.
+
+> Although the methods agree in this case, they can disagree for several reasons:
+>
+> - **Matching criterion**: MH matches on observed total score, which is contaminated by the DIF items themselves. `lordif` uses IRT-based $\hat{\theta}$ estimates and iteratively purifies the matching criterion by removing DIF items---potentially yielding a less biased comparison.
+> - **Sensitivity to DIF type**: MH is designed primarily for **uniform DIF** (constant odds ratio across ability levels). For **non-uniform DIF** (as in item 15, where the ICCs cross), MH averages over strata and may underestimate the effect or fail to detect it entirely. `lordif` tests separate parameters for uniform and non-uniform DIF via the logistic regression framework.
+> - **Statistical criterion**: MH uses a chi-square test with a single degree of freedom; `lordif` uses a likelihood ratio chi-square comparing nested logistic regression models. The sensitivity and Type I error rates may differ.
+> - **Purification**: `lordif`'s iterative purification means the IRT calibration used for matching progressively excludes DIF items, while MH uses a single total score throughout.
+>
+> In this dataset, the DIF effects are large enough that both methods detect them, but with subtler DIF or non-uniform DIF, `lordif` generally has an advantage.
+
+**Question 4c**: Based on your full analysis, which items would you recommend for further content review by subject matter experts? Justify your recommendation.
+
+> I would recommend **all 5 flagged items** (5, 10, 15, 20, 25) for content review. Items 10 and 20 are the highest priority because they show the largest effects (Level B by ETS criteria). Item 15 is noteworthy because it displays non-uniform DIF, which suggests that the item functions differently across the ability range---this may indicate that the item is tapping into a construct-irrelevant skill that interacts with both ability and gender. Items 5 and 25 show smaller but statistically significant effects.
+>
+> The content review should focus on whether the item content, wording, context, or format could plausibly advantage one gender group for reasons unrelated to the construct being measured. For example, items set in contexts more familiar to one gender (e.g., sports, cooking) could produce DIF without reflecting true ability differences.
+
+---
+
+# Comparison to Ground Truth
+
+Now that we have results from both methods, let's compare them to the known generating parameters.
+
+```{r ground-truth-comparison}
+# True DIF items and their properties
+true_dif <- c(5, 10, 15, 20, 25)
+true_direction <- c("Favors Males", "Favors Males", "Favors Males",
+                     "Favors Females", "Favors Females")
+true_type <- c("Uniform", "Uniform", "Non-uniform", "Uniform", "Uniform")
+true_magnitude <- c("1.0 logits", "0.7 logits", "0.5 logits",
+                     "0.5 logits", "0.7 logits")
+
+# Detection results
+mh_detected <- true_dif %in% mh_flagged
+lordif_detected <- true_dif %in% lordif_flagged
+
+# MH direction recovery
+mh_dir <- ifelse(delta[true_dif] < 0, "Favors Males", "Favors Females")
+
+comparison <- data.frame(
+  Item = true_dif,
+  True_Direction = true_direction,
+  True_Type = true_type,
+  Magnitude = true_magnitude,
+  MH_Detected = ifelse(mh_detected, "Yes", "No"),
+  MH_Direction = mh_dir,
+  MH_Level = level[true_dif],
+  lordif_Detected = ifelse(lordif_detected, "Yes", "No")
+)
+
+comparison |>
+  kable("html",
+        col.names = c("Item", "True Direction", "True DIF Type", "Magnitude",
+                       "MH Detected?", "MH Direction", "MH Level",
+                       "lordif Detected?")) |>
+  kable_styling(full_width = FALSE)
+
+# False positives
+mh_false_pos <- setdiff(mh_flagged, true_dif)
+lordif_false_pos <- setdiff(lordif_flagged, true_dif)
+cat("MH false positives:", if (length(mh_false_pos) > 0) mh_false_pos else "none", "\n")
+cat("lordif false positives:", if (length(lordif_false_pos) > 0) lordif_false_pos else "none", "\n")
+```
+
+**Summary**: Both methods performed well on this dataset:
+
+- **Sensitivity**: Both MH and `lordif` correctly identified all 5 true DIF items. Neither method missed a DIF item (no false negatives).
+- **Specificity**: Neither method flagged any of the 23 non-DIF items (no false positives).
+- **Direction**: Both methods correctly identified which group was advantaged on each item.
+- **DIF type**: MH detected item 15 despite its non-uniform DIF, likely because the uniform component (0.5 logit difficulty shift) was large enough to produce a significant MH statistic even though MH cannot formally distinguish uniform from non-uniform DIF. The `lordif` diagnostic plots reveal the non-uniform nature of item 15's DIF through the crossing ICCs.
+- **Magnitude ranking**: The ETS delta classification roughly tracks the true DIF magnitudes, with larger logit shifts producing larger delta values, though the correspondence is imperfect because the delta scale also depends on item discrimination and the guessing parameter.
+
+---
+
+# Exercise 5: Reflection
+
+**Question 5**: Suppose you found strong evidence of DIF for several items, all favoring the same group. What are the implications for the validity of total score comparisons between groups? How would you advise a test developer who received these results?
+
+> If DIF items consistently favor the same group, the effects **amplify** rather than cancel at the test level. This means the total score is systematically biased: one group's expected score is inflated (or the other's is deflated) relative to what their true ability would predict. This directly threatens the **validity** of between-group score comparisons---any observed mean difference confounds true ability differences (impact) with construct-irrelevant variance (bias).
+>
+> I would advise the test developer to:
+>
+> - **Conduct a content review** with subject matter experts to determine whether the DIF items share common features that could explain the bias (e.g., item format, context, language complexity).
+> - **Consider removing or revising** the most problematic items, especially those at Level C. However, removing items may affect content coverage and reliability, so this must be balanced.
+> - **Examine the test-level impact** using the TCC and individual-level plots. If the bias is large enough to change classification decisions (e.g., pass/fail), corrective action is urgent.
+> - **Report the DIF analysis** as part of the technical documentation for the test, and flag the affected items for monitoring in future administrations.
+> - **Investigate the root cause**: is the DIF due to item content (construct-irrelevant), or does it reflect real differential learning opportunities (construct-relevant)? Only the former represents a validity threat that should be addressed by revising the test.
