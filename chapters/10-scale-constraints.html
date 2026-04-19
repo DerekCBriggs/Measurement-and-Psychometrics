@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Derek Briggs">
+<meta name="dcterms.date" content="8720-01-01">
+
+<title>10&nbsp; IRT Scale Constraints Using the mirt Package – Psychometric Modeling with IRT</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../chapters/11-person-estimation.html" rel="next">
+<link href="../chapters/09-rasch-paradigm.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-27c261d06b905028a18691de25d09dde.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/10-scale-constraints.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">IRT Scale Constraints Using the mirt Package</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header sidebar-header-stacked">
+      <a href="../index.html" class="sidebar-logo-link">
+      </a>
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Psychometric Modeling with IRT</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/DerekCBriggs/Measurement-and-Psychometrics" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/01-reliability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">A Guide to Reliability: Avoiding Misconceptions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/02-classical-item-analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Classical Item Analysis Prior to IRT Model Specification</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Basics of IRT</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/03-deriving-icc.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Deriving and Conceptualizing an Item Characteristic Curve</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/04-interpreting-iccs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Interpreting Item Characteristic Curves</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/05-tcc-info-sem.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Test Characteristic Curves, Information Functions, and SEM</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/06-assumptions-properties.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Assumptions and Properties of IRT Models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/07-normal-ogive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The Normal Ogive</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/08-mirt-commands.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Basic mirt Commands: A Reference Guide</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/09-rasch-paradigm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">The Rasch Model Paradigm</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/10-scale-constraints.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">IRT Scale Constraints Using the mirt Package</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Parameter Estimation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/11-person-estimation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Person Parameter Estimation in IRT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/12-jmle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Item Parameter Estimation via JMLE</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/13-mmle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Item Parameter Estimation via MMLE/EM</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/14-model-fit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Evaluating IRT Model Fit</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/15-polytomous.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">IRT Models for Polytomously Scored Items</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Applications of IRT</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/16-fixing-params.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Fixing Item Parameters in mirt</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/17-linking-equating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">IRT Equating using mirt</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/18-dif.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Differential Item Functioning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/19-vertical-scaling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Vertical Scaling and Growth Using mirt</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/20-cat.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Computerized Adaptive Testing with mirtCAT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/21-mirt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">An Introduction to Multidimensional IRT with mirt</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../key-terms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Index of Key Terms</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction-and-background" id="toc-introduction-and-background" class="nav-link active" data-scroll-target="#introduction-and-background"><span class="header-section-number">10.1</span> Introduction and Background</a>
+  <ul class="collapse">
+  <li><a href="#the-indeterminacy-of-the-logit-scale" id="toc-the-indeterminacy-of-the-logit-scale" class="nav-link" data-scroll-target="#the-indeterminacy-of-the-logit-scale"><span class="header-section-number">10.1.1</span> The indeterminacy of the logit scale</a></li>
+  </ul></li>
+  <li><a href="#scale-constraints-in-irt-models" id="toc-scale-constraints-in-irt-models" class="nav-link" data-scroll-target="#scale-constraints-in-irt-models"><span class="header-section-number">10.2</span> Scale constraints in IRT models</a></li>
+  <li><a href="#the-logit-as-a-unit-of-measurement" id="toc-the-logit-as-a-unit-of-measurement" class="nav-link" data-scroll-target="#the-logit-as-a-unit-of-measurement"><span class="header-section-number">10.3</span> The logit as a unit of measurement</a></li>
+  <li><a href="#anchoring-on-item-difficulty" id="toc-anchoring-on-item-difficulty" class="nav-link" data-scroll-target="#anchoring-on-item-difficulty"><span class="header-section-number">10.4</span> Anchoring on item difficulty</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">IRT Scale Constraints Using the mirt Package</span></h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Derek Briggs </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 1, 8720</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction-and-background" class="level2" data-number="10.1">
+<h2 data-number="10.1" class="anchored" data-anchor-id="introduction-and-background"><span class="header-section-number">10.1</span> Introduction and Background</h2>
+<p>The purpose of this document is both educational and practical. Educationally speaking, I will demonstrate the equivalent relationships between constraints that can be imposed to identify or “anchor” the scale of an IRT model. I’ll mostly focus on the Rasch Model. Practically speaking, I will show the syntax that needs to be employed to accomplish all this using functions with Phil Chalmer’s mirt package.</p>
+<section id="the-indeterminacy-of-the-logit-scale" class="level3" data-number="10.1.1">
+<h3 data-number="10.1.1" class="anchored" data-anchor-id="the-indeterminacy-of-the-logit-scale"><span class="header-section-number">10.1.1</span> The indeterminacy of the logit scale</h3>
+<p>When we measure things like length, duration and temperature, a key decision point for the measuring scale is the definition of the scale’s origin or zero point, and a unit. For height and duration, the origin for most measuring scales is pretty straightforward: it represents no length, or no passage of time. For temperature, this is more complicated, because for the two most commonly used scales, Celsius and Fahrenheit, zero on the scale doesn’t mean no temperature. In other words, temperature is typically measured on an interval scale, while height and duration are measured on ratio scales. In the context of educational and psychological attributes, we typically only aspire to a measuring scale with interval properties. But this means we need to purposefully define what a “0” means, or to transform the scale such that there is no 0.</p>
+<p>We also need to define the unit of the scale. For length we could choose inches or feet, millimeters or centimeters. For temperature we could choose degrees C and F. In some sense the choice is arbitrary (e.g., should we use centimeters or inches?) But in another sense the choice is critical because it depends on the precision that is desired and our ability to enact a measuring procedure that accurately record these distinctions (e.g., should we use meters, centimeters or millimeters?)</p>
+<p>It is easy to see the arbitrary nature of the logit scale in the context of an IRT model. Consider the logit formulation of the 2PL</p>
+<p><span class="math display">\[ logit(X_{pi})=a_i(\theta_p-b_i) \]</span> There are many many different combinations of <span class="math inline">\(a_i\)</span>, <span class="math inline">\(b_i\)</span> and <span class="math inline">\(\theta_p\)</span> that will produce the same log odds of a correct item response. A key feature of IRT models is that they make it possible to locate persons and items on a common scale. But without imposing constraints, there is no way to establish an unambiguous interpretation for the distance between the location of any item and the location of any person.</p>
+</section>
+</section>
+<section id="scale-constraints-in-irt-models" class="level2" data-number="10.2">
+<h2 data-number="10.2" class="anchored" data-anchor-id="scale-constraints-in-irt-models"><span class="header-section-number">10.2</span> Scale constraints in IRT models</h2>
+<p>Mathematically, the Rasch Model can be viewed as a constrained version of the 2PL in which</p>
+<p><span class="math display">\[ logit(X_{pi})=a(\theta_p-b_i) \]</span> OR</p>
+<p><span class="math display">\[ logit(X_{pi})=\theta_p-b_i \]</span> In either case, we are imposing the constraint that all items are equally discriminating, which means that if you think of each item as a replication of the basic measurement procedure, then the procedure always involves the same slope parameter, which is <span class="math inline">\(a\)</span>. In the second formulation, we have simply set <span class="math inline">\(a=1\)</span>.</p>
+<p>It would be an understandable mistake to think that we learn something new by getting an estimate of <span class="math inline">\(a\)</span> instead of constraining it to be 1. To see why this is a mistake I will apply some code Phil Chalmers includes on p.&nbsp;96 of his mirt manual.</p>
+<p>The following illustration is based on 5 LSAT items taken by 1000 examinees. This little data set is contained within the mirt package. Let’s open mirt and load the data into an active dataframe. Note that the function <strong>itemstats</strong> within mirt computes classical item stats much like we get using the function <strong>alpha</strong> in the psych package.</p>
+<div class="cell" data-messages="false">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mirt)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: stats4</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: lattice</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">expand.table</span>(LSAT6)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">itemstats</span>(dat)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>$overall
+    N mean_total.score sd_total.score ave.r sd.r alpha SEM.alpha
+ 1000            3.819          1.035 0.077 0.03 0.295     0.869
+
+$itemstats
+          N K  mean    sd total.r total.r_if_rm alpha_if_rm
+Item_1 1000 2 0.924 0.265   0.362         0.113       0.275
+Item_2 1000 2 0.709 0.454   0.567         0.153       0.238
+Item_3 1000 2 0.553 0.497   0.618         0.173       0.217
+Item_4 1000 2 0.763 0.425   0.534         0.144       0.246
+Item_5 1000 2 0.870 0.336   0.435         0.122       0.266
+
+$proportions
+           0     1
+Item_1 0.076 0.924
+Item_2 0.291 0.709
+Item_3 0.447 0.553
+Item_4 0.237 0.763
+Item_5 0.130 0.870</code></pre>
+</div>
+</div>
+<p>Now, let’s calibrate these items using mirt and choose the default specification for the Rasch Model where <span class="math inline">\(a=1\)</span>. (Note: below the <strong>verbose=FALSE</strong> option suppresses info about the iterations of the MMLE estimation algorithm. I’m doing this to keep it from cluttering up the R Markdown document.)</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">mirt</span>(dat, <span class="dv">1</span>, <span class="at">itemtype =</span> <span class="st">'Rasch'</span>,<span class="at">verbose=</span><span class="cn">FALSE</span>) </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Item parameter estimates</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(m1, <span class="at">simplify=</span><span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>$items
+       a1     d g u
+Item_1  1 2.731 0 1
+Item_2  1 0.999 0 1
+Item_3  1 0.240 0 1
+Item_4  1 1.307 0 1
+Item_5  1 2.100 0 1
+
+$means
+F1 
+ 0 
+
+$cov
+      F1
+F1 0.572</code></pre>
+</div>
+</div>
+<p>In looking at the mirt output, recall that mirt parameterizes IRT models in slope intercept form, <span class="math inline">\(a_i(\theta_p + d_i)\)</span> instead of <span class="math inline">\(a_i(\theta_p - b_i)\)</span>. In this case since all <span class="math inline">\(a_i=1\)</span> to get item difficulty instead of easiness, you would just multiply <span class="math inline">\(d_i\)</span> by -1. Or we could have invoked the option <strong>IRTpars=TRUE</strong>.</p>
+<p>Notice in this specification the standard deviation of the ability distribution is <span class="math inline">\(0.76\)</span>.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">#SD of theta distribution</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sqrt</span>(<span class="fu">coef</span>(m1)<span class="sc">$</span>GroupPars[<span class="dv">2</span>]) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.7561932</code></pre>
+</div>
+</div>
+<p>Also, the default in mirt is to fix the location of the scale such that the mean of the ability distribution is 0.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Mean of theta distribution</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(m1)<span class="sc">$</span>GroupPars[<span class="dv">1</span>] </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+</div>
+<p>Now, let’s see what happens when we use the alternate specification where <span class="math inline">\(a\)</span> is constrained to be the same for each item (but not necessarily 1).</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="st">'F = 1-5</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="st">CONSTRAIN = (1-5, a1)'</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>m2 <span class="ot">&lt;-</span> <span class="fu">mirt</span>(dat, model,<span class="at">verbose=</span><span class="cn">FALSE</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(m2, <span class="at">simplify=</span><span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>$items
+          a1     d g u
+Item_1 0.755 2.730 0 1
+Item_2 0.755 0.999 0 1
+Item_3 0.755 0.240 0 1
+Item_4 0.755 1.307 0 1
+Item_5 0.755 2.100 0 1
+
+$means
+F 
+0 
+
+$cov
+  F
+F 1</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">#SD of theta distribution</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sqrt</span>(<span class="fu">coef</span>(m2)<span class="sc">$</span>GroupPars[<span class="dv">2</span>]) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Mean of theta distribution</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(m2)<span class="sc">$</span>GroupPars[<span class="dv">1</span>] </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+</div>
+<p>Notice the key difference in syntax: the command “CONSTRAIN” above accomplishes the following “for items 1-5, constrain the parameter a1 to be the same”. We now get an estimate of <span class="math inline">\(a1=.76\)</span>. Does this value seem familiar? Yes! It is the same value we got for the SD of the ability distribution in our original mirt specification. So the common slope (i.e., discrimination) parameter for items is not just related to the SD of the ability distribution in the original model specification, it is identical.</p>
+<p>To sum up.</p>
+<p>We fit two equivalent versions of the Rasch Model.</p>
+<ul>
+<li>In the first specification <span class="math inline">\(logit(X_{pi})=(\theta_p-b_i)\)</span>: <span class="math inline">\(a1=1\)</span> and the <span class="math inline">\(SD(\theta)=.76\)</span></li>
+<li>In the second specification <span class="math inline">\(logit(X_{pi})=a(\theta_p-b_i)\)</span>: <span class="math inline">\(a1=.76\)</span> and the <span class="math inline">\(SD(\theta)=1\)</span></li>
+</ul>
+<p>Now let’s see what happens if we specify the 2PL with this same data. We identify the scale by fixing the mean and SD of the ability distribution to 0,1.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>m3 <span class="ot">&lt;-</span> <span class="fu">mirt</span>(dat, <span class="dv">1</span>, <span class="at">itemtype =</span> <span class="st">'2PL'</span>,<span class="at">verbose=</span><span class="cn">FALSE</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Item parameter estimates</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(m3, <span class="at">simplify=</span><span class="cn">TRUE</span>, <span class="at">IRTpars=</span><span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>$items
+           a      b g u
+Item_1 0.825 -3.361 0 1
+Item_2 0.723 -1.370 0 1
+Item_3 0.890 -0.280 0 1
+Item_4 0.689 -1.866 0 1
+Item_5 0.658 -3.123 0 1
+
+$means
+F1 
+ 0 
+
+$cov
+   F1
+F1  1</code></pre>
+</div>
+</div>
+<p>What if we take the mean of the 5 item discrimination parameter estimates? You guessed it: 0.76</p>
+</section>
+<section id="the-logit-as-a-unit-of-measurement" class="level2" data-number="10.3">
+<h2 data-number="10.3" class="anchored" data-anchor-id="the-logit-as-a-unit-of-measurement"><span class="header-section-number">10.3</span> The logit as a unit of measurement</h2>
+<p>For any IRT model, the default unit of measurement is a logit. The interpretation of this unit is not straightforward! A starting point is to think in terms of a one unit difference between person ability and item difficulty, which is the central kernel of the logit formulation of an IRT model.</p>
+<p>If we take exp<span class="math inline">\((1)\)</span> then we can express a one unit difference between ability and difficulty in terms of a change in the odds of an event occurring (e.g., the event of a student answering a test item correctly) starting from some baseline. Here we see that exp<span class="math inline">\((1)=\)</span> 2.72. So relative to a baseline of even odds, an increase of 1 logit increases our odds ratio to 2.7. Or, we can express a one unit difference between ability and difficulty in terms of a change of probability. For example, if we go from a difference of 0 to 1 logit, the probability of a correct response goes up from plogis<span class="math inline">\((0)=\)</span> 0.5 to plogis<span class="math inline">\((1)=\)</span> 0.73.</p>
+<p>How should we interpret <span class="math inline">\(a\)</span> relative to the logit as a unit of measurement? For every one unit change in the <em>difference</em> between the ability of person <span class="math inline">\(p\)</span> and the difficulty of item <span class="math inline">\(i\)</span>, the log odds of a correct response increases by <span class="math inline">\(a\)</span>. In the default specification of the Rasch Model, where <span class="math inline">\(a=1\)</span>, all differences between the locations of people and items on the scale have a direct interpretation in terms of the log odds of a correct response.</p>
+<p>In the alternative specification, where <span class="math inline">\(a\)</span> is some constant and need not equal 1, these differences <span class="math inline">\((\theta_p-b_i)\)</span> get “filtered” (multiplied) by the value of <span class="math inline">\(a\)</span>. However, a convenient thing in the alternate specification is that since SD<span class="math inline">\((\theta)\)</span> is constrained to be 1, the unit of measurement of one logit is equivalent to the SD of the person ability distribution.</p>
+</section>
+<section id="anchoring-on-item-difficulty" class="level2" data-number="10.4">
+<h2 data-number="10.4" class="anchored" data-anchor-id="anchoring-on-item-difficulty"><span class="header-section-number">10.4</span> Anchoring on item difficulty</h2>
+<p>There is no simple option within the mirt function that will set the sum (equivalently, the mean) of item difficulty estimates to 0. Phil Chalmers provides some code that can supposedly be used to make this happen via “approach 3” described in https://philchalmers.github.io/mirt/html/Three-Rasch.html but I frankly can’t make sense of what he’s doing. If you can figure this out, then perhaps you can tailor his code accordingly.</p>
+<p>That said, it is not hard to enact this post hoc. That is, you can estimate item parameters using mirt’s default constraint that the person ability distribution has a mean of 0, and then after extracting the item parameters and estimating (i.e., scoring) person parameters, you can simply change set the location of 0 to represent the mean item difficulty. Here’s an example. In this example I use eap scoring to get theta values.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Pull item parameter estimates from earlier Rasch Model calibration</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>rasch.diffs.m<span class="ot">&lt;-</span><span class="fu">coef</span>(m1, <span class="at">simplify=</span><span class="cn">TRUE</span>, <span class="at">IRTpars=</span><span class="cn">TRUE</span>)<span class="sc">$</span>items[,<span class="dv">2</span>]</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co">#Generate person ability estimates</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>rasch.theta.eap<span class="fl">.0</span><span class="ot">&lt;-</span><span class="fu">fscores</span>(m1,<span class="at">method=</span><span class="st">"EAP"</span>,<span class="at">fullscores.SE =</span> <span class="cn">TRUE</span>)[,<span class="dv">1</span>]</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="co">#Recenter item parameters by subtracting the mean item difficulty from each value</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>rasch.diffs<span class="fl">.0</span><span class="ot">&lt;-</span>rasch.diffs.m<span class="sc">-</span><span class="fu">mean</span>(rasch.diffs.m)</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="co">#Now shift person ability by also subtracting mean item difficulty from each value</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>rasch.theta.eap.m<span class="ot">&lt;-</span>rasch.theta.eap<span class="fl">.0</span><span class="sc">-</span><span class="fu">mean</span>(rasch.diffs.m)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<ul>
+<li><p>For the default mirt scale, we characterize the locations of items and persons using rasch.diffs.m and rasch.theta.eap.0. On this scale, the mean of rasch.diffs.m is <span class="math inline">\(-1.47\)</span> and mean of rasch.theta.eap.0 is <span class="math inline">\(0\)</span> which can be interpreted as follows: relative to the location on the scale of the average person taking this test (<span class="math inline">\(\theta_p=0\)</span>), the location of the average item is <span class="math inline">\(1.47\)</span> logits lower. And since plogis<span class="math inline">\((0-(-1.47))=\)</span> 0.81 we can predict that if the average person was given an item of average difficulty for this test, they would have an 81% chance of answering it correctly.</p></li>
+<li><p>For our alternate mirt scale, we characterize the locations of items and persons using rasch.diffs.0 (item difficulty parameters) and rasch.theta.eap.m. On this scale, the mean of rasch.diffs.0 is <span class="math inline">\(0\)</span> and mean of rasch.theta.eap.m is <span class="math inline">\(1.47\)</span> which can be interpreted as follows: relative to the location on the scale of the average item on this test (<span class="math inline">\(b_i=0\)</span>), the average person is <span class="math inline">\(1.47\)</span> logits higher. But notice that since plogis<span class="math inline">\((1.47-(0))=\)</span> 0.81 we can predict that if the average person was given an item of average difficulty for this test, they would have an 81% chance of answering it correctly.</p></li>
+</ul>
+<p>What I’ve shown in this last section about anchoring the scale (e.g., choosing a location for 0 on the scale) would also apply if we were fitting the 2PL or 3PL models. There is also nothing to stop you from anchoring the scale by choosing a specific item (or person!) and constraining the value of that parameter to be 0. I will show you how to fix item parameters to specific values in mirt in another R Markdown document.</p>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../chapters/09-rasch-paradigm.html" class="pagination-link" aria-label="The Rasch Model Paradigm">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">The Rasch Model Paradigm</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../chapters/11-person-estimation.html" class="pagination-link" aria-label="Person Parameter Estimation in IRT">
+        <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Person Parameter Estimation in IRT</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "IRT Scale Constraints Using the mirt Package"</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> "Derek Briggs"</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "EDUC 8720"</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="an">output:</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="co">  html_document:</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co">    toc: true</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="co">    toc_float: true</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co">    code_folding: show</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="co">  pdf_document:</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="co">    toc: true</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="co">    latex_engine: xelatex</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="in">```{r inject-rootdir, include=FALSE}</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_knit<span class="sc">$</span><span class="fu">set</span>(<span class="at">root.dir =</span> <span class="st">"/Users/briggsd/Library/CloudStorage/Dropbox/Github/Measurement and Psychometrics/Using the mirt package"</span>)</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a><span class="in">```{r setup, include=FALSE}</span></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">echo =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a><span class="fu">## Introduction and Background</span></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>The purpose of this document is both educational and practical. Educationally speaking, I will demonstrate the equivalent relationships between constraints that can be imposed to identify or "anchor" the scale of an IRT model. I'll mostly focus on the Rasch Model. Practically speaking, I will show the syntax that needs to be employed to accomplish all this using functions with Phil Chalmer's mirt package. </span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a><span class="fu">### The indeterminacy of the logit scale</span></span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>When we measure things like length, duration and temperature, a key decision point for the measuring scale is the definition of the scale's origin or zero point, and a unit. For height and duration, the origin for most measuring scales is pretty straightforward: it represents no length, or no passage of time. For temperature, this is more complicated, because for the two most commonly used scales, Celsius and Fahrenheit, zero on the scale doesn't mean no temperature. In other words, temperature is typically measured on an interval scale, while height and duration are measured on ratio scales. In the context of educational and psychological attributes, we typically only aspire to a measuring scale with interval properties. But this means we need to purposefully define what a "0" means, or to transform the scale such that there is no 0. </span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>We also need to define the unit of the scale. For length we could choose inches or feet, millimeters or centimeters. For temperature we could choose degrees C and F. In some sense the choice is arbitrary (e.g., should we use centimeters or inches?) But in another sense the choice is critical because it depends on the precision that is desired and our ability to enact a measuring procedure that accurately record these distinctions (e.g., should we use meters, centimeters or millimeters?)</span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a>It is easy to see the arbitrary nature of the logit scale in the context of an IRT model. Consider the logit formulation of the 2PL</span>
+<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a>$$ logit(X_{pi})=a_i(\theta_p-b_i) $$</span>
+<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a>There are many many different combinations of $a_i$, $b_i$ and $\theta_p$ that will produce the same log odds of a correct item response. A key feature of IRT models is that they make it possible to locate persons and items on a common scale. But without imposing constraints, there is no way to establish an unambiguous interpretation for the distance between the location of any item and the location of any person. </span>
+<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a><span class="fu">## Scale constraints in IRT models</span></span>
+<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a>Mathematically, the Rasch Model can be viewed as a constrained version of the 2PL in which</span>
+<span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-42"><a href="#cb21-42" aria-hidden="true" tabindex="-1"></a>$$ logit(X_{pi})=a(\theta_p-b_i) $$</span>
+<span id="cb21-43"><a href="#cb21-43" aria-hidden="true" tabindex="-1"></a>OR</span>
+<span id="cb21-44"><a href="#cb21-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-45"><a href="#cb21-45" aria-hidden="true" tabindex="-1"></a>$$ logit(X_{pi})=\theta_p-b_i $$</span>
+<span id="cb21-46"><a href="#cb21-46" aria-hidden="true" tabindex="-1"></a>In either case, we are imposing the constraint that all items are equally discriminating, which means that if you think of each item as a replication of the basic measurement procedure, then the procedure always involves the same slope parameter, which is $a$. In the second formulation, we have simply set $a=1$. </span>
+<span id="cb21-47"><a href="#cb21-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-48"><a href="#cb21-48" aria-hidden="true" tabindex="-1"></a>It would be an understandable mistake to think that we learn something new by getting an estimate of $a$ instead of constraining it to be 1. To see why this is a mistake I will apply some code Phil Chalmers includes on p. 96 of his mirt manual. </span>
+<span id="cb21-49"><a href="#cb21-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-50"><a href="#cb21-50" aria-hidden="true" tabindex="-1"></a>The following illustration is based on 5 LSAT items taken by 1000 examinees. This little data set is contained within the mirt package. Let's open mirt and load the data into an active dataframe. Note that the function **itemstats** within mirt computes classical item stats much like we get using the function **alpha** in the psych package.</span>
+<span id="cb21-51"><a href="#cb21-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-52"><a href="#cb21-52" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, messages=FALSE}</span></span>
+<span id="cb21-53"><a href="#cb21-53" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mirt)</span>
+<span id="cb21-54"><a href="#cb21-54" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">expand.table</span>(LSAT6)</span>
+<span id="cb21-55"><a href="#cb21-55" aria-hidden="true" tabindex="-1"></a><span class="fu">itemstats</span>(dat)</span>
+<span id="cb21-56"><a href="#cb21-56" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-57"><a href="#cb21-57" aria-hidden="true" tabindex="-1"></a>Now, let's calibrate these items using mirt and choose the default specification for the Rasch Model where $a=1$. (Note: below the **verbose=FALSE** option suppresses info about the iterations of the MMLE estimation algorithm. I'm doing this to keep it from cluttering up the R Markdown document.) </span>
+<span id="cb21-58"><a href="#cb21-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-59"><a href="#cb21-59" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, message=FALSE,warning=FALSE}</span></span>
+<span id="cb21-60"><a href="#cb21-60" aria-hidden="true" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">mirt</span>(dat, <span class="dv">1</span>, <span class="at">itemtype =</span> <span class="st">'Rasch'</span>,<span class="at">verbose=</span><span class="cn">FALSE</span>) </span>
+<span id="cb21-61"><a href="#cb21-61" aria-hidden="true" tabindex="-1"></a><span class="co">#Item parameter estimates</span></span>
+<span id="cb21-62"><a href="#cb21-62" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(m1, <span class="at">simplify=</span><span class="cn">TRUE</span>)</span>
+<span id="cb21-63"><a href="#cb21-63" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-64"><a href="#cb21-64" aria-hidden="true" tabindex="-1"></a>In looking at the mirt output, recall that mirt parameterizes IRT models in slope intercept form, $a_i(\theta_p + d_i)$ instead of $a_i(\theta_p - b_i)$. In this case since all $a_i=1$ to get item difficulty instead of easiness, you would just multiply $d_i$ by -1. Or we could have invoked the option **IRTpars=TRUE**.</span>
+<span id="cb21-65"><a href="#cb21-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-66"><a href="#cb21-66" aria-hidden="true" tabindex="-1"></a>Notice in this specification the standard deviation of the ability distribution is $0.76$. </span>
+<span id="cb21-67"><a href="#cb21-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-70"><a href="#cb21-70" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-71"><a href="#cb21-71" aria-hidden="true" tabindex="-1"></a><span class="co">#SD of theta distribution</span></span>
+<span id="cb21-72"><a href="#cb21-72" aria-hidden="true" tabindex="-1"></a><span class="fu">sqrt</span>(<span class="fu">coef</span>(m1)<span class="sc">$</span>GroupPars[<span class="dv">2</span>]) </span>
+<span id="cb21-73"><a href="#cb21-73" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-74"><a href="#cb21-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-75"><a href="#cb21-75" aria-hidden="true" tabindex="-1"></a>Also, the default in mirt is to fix the location of the scale such that the mean of the ability distribution is 0. </span>
+<span id="cb21-76"><a href="#cb21-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-79"><a href="#cb21-79" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb21-80"><a href="#cb21-80" aria-hidden="true" tabindex="-1"></a><span class="co">#Mean of theta distribution</span></span>
+<span id="cb21-81"><a href="#cb21-81" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(m1)<span class="sc">$</span>GroupPars[<span class="dv">1</span>] </span>
+<span id="cb21-82"><a href="#cb21-82" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-83"><a href="#cb21-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-84"><a href="#cb21-84" aria-hidden="true" tabindex="-1"></a>Now, let's see what happens when we use the alternate specification where $a$ is constrained to be the same for each item (but not necessarily 1).</span>
+<span id="cb21-85"><a href="#cb21-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-86"><a href="#cb21-86" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, message=FALSE}</span></span>
+<span id="cb21-87"><a href="#cb21-87" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="st">'F = 1-5</span></span>
+<span id="cb21-88"><a href="#cb21-88" aria-hidden="true" tabindex="-1"></a><span class="st">CONSTRAIN = (1-5, a1)'</span></span>
+<span id="cb21-89"><a href="#cb21-89" aria-hidden="true" tabindex="-1"></a>m2 <span class="ot">&lt;-</span> <span class="fu">mirt</span>(dat, model,<span class="at">verbose=</span><span class="cn">FALSE</span>)</span>
+<span id="cb21-90"><a href="#cb21-90" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(m2, <span class="at">simplify=</span><span class="cn">TRUE</span>)</span>
+<span id="cb21-91"><a href="#cb21-91" aria-hidden="true" tabindex="-1"></a><span class="co">#SD of theta distribution</span></span>
+<span id="cb21-92"><a href="#cb21-92" aria-hidden="true" tabindex="-1"></a><span class="fu">sqrt</span>(<span class="fu">coef</span>(m2)<span class="sc">$</span>GroupPars[<span class="dv">2</span>]) </span>
+<span id="cb21-93"><a href="#cb21-93" aria-hidden="true" tabindex="-1"></a><span class="co">#Mean of theta distribution</span></span>
+<span id="cb21-94"><a href="#cb21-94" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(m2)<span class="sc">$</span>GroupPars[<span class="dv">1</span>] </span>
+<span id="cb21-95"><a href="#cb21-95" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-96"><a href="#cb21-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-97"><a href="#cb21-97" aria-hidden="true" tabindex="-1"></a>Notice the key difference in syntax: the command "CONSTRAIN" above accomplishes the following "for items 1-5, constrain the parameter a1 to be the same".  We now get an estimate of $a1=.76$. Does this value seem familiar? Yes! It is the same value we got for the SD of the ability distribution in our original mirt specification. So the common slope (i.e., discrimination)  parameter for items is not just related to the SD of the ability distribution in the original model specification, it is identical. </span>
+<span id="cb21-98"><a href="#cb21-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-99"><a href="#cb21-99" aria-hidden="true" tabindex="-1"></a>To sum up. </span>
+<span id="cb21-100"><a href="#cb21-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-101"><a href="#cb21-101" aria-hidden="true" tabindex="-1"></a>We fit two equivalent versions of the Rasch Model.</span>
+<span id="cb21-102"><a href="#cb21-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-103"><a href="#cb21-103" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>In the first specification $logit(X_{pi})=(\theta_p-b_i)$: $a1=1$ and the $SD(\theta)=.76$ </span>
+<span id="cb21-104"><a href="#cb21-104" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>In the second specification $logit(X_{pi})=a(\theta_p-b_i)$: $a1=.76$ and the $SD(\theta)=1$ </span>
+<span id="cb21-105"><a href="#cb21-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-106"><a href="#cb21-106" aria-hidden="true" tabindex="-1"></a>Now let's see what happens if we specify the 2PL with this same data. We identify the scale by fixing the mean and SD of the ability distribution to 0,1.</span>
+<span id="cb21-107"><a href="#cb21-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-108"><a href="#cb21-108" aria-hidden="true" tabindex="-1"></a><span class="in">```{r,message=FALSE}</span></span>
+<span id="cb21-109"><a href="#cb21-109" aria-hidden="true" tabindex="-1"></a>m3 <span class="ot">&lt;-</span> <span class="fu">mirt</span>(dat, <span class="dv">1</span>, <span class="at">itemtype =</span> <span class="st">'2PL'</span>,<span class="at">verbose=</span><span class="cn">FALSE</span>)</span>
+<span id="cb21-110"><a href="#cb21-110" aria-hidden="true" tabindex="-1"></a><span class="co">#Item parameter estimates</span></span>
+<span id="cb21-111"><a href="#cb21-111" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(m3, <span class="at">simplify=</span><span class="cn">TRUE</span>, <span class="at">IRTpars=</span><span class="cn">TRUE</span>)</span>
+<span id="cb21-112"><a href="#cb21-112" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-113"><a href="#cb21-113" aria-hidden="true" tabindex="-1"></a>What if we take the mean of the 5 item discrimination parameter estimates? You guessed it: <span class="in">`r round(mean(coef(m3, simplify=TRUE, IRTpars=TRUE)$items[,1]),2)`</span></span>
+<span id="cb21-114"><a href="#cb21-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-115"><a href="#cb21-115" aria-hidden="true" tabindex="-1"></a><span class="fu">## The logit as a unit of measurement</span></span>
+<span id="cb21-116"><a href="#cb21-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-117"><a href="#cb21-117" aria-hidden="true" tabindex="-1"></a>For any IRT model, the default unit of measurement is a logit. The interpretation of this unit is not straightforward! A starting point is to think in terms of a one unit difference between person ability and item difficulty, which is the central kernel of the logit formulation of an IRT model. </span>
+<span id="cb21-118"><a href="#cb21-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-119"><a href="#cb21-119" aria-hidden="true" tabindex="-1"></a>If we take exp$(1)$ then we can express a one unit difference between ability and difficulty in terms of a change in the odds of an event occurring (e.g., the event of a student answering a test item correctly) starting from some baseline. Here we see that exp$(1)=$ <span class="in">`r round(exp(1),2)`</span>. So relative to a baseline of even odds, an increase of 1 logit increases our odds ratio to 2.7. Or, we can express a one unit difference between ability and difficulty in terms of a change of probability. For example, if we go from a difference of 0 to 1 logit, the probability of a correct response goes up from plogis$(0)=$ <span class="in">`r round(plogis(0),2)`</span> to plogis$(1)=$ <span class="in">`r round(plogis(1),2)`</span>.</span>
+<span id="cb21-120"><a href="#cb21-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-121"><a href="#cb21-121" aria-hidden="true" tabindex="-1"></a>How should we interpret $a$ relative to the logit as a unit of measurement? For every one unit change in the *difference* between the ability of person $p$ and the difficulty of item $i$, the log odds of a correct response increases by $a$. In the default specification of the Rasch Model, where $a=1$, all differences between the locations of people and items on the scale have a direct interpretation in terms of the log odds of a correct response. </span>
+<span id="cb21-122"><a href="#cb21-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-123"><a href="#cb21-123" aria-hidden="true" tabindex="-1"></a>In the alternative specification, where $a$ is some constant and need not equal 1, these differences $(\theta_p-b_i)$ get "filtered" (multiplied) by the value of $a$. However, a convenient thing in the alternate specification is that since SD$(\theta)$ is constrained to be 1, the unit of measurement of one logit is equivalent to the SD of the person ability distribution. </span>
+<span id="cb21-124"><a href="#cb21-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-125"><a href="#cb21-125" aria-hidden="true" tabindex="-1"></a><span class="fu">## Anchoring on item difficulty</span></span>
+<span id="cb21-126"><a href="#cb21-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-127"><a href="#cb21-127" aria-hidden="true" tabindex="-1"></a>There is no simple option within the mirt function that will set the sum (equivalently, the mean) of item difficulty estimates to 0. Phil Chalmers provides some code that can supposedly be used to make this happen via "approach 3" described in  https://philchalmers.github.io/mirt/html/Three-Rasch.html but I frankly can't make sense of what he's doing. If you can figure this out, then perhaps you can tailor his code accordingly.</span>
+<span id="cb21-128"><a href="#cb21-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-129"><a href="#cb21-129" aria-hidden="true" tabindex="-1"></a>That said, it is not hard to enact this post hoc. That is, you can estimate item parameters using mirt's default constraint that the person ability distribution has a mean of 0, and then after extracting the item parameters and estimating (i.e., scoring) person parameters, you can simply change set the location of 0 to represent the mean item difficulty. Here's an example. In this example I use eap scoring to get theta values.</span>
+<span id="cb21-130"><a href="#cb21-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-131"><a href="#cb21-131" aria-hidden="true" tabindex="-1"></a><span class="in">```{r RM scale transformation}</span></span>
+<span id="cb21-132"><a href="#cb21-132" aria-hidden="true" tabindex="-1"></a><span class="co">#Pull item parameter estimates from earlier Rasch Model calibration</span></span>
+<span id="cb21-133"><a href="#cb21-133" aria-hidden="true" tabindex="-1"></a>rasch.diffs.m<span class="ot">&lt;-</span><span class="fu">coef</span>(m1, <span class="at">simplify=</span><span class="cn">TRUE</span>, <span class="at">IRTpars=</span><span class="cn">TRUE</span>)<span class="sc">$</span>items[,<span class="dv">2</span>]</span>
+<span id="cb21-134"><a href="#cb21-134" aria-hidden="true" tabindex="-1"></a><span class="co">#Generate person ability estimates</span></span>
+<span id="cb21-135"><a href="#cb21-135" aria-hidden="true" tabindex="-1"></a>rasch.theta.eap<span class="fl">.0</span><span class="ot">&lt;-</span><span class="fu">fscores</span>(m1,<span class="at">method=</span><span class="st">"EAP"</span>,<span class="at">fullscores.SE =</span> <span class="cn">TRUE</span>)[,<span class="dv">1</span>]</span>
+<span id="cb21-136"><a href="#cb21-136" aria-hidden="true" tabindex="-1"></a><span class="co">#Recenter item parameters by subtracting the mean item difficulty from each value</span></span>
+<span id="cb21-137"><a href="#cb21-137" aria-hidden="true" tabindex="-1"></a>rasch.diffs<span class="fl">.0</span><span class="ot">&lt;-</span>rasch.diffs.m<span class="sc">-</span><span class="fu">mean</span>(rasch.diffs.m)</span>
+<span id="cb21-138"><a href="#cb21-138" aria-hidden="true" tabindex="-1"></a><span class="co">#Now shift person ability by also subtracting mean item difficulty from each value</span></span>
+<span id="cb21-139"><a href="#cb21-139" aria-hidden="true" tabindex="-1"></a>rasch.theta.eap.m<span class="ot">&lt;-</span>rasch.theta.eap<span class="fl">.0</span><span class="sc">-</span><span class="fu">mean</span>(rasch.diffs.m)</span>
+<span id="cb21-140"><a href="#cb21-140" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb21-141"><a href="#cb21-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-142"><a href="#cb21-142" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>For the default mirt scale, we characterize the locations of items and persons using rasch.diffs.m and rasch.theta.eap.0. On this scale, the mean of rasch.diffs.m is $-1.47$ and mean of rasch.theta.eap.0 is $0$ which can be interpreted as follows: relative to the location on the scale of the average person taking this test ($\theta_p=0$), the location of the average item is $1.47$ logits lower. And since plogis$(0-(-1.47))=$ <span class="in">`r round(plogis(1.47),2)`</span> we can predict that if the average person was given an item of average difficulty for this test, they would have an 81% chance of answering it correctly.</span>
+<span id="cb21-143"><a href="#cb21-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-144"><a href="#cb21-144" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>For our alternate mirt scale, we characterize the locations of items and persons using rasch.diffs.0 (item difficulty parameters) and rasch.theta.eap.m. On this scale, the mean of rasch.diffs.0 is $0$ and mean of rasch.theta.eap.m is $1.47$ which can be interpreted as follows: relative to the location on the scale of the average item on this test ($b_i=0$), the average person is $1.47$ logits higher. But notice that since plogis$(1.47-(0))=$ <span class="in">`r round(plogis(1.47),2)`</span> we can predict that if the average person was given an item of average difficulty for this test, they would have an 81% chance of answering it correctly. </span>
+<span id="cb21-145"><a href="#cb21-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-146"><a href="#cb21-146" aria-hidden="true" tabindex="-1"></a>What I've shown in this last section about anchoring the scale (e.g., choosing a location for 0 on the scale) would also apply if we were fitting the 2PL or 3PL models. There is also nothing to stop you from anchoring the scale by choosing a specific item (or person!) and constraining the value of that parameter to be 0. I will show you how to fix item parameters to specific values in mirt in another R Markdown document.</span>
+</code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

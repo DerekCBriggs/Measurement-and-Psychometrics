@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Derek Briggs">
+<meta name="dcterms.date" content="8720-01-01">
+
+<title>8&nbsp; Basic mirt Commands: A Reference Guide – Psychometric Modeling with IRT</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../chapters/09-rasch-paradigm.html" rel="next">
+<link href="../chapters/07-normal-ogive.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-27c261d06b905028a18691de25d09dde.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/08-mirt-commands.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Basic mirt Commands: A Reference Guide</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header sidebar-header-stacked">
+      <a href="../index.html" class="sidebar-logo-link">
+      </a>
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Psychometric Modeling with IRT</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/DerekCBriggs/Measurement-and-Psychometrics" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/01-reliability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">A Guide to Reliability: Avoiding Misconceptions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/02-classical-item-analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Classical Item Analysis Prior to IRT Model Specification</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Basics of IRT</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/03-deriving-icc.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Deriving and Conceptualizing an Item Characteristic Curve</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/04-interpreting-iccs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Interpreting Item Characteristic Curves</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/05-tcc-info-sem.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Test Characteristic Curves, Information Functions, and SEM</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/06-assumptions-properties.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Assumptions and Properties of IRT Models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/07-normal-ogive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The Normal Ogive</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/08-mirt-commands.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Basic mirt Commands: A Reference Guide</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/09-rasch-paradigm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">The Rasch Model Paradigm</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/10-scale-constraints.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">IRT Scale Constraints Using the mirt Package</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Parameter Estimation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/11-person-estimation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Person Parameter Estimation in IRT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/12-jmle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Item Parameter Estimation via JMLE</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/13-mmle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Item Parameter Estimation via MMLE/EM</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/14-model-fit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Evaluating IRT Model Fit</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/15-polytomous.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">IRT Models for Polytomously Scored Items</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Applications of IRT</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/16-fixing-params.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Fixing Item Parameters in mirt</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/17-linking-equating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">IRT Equating using mirt</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/18-dif.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Differential Item Functioning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/19-vertical-scaling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Vertical Scaling and Growth Using mirt</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/20-cat.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Computerized Adaptive Testing with mirtCAT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/21-mirt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">An Introduction to Multidimensional IRT with mirt</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../key-terms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Index of Key Terms</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction"><span class="header-section-number">8.1</span> Introduction</a>
+  <ul class="collapse">
+  <li><a href="#required-packages" id="toc-required-packages" class="nav-link" data-scroll-target="#required-packages"><span class="header-section-number">8.1.1</span> Required Packages</a></li>
+  <li><a href="#loading-data" id="toc-loading-data" class="nav-link" data-scroll-target="#loading-data"><span class="header-section-number">8.1.2</span> Loading Data</a></li>
+  </ul></li>
+  <li><a href="#part-1-classical-item-analysis" id="toc-part-1-classical-item-analysis" class="nav-link" data-scroll-target="#part-1-classical-item-analysis"><span class="header-section-number">8.2</span> Part 1: Classical Item Analysis</a>
+  <ul class="collapse">
+  <li><a href="#item-statistics-using-mirtitemstats" id="toc-item-statistics-using-mirtitemstats" class="nav-link" data-scroll-target="#item-statistics-using-mirtitemstats"><span class="header-section-number">8.2.1</span> Item Statistics using <code>mirt:itemstats</code></a></li>
+  </ul></li>
+  <li><a href="#part-2-fitting-irt-models-with-mirt" id="toc-part-2-fitting-irt-models-with-mirt" class="nav-link" data-scroll-target="#part-2-fitting-irt-models-with-mirt"><span class="header-section-number">8.3</span> Part 2: Fitting IRT Models with <code>mirt</code></a>
+  <ul class="collapse">
+  <li><a href="#estimating-the-1pl-2pl-and-3pl-models" id="toc-estimating-the-1pl-2pl-and-3pl-models" class="nav-link" data-scroll-target="#estimating-the-1pl-2pl-and-3pl-models"><span class="header-section-number">8.3.1</span> Estimating the 1PL, 2PL, and 3PL Models</a></li>
+  <li><a href="#extracting-item-parameter-estimates" id="toc-extracting-item-parameter-estimates" class="nav-link" data-scroll-target="#extracting-item-parameter-estimates"><span class="header-section-number">8.3.2</span> Extracting Item Parameter Estimates</a></li>
+  <li><a href="#saving-and-working-with-parameter-estimates" id="toc-saving-and-working-with-parameter-estimates" class="nav-link" data-scroll-target="#saving-and-working-with-parameter-estimates"><span class="header-section-number">8.3.3</span> Saving and Working with Parameter Estimates</a></li>
+  <li><a href="#comparing-parameters-across-models" id="toc-comparing-parameters-across-models" class="nav-link" data-scroll-target="#comparing-parameters-across-models"><span class="header-section-number">8.3.4</span> Comparing Parameters Across Models</a></li>
+  </ul></li>
+  <li><a href="#part-3-plotting-with-mirt" id="toc-part-3-plotting-with-mirt" class="nav-link" data-scroll-target="#part-3-plotting-with-mirt"><span class="header-section-number">8.4</span> Part 3: Plotting with <code>mirt</code></a>
+  <ul class="collapse">
+  <li><a href="#item-response-functions-iccs" id="toc-item-response-functions-iccs" class="nav-link" data-scroll-target="#item-response-functions-iccs"><span class="header-section-number">8.4.1</span> Item Response Functions (ICCs)</a></li>
+  <li><a href="#observed-vs.-predicted-item-fit" id="toc-observed-vs.-predicted-item-fit" class="nav-link" data-scroll-target="#observed-vs.-predicted-item-fit"><span class="header-section-number">8.4.2</span> Observed vs.&nbsp;Predicted (Item Fit)</a></li>
+  </ul></li>
+  <li><a href="#part-4-test-characteristic-curve-and-information-functions" id="toc-part-4-test-characteristic-curve-and-information-functions" class="nav-link" data-scroll-target="#part-4-test-characteristic-curve-and-information-functions"><span class="header-section-number">8.5</span> Part 4: Test Characteristic Curve and Information Functions</a>
+  <ul class="collapse">
+  <li><a href="#test-characteristic-curve-tcc" id="toc-test-characteristic-curve-tcc" class="nav-link" data-scroll-target="#test-characteristic-curve-tcc"><span class="header-section-number">8.5.1</span> Test Characteristic Curve (TCC)</a></li>
+  <li><a href="#item-information-functions" id="toc-item-information-functions" class="nav-link" data-scroll-target="#item-information-functions"><span class="header-section-number">8.5.2</span> Item Information Functions</a></li>
+  <li><a href="#test-information-function" id="toc-test-information-function" class="nav-link" data-scroll-target="#test-information-function"><span class="header-section-number">8.5.3</span> Test Information Function</a></li>
+  <li><a href="#test-information-and-standard-error-of-measurement" id="toc-test-information-and-standard-error-of-measurement" class="nav-link" data-scroll-target="#test-information-and-standard-error-of-measurement"><span class="header-section-number">8.5.4</span> Test Information and Standard Error of Measurement</a></li>
+  <li><a href="#comparing-custom-test-information-functions" id="toc-comparing-custom-test-information-functions" class="nav-link" data-scroll-target="#comparing-custom-test-information-functions"><span class="header-section-number">8.5.5</span> Comparing Custom Test Information Functions</a></li>
+  </ul></li>
+  <li><a href="#quick-reference-summary" id="toc-quick-reference-summary" class="nav-link" data-scroll-target="#quick-reference-summary"><span class="header-section-number">8.6</span> Quick Reference Summary</a>
+  <ul class="collapse">
+  <li><a href="#classical-item-analysis" id="toc-classical-item-analysis" class="nav-link" data-scroll-target="#classical-item-analysis"><span class="header-section-number">8.6.1</span> Classical Item Analysis</a></li>
+  <li><a href="#model-fitting" id="toc-model-fitting" class="nav-link" data-scroll-target="#model-fitting"><span class="header-section-number">8.6.2</span> Model Fitting</a></li>
+  <li><a href="#extracting-parameters" id="toc-extracting-parameters" class="nav-link" data-scroll-target="#extracting-parameters"><span class="header-section-number">8.6.3</span> Extracting Parameters</a></li>
+  <li><a href="#plotting" id="toc-plotting" class="nav-link" data-scroll-target="#plotting"><span class="header-section-number">8.6.4</span> Plotting</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Basic mirt Commands: A Reference Guide</span></h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Derek Briggs </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 1, 8720</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level2" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">8.1</span> Introduction</h2>
+<p>This document is a reference guide for using the <code>mirt</code> package in R to fit IRT models to dichotomously scored item response data. It covers the essential workflow from classical item analysis through model fitting, parameter extraction, and plotting. Use this as a resource when working with different data sets to complete class assignments.</p>
+<section id="required-packages" class="level3" data-number="8.1.1">
+<h3 data-number="8.1.1" class="anchored" data-anchor-id="required-packages"><span class="header-section-number">8.1.1</span> Required Packages</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mirt)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="loading-data" class="level3" data-number="8.1.2">
+<h3 data-number="8.1.2" class="anchored" data-anchor-id="loading-data"><span class="header-section-number">8.1.2</span> Loading Data</h3>
+<p>For this guide we use a 15-item data set (<code>pset1_formA.csv</code>). When working with your own data, update the file path accordingly.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>data_path <span class="ot">&lt;-</span> <span class="st">"../IRT Models for Dichotomously Scored Items/Data/"</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>forma <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="fu">paste0</span>(data_path, <span class="st">"pset1_formA.csv"</span>))</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>forma <span class="ot">&lt;-</span> forma[, <span class="dv">1</span><span class="sc">:</span><span class="dv">15</span>]  <span class="co"># Use first 15 items</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(forma)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 V11 V12 V13 V14 V15
+1  0  0  0  0  1  1  0  0  1   0   0   0   0   0   1
+2  0  0  0  1  1  1  1  1  1   1   0   0   1   0   0
+3  0  0  0  0  0  0  0  0  1   0   0   0   0   0   1
+4  0  0  0  1  1  1  1  0  0   0   0   0   0   1   0
+5  1  1  1  1  1  1  1  1  1   1   1   1   1   1   1
+6  0  0  0  1  1  1  1  0  0   0   0   0   0   0   0</code></pre>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="part-1-classical-item-analysis" class="level2" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="part-1-classical-item-analysis"><span class="header-section-number">8.2</span> Part 1: Classical Item Analysis</h2>
+<p>Always start with descriptive statistics before doing anything fancy. In this context, descriptive stats are classical item statistics.</p>
+<section id="item-statistics-using-mirtitemstats" class="level3" data-number="8.2.1">
+<h3 data-number="8.2.1" class="anchored" data-anchor-id="item-statistics-using-mirtitemstats"><span class="header-section-number">8.2.1</span> Item Statistics using <code>mirt:itemstats</code></h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">itemstats</span>(forma)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>$overall
+    N mean_total.score sd_total.score ave.r  sd.r alpha SEM.alpha
+ 1958            5.652          4.061 0.304 0.112 0.866     1.487
+
+$itemstats
+       N K  mean    sd total.r total.r_if_rm alpha_if_rm
+V1  1958 2 0.278 0.448   0.608         0.531       0.857
+V2  1958 2 0.261 0.440   0.606         0.530       0.857
+V3  1958 2 0.208 0.406   0.584         0.513       0.858
+V4  1958 2 0.601 0.490   0.606         0.520       0.857
+V5  1958 2 0.554 0.497   0.651         0.572       0.854
+V6  1958 2 0.380 0.486   0.600         0.515       0.857
+V7  1958 2 0.630 0.483   0.594         0.508       0.858
+V8  1958 2 0.202 0.402   0.577         0.505       0.858
+V9  1958 2 0.455 0.498   0.613         0.527       0.857
+V10 1958 2 0.368 0.482   0.672         0.598       0.853
+V11 1958 2 0.138 0.345   0.532         0.467       0.860
+V12 1958 2 0.172 0.378   0.542         0.471       0.860
+V13 1958 2 0.448 0.497   0.475         0.372       0.865
+V14 1958 2 0.515 0.500   0.615         0.530       0.857
+V15 1958 2 0.440 0.497   0.591         0.502       0.858
+
+$proportions
+        0     1
+V1  0.722 0.278
+V2  0.739 0.261
+V3  0.792 0.208
+V4  0.399 0.601
+V5  0.446 0.554
+V6  0.620 0.380
+V7  0.370 0.630
+V8  0.798 0.202
+V9  0.545 0.455
+V10 0.632 0.368
+V11 0.862 0.138
+V12 0.828 0.172
+V13 0.552 0.448
+V14 0.485 0.515
+V15 0.560 0.440</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="part-2-fitting-irt-models-with-mirt" class="level2" data-number="8.3">
+<h2 data-number="8.3" class="anchored" data-anchor-id="part-2-fitting-irt-models-with-mirt"><span class="header-section-number">8.3</span> Part 2: Fitting IRT Models with <code>mirt</code></h2>
+<section id="estimating-the-1pl-2pl-and-3pl-models" class="level3" data-number="8.3.1">
+<h3 data-number="8.3.1" class="anchored" data-anchor-id="estimating-the-1pl-2pl-and-3pl-models"><span class="header-section-number">8.3.1</span> Estimating the 1PL, 2PL, and 3PL Models</h3>
+<p>The <code>mirt</code> function is used to fit unidimensional IRT models. The key arguments are:</p>
+<ul>
+<li><code>model = 1</code> specifies a unidimensional model</li>
+<li><code>itemtype</code> specifies the model type: <code>"Rasch"</code>, <code>"2PL"</code>, or <code>"3PL"</code></li>
+<li><code>method = "EM"</code> specifies the EM algorithm for estimation (this is the default)</li>
+</ul>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>mirt_1pl <span class="ot">&lt;-</span> <span class="fu">mirt</span>(forma, <span class="at">model =</span> <span class="dv">1</span>, <span class="at">itemtype =</span> <span class="st">"Rasch"</span>, <span class="at">method =</span> <span class="st">"EM"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>mirt_2pl <span class="ot">&lt;-</span> <span class="fu">mirt</span>(forma, <span class="at">model =</span> <span class="dv">1</span>, <span class="at">itemtype =</span> <span class="st">"2PL"</span>, <span class="at">method =</span> <span class="st">"EM"</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>mirt_3pl <span class="ot">&lt;-</span> <span class="fu">mirt</span>(forma, <span class="at">model =</span> <span class="dv">1</span>, <span class="at">itemtype =</span> <span class="st">"3PL"</span>, <span class="at">method =</span> <span class="st">"EM"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="extracting-item-parameter-estimates" class="level3" data-number="8.3.2">
+<h3 data-number="8.3.2" class="anchored" data-anchor-id="extracting-item-parameter-estimates"><span class="header-section-number">8.3.2</span> Extracting Item Parameter Estimates</h3>
+<p>By default, <code>mirt</code> parameterizes models in <strong>slope-intercept form</strong>: <span class="math inline">\(a_i(\theta_p + d_i)\)</span>. To get the traditional IRT parameterization <span class="math inline">\(a_i(\theta_p - b_i)\)</span>, use <code>IRTpars = TRUE</code>.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Slope-intercept form (default)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(mirt_2pl, <span class="at">simplify =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>$items
+       a1      d g u
+V1  2.223 -1.707 0 1
+V2  2.285 -1.877 0 1
+V3  2.371 -2.413 0 1
+V4  1.833  0.599 0 1
+V5  2.152  0.311 0 1
+V6  1.641 -0.756 0 1
+V7  1.595  0.741 0 1
+V8  2.057 -2.258 0 1
+V9  1.580 -0.299 0 1
+V10 2.338 -1.052 0 1
+V11 2.353 -3.177 0 1
+V12 2.018 -2.520 0 1
+V13 0.956 -0.262 0 1
+V14 1.566  0.052 0 1
+V15 1.468 -0.368 0 1
+
+$means
+F1 
+ 0 
+
+$cov
+   F1
+F1  1</code></pre>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Traditional IRT form</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(mirt_2pl, <span class="at">simplify =</span> <span class="cn">TRUE</span>, <span class="at">IRTpars =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>$items
+        a      b g u
+V1  2.223  0.768 0 1
+V2  2.285  0.821 0 1
+V3  2.371  1.018 0 1
+V4  1.833 -0.327 0 1
+V5  2.152 -0.144 0 1
+V6  1.641  0.461 0 1
+V7  1.595 -0.465 0 1
+V8  2.057  1.098 0 1
+V9  1.580  0.189 0 1
+V10 2.338  0.450 0 1
+V11 2.353  1.350 0 1
+V12 2.018  1.249 0 1
+V13 0.956  0.274 0 1
+V14 1.566 -0.033 0 1
+V15 1.468  0.251 0 1
+
+$means
+F1 
+ 0 
+
+$cov
+   F1
+F1  1</code></pre>
+</div>
+</div>
+<p>Note the relationship between the two parameterizations: <span class="math inline">\(b = -d/a\)</span>.</p>
+</section>
+<section id="saving-and-working-with-parameter-estimates" class="level3" data-number="8.3.3">
+<h3 data-number="8.3.3" class="anchored" data-anchor-id="saving-and-working-with-parameter-estimates"><span class="header-section-number">8.3.3</span> Saving and Working with Parameter Estimates</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>coef_1pl <span class="ot">&lt;-</span> <span class="fu">coef</span>(mirt_1pl, <span class="at">simplify =</span> <span class="cn">TRUE</span>, <span class="at">IRTpars =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>coef_2pl <span class="ot">&lt;-</span> <span class="fu">coef</span>(mirt_2pl, <span class="at">simplify =</span> <span class="cn">TRUE</span>, <span class="at">IRTpars =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>coef_3pl <span class="ot">&lt;-</span> <span class="fu">coef</span>(mirt_3pl, <span class="at">simplify =</span> <span class="cn">TRUE</span>, <span class="at">IRTpars =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract just the a and b columns for the 2PL</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>coef_2pl<span class="sc">$</span>items[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>            a           b
+V1  2.2229042  0.76796594
+V2  2.2852959  0.82116507
+V3  2.3709157  1.01792382
+V4  1.8331464 -0.32676666
+V5  2.1519449 -0.14432116
+V6  1.6413947  0.46051170
+V7  1.5948384 -0.46481011
+V8  2.0568636  1.09772715
+V9  1.5795863  0.18920500
+V10 2.3383711  0.44967213
+V11 2.3534503  1.35010342
+V12 2.0179700  1.24898596
+V13 0.9564336  0.27361200
+V14 1.5655666 -0.03331578
+V15 1.4678540  0.25067126</code></pre>
+</div>
+</div>
+<p>The <code>g</code> and <code>u</code> columns in the output represent the lower asymptote (guessing) and upper asymptote parameters. These are only estimated in the 3PL (and a hypothetical 4PL) model.</p>
+</section>
+<section id="comparing-parameters-across-models" class="level3" data-number="8.3.4">
+<h3 data-number="8.3.4" class="anchored" data-anchor-id="comparing-parameters-across-models"><span class="header-section-number">8.3.4</span> Comparing Parameters Across Models</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">data.frame</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  coef_1pl<span class="sc">$</span>items[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>],</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  coef_2pl<span class="sc">$</span>items[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>],</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  coef_3pl<span class="sc">$</span>items[, <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>]</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>    a      b   a.1    b.1    a.2    b.2     g
+V1  1  1.469 2.223  0.768 48.255  0.936 0.080
+V2  1  1.590 2.285  0.821 47.597  0.950 0.064
+V3  1  2.013 2.371  1.018 11.356  1.007 0.044
+V4  1 -0.604 1.833 -0.327  1.747 -0.290 0.000
+V5  1 -0.306 2.152 -0.144  2.048 -0.095 0.000
+V6  1  0.774 1.641  0.461  1.545  0.532 0.000
+V7  1 -0.791 1.595 -0.465  1.537 -0.433 0.000
+V8  1  2.066 2.057  1.098  1.903  1.186 0.000
+V9  1  0.306 1.580  0.189  1.531  0.248 0.000
+V10 1  0.853 2.338  0.450  2.139  0.532 0.000
+V11 1  2.697 2.353  1.350  2.027  1.470 0.000
+V12 1  2.342 2.018  1.249  1.838  1.347 0.000
+V13 1  0.351 0.956  0.274  0.932  0.324 0.000
+V14 1 -0.065 1.566 -0.033  1.476  0.016 0.000
+V15 1  0.398 1.468  0.251  1.412  0.310 0.000</code></pre>
+</div>
+</div>
+<p>Note that the 1PL estimates are on a <strong>different scale</strong> than the 2PL and 3PL estimates (see the companion document on scale constraints for details). But the <span class="math inline">\(b\)</span>-values are highly correlated across models—the differences are up to a linear transformation due to scale.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(coef_2pl<span class="sc">$</span>items[, <span class="dv">2</span>], coef_1pl<span class="sc">$</span>items[, <span class="dv">2</span>],</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">xlab =</span> <span class="st">"b (2PL)"</span>, <span class="at">ylab =</span> <span class="st">"b (1PL)"</span>,</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Difficulty Estimates: 1PL vs. 2PL"</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="fu">lm</span>(coef_1pl<span class="sc">$</span>items[, <span class="dv">2</span>] <span class="sc">~</span> coef_2pl<span class="sc">$</span>items[, <span class="dv">2</span>]), <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">lty =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="08-mirt-commands_files/figure-html/compare-b-values-1.png" class="img-fluid figure-img" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="part-3-plotting-with-mirt" class="level2" data-number="8.4">
+<h2 data-number="8.4" class="anchored" data-anchor-id="part-3-plotting-with-mirt"><span class="header-section-number">8.4</span> Part 3: Plotting with <code>mirt</code></h2>
+<p>The <code>mirt</code> package has a powerful built-in <code>plot</code> function with many options. Use <code>help('plot-method')</code> to see all available plot types.</p>
+<section id="item-response-functions-iccs" class="level3" data-number="8.4.1">
+<h3 data-number="8.4.1" class="anchored" data-anchor-id="item-response-functions-iccs"><span class="header-section-number">8.4.1</span> Item Response Functions (ICCs)</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># All items</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mirt_2pl, <span class="at">type =</span> <span class="st">'trace'</span>,<span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="08-mirt-commands_files/figure-html/plot-iccs-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Specific items</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mirt_2pl, <span class="at">which.items =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">8</span>), <span class="at">type =</span> <span class="st">'trace'</span>,<span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="08-mirt-commands_files/figure-html/plot-iccs-select-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Overlay specific ICCs on a single plot</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mirt_2pl,</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">type =</span> <span class="st">"trace"</span>,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">which.items =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">8</span>),</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>),</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">facet_items =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="08-mirt-commands_files/figure-html/one-plot-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="observed-vs.-predicted-item-fit" class="level3" data-number="8.4.2">
+<h3 data-number="8.4.2" class="anchored" data-anchor-id="observed-vs.-predicted-item-fit"><span class="header-section-number">8.4.2</span> Observed vs.&nbsp;Predicted (Item Fit)</h3>
+<p>The <code>itemfit</code> function with <code>empirical.plot</code> overlays observed response proportions on the model-implied ICC. This is useful for diagnosing item misfit.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">itemfit</span>(mirt_2pl, <span class="at">group.bins =</span> <span class="dv">15</span>, <span class="at">empirical.plot =</span> <span class="dv">1</span>,<span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="08-mirt-commands_files/figure-html/item-fit-1.png" class="img-fluid figure-img" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="part-4-test-characteristic-curve-and-information-functions" class="level2" data-number="8.5">
+<h2 data-number="8.5" class="anchored" data-anchor-id="part-4-test-characteristic-curve-and-information-functions"><span class="header-section-number">8.5</span> Part 4: Test Characteristic Curve and Information Functions</h2>
+<section id="test-characteristic-curve-tcc" class="level3" data-number="8.5.1">
+<h3 data-number="8.5.1" class="anchored" data-anchor-id="test-characteristic-curve-tcc"><span class="header-section-number">8.5.1</span> Test Characteristic Curve (TCC)</h3>
+<p>The TCC shows the expected number of correct answers (out of 15) at each ability level.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mirt_2pl,<span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="08-mirt-commands_files/figure-html/tcc-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="item-information-functions" class="level3" data-number="8.5.2">
+<h3 data-number="8.5.2" class="anchored" data-anchor-id="item-information-functions"><span class="header-section-number">8.5.2</span> Item Information Functions</h3>
+<p>Each item provides a certain amount of “information” about ability at different points on the theta scale.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mirt_2pl, <span class="at">type =</span> <span class="st">'infotrace'</span>, <span class="at">which.items =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>),<span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="08-mirt-commands_files/figure-html/item-info-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="test-information-function" class="level3" data-number="8.5.3">
+<h3 data-number="8.5.3" class="anchored" data-anchor-id="test-information-function"><span class="header-section-number">8.5.3</span> Test Information Function</h3>
+<p>The test information function is the sum of all item information functions.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mirt_2pl, <span class="at">type =</span> <span class="st">'info'</span>,<span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="08-mirt-commands_files/figure-html/test-info-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="test-information-and-standard-error-of-measurement" class="level3" data-number="8.5.4">
+<h3 data-number="8.5.4" class="anchored" data-anchor-id="test-information-and-standard-error-of-measurement"><span class="header-section-number">8.5.4</span> Test Information and Standard Error of Measurement</h3>
+<p>This combined plot shows both the test information function and the SEM on the same graph. The SEM is the inverse of the square root of the information: <span class="math inline">\(SEM(\theta) = 1/\sqrt{I(\theta)}\)</span>.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mirt_2pl, <span class="at">type =</span> <span class="st">'infoSE'</span>, <span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="08-mirt-commands_files/figure-html/info-sem-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="comparing-custom-test-information-functions" class="level3" data-number="8.5.5">
+<h3 data-number="8.5.5" class="anchored" data-anchor-id="comparing-custom-test-information-functions"><span class="header-section-number">8.5.5</span> Comparing Custom Test Information Functions</h3>
+<p>Say we create two test forms, form A with items 1-7, and form B with items 8-14. Let’s compare test info by form</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>A<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>B<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="dv">8</span><span class="sc">:</span><span class="dv">14</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>A.info <span class="ot">&lt;-</span> <span class="fu">testinfo</span>(mirt_2pl, <span class="at">which.items =</span> A, <span class="at">Theta =</span> <span class="fu">matrix</span>(<span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>,<span class="dv">3</span>,<span class="at">by=</span><span class="fl">0.1</span>)))</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>B.info <span class="ot">&lt;-</span> <span class="fu">testinfo</span>(mirt_2pl, <span class="at">which.items =</span> B, <span class="at">Theta =</span> <span class="fu">matrix</span>(<span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>,<span class="dv">3</span>,<span class="at">by=</span><span class="fl">0.1</span>)))</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>ymax <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">max</span>(<span class="fu">max</span>(A.info), <span class="fu">max</span>(B.info)), <span class="dv">0</span>) <span class="sc">+</span> <span class="dv">1</span>  <span class="co"># Top end of y-axis</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Plotting information without using the mirt plot function</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>Theta <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>, <span class="at">by =</span> <span class="fl">0.1</span>)</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(Theta, A.info, <span class="at">type =</span> <span class="st">"l"</span>, <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, ymax), <span class="at">col =</span> <span class="st">"blue"</span>,</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"Information"</span>, <span class="at">main =</span> <span class="st">"Blue = Form A, Black = Form B"</span>)</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(Theta, B.info, <span class="at">col =</span> <span class="st">"black"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="08-mirt-commands_files/figure-html/custom-info-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="quick-reference-summary" class="level2" data-number="8.6">
+<h2 data-number="8.6" class="anchored" data-anchor-id="quick-reference-summary"><span class="header-section-number">8.6</span> Quick Reference Summary</h2>
+<section id="classical-item-analysis" class="level3" data-number="8.6.1">
+<h3 data-number="8.6.1" class="anchored" data-anchor-id="classical-item-analysis"><span class="header-section-number">8.6.1</span> Classical Item Analysis</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Task</th>
+<th style="text-align: left;">Command</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Classical item stats</td>
+<td style="text-align: left;"><code>itemstats(data)</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="model-fitting" class="level3" data-number="8.6.2">
+<h3 data-number="8.6.2" class="anchored" data-anchor-id="model-fitting"><span class="header-section-number">8.6.2</span> Model Fitting</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Task</th>
+<th style="text-align: left;">Command</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Fit Rasch model</td>
+<td style="text-align: left;"><code>mirt(data, 1, itemtype = "Rasch")</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Fit 2PL model</td>
+<td style="text-align: left;"><code>mirt(data, 1, itemtype = "2PL")</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Fit 3PL model</td>
+<td style="text-align: left;"><code>mirt(data, 1, itemtype = "3PL")</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="extracting-parameters" class="level3" data-number="8.6.3">
+<h3 data-number="8.6.3" class="anchored" data-anchor-id="extracting-parameters"><span class="header-section-number">8.6.3</span> Extracting Parameters</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Task</th>
+<th style="text-align: left;">Command</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Get IRT parameters</td>
+<td style="text-align: left;"><code>coef(mod, simplify = TRUE, IRTpars = TRUE)</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Get slope-intercept form</td>
+<td style="text-align: left;"><code>coef(mod, simplify = TRUE)</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">EAP ability estimates</td>
+<td style="text-align: left;"><code>fscores(mod, method = "EAP")</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="plotting" class="level3" data-number="8.6.4">
+<h3 data-number="8.6.4" class="anchored" data-anchor-id="plotting"><span class="header-section-number">8.6.4</span> Plotting</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 60%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Task</th>
+<th style="text-align: left;">Command</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Plot all ICCs (faceted)</td>
+<td style="text-align: left;"><code>plot(mod, type = 'trace', theta_lim = c(-3, 3))</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Plot specific item ICCs</td>
+<td style="text-align: left;"><code>plot(mod, which.items = c(1, 3), type = 'trace', theta_lim = c(-3, 3))</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Overlay ICCs on one plot</td>
+<td style="text-align: left;"><code>plot(mod, which.items = c(1, 3), type = 'trace', facet_items = FALSE)</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Plot TCC</td>
+<td style="text-align: left;"><code>plot(mod, theta_lim = c(-3, 3))</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Plot item information</td>
+<td style="text-align: left;"><code>plot(mod, type = 'infotrace', which.items = 1:3, theta_lim = c(-3, 3))</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Plot test information</td>
+<td style="text-align: left;"><code>plot(mod, type = 'info', theta_lim = c(-3, 3))</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Plot info + SEM</td>
+<td style="text-align: left;"><code>plot(mod, type = 'infoSE', theta_lim = c(-3, 3))</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Custom test info by form</td>
+<td style="text-align: left;"><code>testinfo(mod, which.items = c(1:7), Theta = matrix(seq(-3, 3, by = 0.1)))</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Check item fit</td>
+<td style="text-align: left;"><code>itemfit(mod, group.bins = 15, empirical.plot = 1, theta_lim = c(-3, 3))</code></td>
+</tr>
+</tbody>
+</table>
+
+
+<!-- -->
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../chapters/07-normal-ogive.html" class="pagination-link" aria-label="The Normal Ogive">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The Normal Ogive</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../chapters/09-rasch-paradigm.html" class="pagination-link" aria-label="The Rasch Model Paradigm">
+        <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">The Rasch Model Paradigm</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Basic mirt Commands: A Reference Guide"</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> "Derek Briggs"</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "EDUC 8720"</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="an">output:</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co">  html_document:</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="co">    toc: true</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="co">    toc_float: true</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="co">    code_folding: show</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="co">  pdf_document:</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="co">    toc: true</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="co">    latex_engine: xelatex</span></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a><span class="in">```{r inject-rootdir, include=FALSE}</span></span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_knit<span class="sc">$</span><span class="fu">set</span>(<span class="at">root.dir =</span> <span class="st">"/Users/briggsd/Library/CloudStorage/Dropbox/Github/Measurement and Psychometrics/Using the mirt package"</span>)</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a><span class="in">```{r setup, include=FALSE}</span></span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">echo =</span> <span class="cn">TRUE</span>, <span class="at">message =</span> <span class="cn">FALSE</span>, <span class="at">warning =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a><span class="fu">## Introduction</span></span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>This document is a reference guide for using the <span class="in">`mirt`</span> package in R to fit IRT models to dichotomously scored item response data. It covers the essential workflow from classical item analysis through model fitting, parameter extraction, and plotting. Use this as a resource when working with different data sets to complete class assignments.</span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a><span class="fu">### Required Packages</span></span>
+<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a><span class="in">```{r load-packages}</span></span>
+<span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mirt)</span>
+<span id="cb25-31"><a href="#cb25-31" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-32"><a href="#cb25-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-33"><a href="#cb25-33" aria-hidden="true" tabindex="-1"></a><span class="fu">### Loading Data</span></span>
+<span id="cb25-34"><a href="#cb25-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-35"><a href="#cb25-35" aria-hidden="true" tabindex="-1"></a>For this guide we use a 15-item data set (<span class="in">`pset1_formA.csv`</span>). When working with your own data, update the file path accordingly.</span>
+<span id="cb25-36"><a href="#cb25-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-37"><a href="#cb25-37" aria-hidden="true" tabindex="-1"></a><span class="in">```{r load-data}</span></span>
+<span id="cb25-38"><a href="#cb25-38" aria-hidden="true" tabindex="-1"></a>data_path <span class="ot">&lt;-</span> <span class="st">"../IRT Models for Dichotomously Scored Items/Data/"</span></span>
+<span id="cb25-39"><a href="#cb25-39" aria-hidden="true" tabindex="-1"></a>forma <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="fu">paste0</span>(data_path, <span class="st">"pset1_formA.csv"</span>))</span>
+<span id="cb25-40"><a href="#cb25-40" aria-hidden="true" tabindex="-1"></a>forma <span class="ot">&lt;-</span> forma[, <span class="dv">1</span><span class="sc">:</span><span class="dv">15</span>]  <span class="co"># Use first 15 items</span></span>
+<span id="cb25-41"><a href="#cb25-41" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(forma)</span>
+<span id="cb25-42"><a href="#cb25-42" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-43"><a href="#cb25-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-44"><a href="#cb25-44" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb25-45"><a href="#cb25-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-46"><a href="#cb25-46" aria-hidden="true" tabindex="-1"></a><span class="fu">## Part 1: Classical Item Analysis</span></span>
+<span id="cb25-47"><a href="#cb25-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-48"><a href="#cb25-48" aria-hidden="true" tabindex="-1"></a>Always start with descriptive statistics before doing anything fancy. In this context, descriptive stats are classical item statistics.</span>
+<span id="cb25-49"><a href="#cb25-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-50"><a href="#cb25-50" aria-hidden="true" tabindex="-1"></a><span class="fu">### Item Statistics using `mirt:itemstats`</span></span>
+<span id="cb25-51"><a href="#cb25-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-52"><a href="#cb25-52" aria-hidden="true" tabindex="-1"></a><span class="in">```{r alpha-stats}</span></span>
+<span id="cb25-53"><a href="#cb25-53" aria-hidden="true" tabindex="-1"></a><span class="fu">itemstats</span>(forma)</span>
+<span id="cb25-54"><a href="#cb25-54" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-55"><a href="#cb25-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-56"><a href="#cb25-56" aria-hidden="true" tabindex="-1"></a><span class="fu">## Part 2: Fitting IRT Models with `mirt`</span></span>
+<span id="cb25-57"><a href="#cb25-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-58"><a href="#cb25-58" aria-hidden="true" tabindex="-1"></a><span class="fu">### Estimating the 1PL, 2PL, and 3PL Models</span></span>
+<span id="cb25-59"><a href="#cb25-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-60"><a href="#cb25-60" aria-hidden="true" tabindex="-1"></a>The <span class="in">`mirt`</span> function is used to fit unidimensional IRT models. The key arguments are:</span>
+<span id="cb25-61"><a href="#cb25-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-62"><a href="#cb25-62" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`model = 1`</span> specifies a unidimensional model</span>
+<span id="cb25-63"><a href="#cb25-63" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`itemtype`</span> specifies the model type: <span class="in">`"Rasch"`</span>, <span class="in">`"2PL"`</span>, or <span class="in">`"3PL"`</span></span>
+<span id="cb25-64"><a href="#cb25-64" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`method = "EM"`</span> specifies the EM algorithm for estimation (this is the default)</span>
+<span id="cb25-65"><a href="#cb25-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-66"><a href="#cb25-66" aria-hidden="true" tabindex="-1"></a><span class="in">```{r fit-models, results='hide'}</span></span>
+<span id="cb25-67"><a href="#cb25-67" aria-hidden="true" tabindex="-1"></a>mirt_1pl <span class="ot">&lt;-</span> <span class="fu">mirt</span>(forma, <span class="at">model =</span> <span class="dv">1</span>, <span class="at">itemtype =</span> <span class="st">"Rasch"</span>, <span class="at">method =</span> <span class="st">"EM"</span>)</span>
+<span id="cb25-68"><a href="#cb25-68" aria-hidden="true" tabindex="-1"></a>mirt_2pl <span class="ot">&lt;-</span> <span class="fu">mirt</span>(forma, <span class="at">model =</span> <span class="dv">1</span>, <span class="at">itemtype =</span> <span class="st">"2PL"</span>, <span class="at">method =</span> <span class="st">"EM"</span>)</span>
+<span id="cb25-69"><a href="#cb25-69" aria-hidden="true" tabindex="-1"></a>mirt_3pl <span class="ot">&lt;-</span> <span class="fu">mirt</span>(forma, <span class="at">model =</span> <span class="dv">1</span>, <span class="at">itemtype =</span> <span class="st">"3PL"</span>, <span class="at">method =</span> <span class="st">"EM"</span>)</span>
+<span id="cb25-70"><a href="#cb25-70" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-71"><a href="#cb25-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-72"><a href="#cb25-72" aria-hidden="true" tabindex="-1"></a><span class="fu">### Extracting Item Parameter Estimates</span></span>
+<span id="cb25-73"><a href="#cb25-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-74"><a href="#cb25-74" aria-hidden="true" tabindex="-1"></a>By default, <span class="in">`mirt`</span> parameterizes models in **slope-intercept form**: $a_i(\theta_p + d_i)$. To get the traditional IRT parameterization $a_i(\theta_p - b_i)$, use <span class="in">`IRTpars = TRUE`</span>.</span>
+<span id="cb25-75"><a href="#cb25-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-76"><a href="#cb25-76" aria-hidden="true" tabindex="-1"></a><span class="in">```{r coef-default}</span></span>
+<span id="cb25-77"><a href="#cb25-77" aria-hidden="true" tabindex="-1"></a><span class="co"># Slope-intercept form (default)</span></span>
+<span id="cb25-78"><a href="#cb25-78" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(mirt_2pl, <span class="at">simplify =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb25-79"><a href="#cb25-79" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-80"><a href="#cb25-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-81"><a href="#cb25-81" aria-hidden="true" tabindex="-1"></a><span class="in">```{r coef-irt}</span></span>
+<span id="cb25-82"><a href="#cb25-82" aria-hidden="true" tabindex="-1"></a><span class="co"># Traditional IRT form</span></span>
+<span id="cb25-83"><a href="#cb25-83" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(mirt_2pl, <span class="at">simplify =</span> <span class="cn">TRUE</span>, <span class="at">IRTpars =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb25-84"><a href="#cb25-84" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-85"><a href="#cb25-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-86"><a href="#cb25-86" aria-hidden="true" tabindex="-1"></a>Note the relationship between the two parameterizations: $b = -d/a$.</span>
+<span id="cb25-87"><a href="#cb25-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-88"><a href="#cb25-88" aria-hidden="true" tabindex="-1"></a><span class="fu">### Saving and Working with Parameter Estimates</span></span>
+<span id="cb25-89"><a href="#cb25-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-90"><a href="#cb25-90" aria-hidden="true" tabindex="-1"></a><span class="in">```{r extract-params}</span></span>
+<span id="cb25-91"><a href="#cb25-91" aria-hidden="true" tabindex="-1"></a>coef_1pl <span class="ot">&lt;-</span> <span class="fu">coef</span>(mirt_1pl, <span class="at">simplify =</span> <span class="cn">TRUE</span>, <span class="at">IRTpars =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb25-92"><a href="#cb25-92" aria-hidden="true" tabindex="-1"></a>coef_2pl <span class="ot">&lt;-</span> <span class="fu">coef</span>(mirt_2pl, <span class="at">simplify =</span> <span class="cn">TRUE</span>, <span class="at">IRTpars =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb25-93"><a href="#cb25-93" aria-hidden="true" tabindex="-1"></a>coef_3pl <span class="ot">&lt;-</span> <span class="fu">coef</span>(mirt_3pl, <span class="at">simplify =</span> <span class="cn">TRUE</span>, <span class="at">IRTpars =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb25-94"><a href="#cb25-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-95"><a href="#cb25-95" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract just the a and b columns for the 2PL</span></span>
+<span id="cb25-96"><a href="#cb25-96" aria-hidden="true" tabindex="-1"></a>coef_2pl<span class="sc">$</span>items[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span>
+<span id="cb25-97"><a href="#cb25-97" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-98"><a href="#cb25-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-99"><a href="#cb25-99" aria-hidden="true" tabindex="-1"></a>The <span class="in">`g`</span> and <span class="in">`u`</span> columns in the output represent the lower asymptote (guessing) and upper asymptote parameters. These are only estimated in the 3PL (and a hypothetical 4PL) model.</span>
+<span id="cb25-100"><a href="#cb25-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-101"><a href="#cb25-101" aria-hidden="true" tabindex="-1"></a><span class="fu">### Comparing Parameters Across Models</span></span>
+<span id="cb25-102"><a href="#cb25-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-103"><a href="#cb25-103" aria-hidden="true" tabindex="-1"></a><span class="in">```{r compare-models}</span></span>
+<span id="cb25-104"><a href="#cb25-104" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">data.frame</span>(</span>
+<span id="cb25-105"><a href="#cb25-105" aria-hidden="true" tabindex="-1"></a>  coef_1pl<span class="sc">$</span>items[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>],</span>
+<span id="cb25-106"><a href="#cb25-106" aria-hidden="true" tabindex="-1"></a>  coef_2pl<span class="sc">$</span>items[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>],</span>
+<span id="cb25-107"><a href="#cb25-107" aria-hidden="true" tabindex="-1"></a>  coef_3pl<span class="sc">$</span>items[, <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>]</span>
+<span id="cb25-108"><a href="#cb25-108" aria-hidden="true" tabindex="-1"></a>), <span class="dv">3</span>)</span>
+<span id="cb25-109"><a href="#cb25-109" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-110"><a href="#cb25-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-111"><a href="#cb25-111" aria-hidden="true" tabindex="-1"></a>Note that the 1PL estimates are on a **different scale** than the 2PL and 3PL estimates (see the companion document on scale constraints for details). But the $b$-values are highly correlated across models---the differences are up to a linear transformation due to scale.</span>
+<span id="cb25-112"><a href="#cb25-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-113"><a href="#cb25-113" aria-hidden="true" tabindex="-1"></a><span class="in">```{r compare-b-values, fig.width=6, fig.height=5}</span></span>
+<span id="cb25-114"><a href="#cb25-114" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(coef_2pl<span class="sc">$</span>items[, <span class="dv">2</span>], coef_1pl<span class="sc">$</span>items[, <span class="dv">2</span>],</span>
+<span id="cb25-115"><a href="#cb25-115" aria-hidden="true" tabindex="-1"></a>     <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">xlab =</span> <span class="st">"b (2PL)"</span>, <span class="at">ylab =</span> <span class="st">"b (1PL)"</span>,</span>
+<span id="cb25-116"><a href="#cb25-116" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Difficulty Estimates: 1PL vs. 2PL"</span>)</span>
+<span id="cb25-117"><a href="#cb25-117" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="fu">lm</span>(coef_1pl<span class="sc">$</span>items[, <span class="dv">2</span>] <span class="sc">~</span> coef_2pl<span class="sc">$</span>items[, <span class="dv">2</span>]), <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">lty =</span> <span class="dv">2</span>)</span>
+<span id="cb25-118"><a href="#cb25-118" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-119"><a href="#cb25-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-120"><a href="#cb25-120" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb25-121"><a href="#cb25-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-122"><a href="#cb25-122" aria-hidden="true" tabindex="-1"></a><span class="fu">## Part 3: Plotting with `mirt`</span></span>
+<span id="cb25-123"><a href="#cb25-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-124"><a href="#cb25-124" aria-hidden="true" tabindex="-1"></a>The <span class="in">`mirt`</span> package has a powerful built-in <span class="in">`plot`</span> function with many options. Use <span class="in">`help('plot-method')`</span> to see all available plot types.</span>
+<span id="cb25-125"><a href="#cb25-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-126"><a href="#cb25-126" aria-hidden="true" tabindex="-1"></a><span class="fu">### Item Response Functions (ICCs)</span></span>
+<span id="cb25-127"><a href="#cb25-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-128"><a href="#cb25-128" aria-hidden="true" tabindex="-1"></a><span class="in">```{r plot-iccs, fig.width=10, fig.height=8}</span></span>
+<span id="cb25-129"><a href="#cb25-129" aria-hidden="true" tabindex="-1"></a><span class="co"># All items</span></span>
+<span id="cb25-130"><a href="#cb25-130" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mirt_2pl, <span class="at">type =</span> <span class="st">'trace'</span>,<span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>))</span>
+<span id="cb25-131"><a href="#cb25-131" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-132"><a href="#cb25-132" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-133"><a href="#cb25-133" aria-hidden="true" tabindex="-1"></a><span class="in">```{r plot-iccs-select, fig.width=10, fig.height=4}</span></span>
+<span id="cb25-134"><a href="#cb25-134" aria-hidden="true" tabindex="-1"></a><span class="co"># Specific items</span></span>
+<span id="cb25-135"><a href="#cb25-135" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mirt_2pl, <span class="at">which.items =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">8</span>), <span class="at">type =</span> <span class="st">'trace'</span>,<span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>))</span>
+<span id="cb25-136"><a href="#cb25-136" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-137"><a href="#cb25-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-138"><a href="#cb25-138" aria-hidden="true" tabindex="-1"></a><span class="in">```{r one-plot, fig.width=10, fig.height=5}</span></span>
+<span id="cb25-139"><a href="#cb25-139" aria-hidden="true" tabindex="-1"></a><span class="co"># Overlay specific ICCs on a single plot</span></span>
+<span id="cb25-140"><a href="#cb25-140" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mirt_2pl,</span>
+<span id="cb25-141"><a href="#cb25-141" aria-hidden="true" tabindex="-1"></a>     <span class="at">type =</span> <span class="st">"trace"</span>,</span>
+<span id="cb25-142"><a href="#cb25-142" aria-hidden="true" tabindex="-1"></a>     <span class="at">which.items =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">8</span>),</span>
+<span id="cb25-143"><a href="#cb25-143" aria-hidden="true" tabindex="-1"></a>     <span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>),</span>
+<span id="cb25-144"><a href="#cb25-144" aria-hidden="true" tabindex="-1"></a>     <span class="at">facet_items =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb25-145"><a href="#cb25-145" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-146"><a href="#cb25-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-147"><a href="#cb25-147" aria-hidden="true" tabindex="-1"></a><span class="fu">### Observed vs. Predicted (Item Fit)</span></span>
+<span id="cb25-148"><a href="#cb25-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-149"><a href="#cb25-149" aria-hidden="true" tabindex="-1"></a>The <span class="in">`itemfit`</span> function with <span class="in">`empirical.plot`</span> overlays observed response proportions on the model-implied ICC. This is useful for diagnosing item misfit.</span>
+<span id="cb25-150"><a href="#cb25-150" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-151"><a href="#cb25-151" aria-hidden="true" tabindex="-1"></a><span class="in">```{r item-fit, fig.width=6, fig.height=5}</span></span>
+<span id="cb25-152"><a href="#cb25-152" aria-hidden="true" tabindex="-1"></a><span class="fu">itemfit</span>(mirt_2pl, <span class="at">group.bins =</span> <span class="dv">15</span>, <span class="at">empirical.plot =</span> <span class="dv">1</span>,<span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>))</span>
+<span id="cb25-153"><a href="#cb25-153" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-154"><a href="#cb25-154" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-155"><a href="#cb25-155" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb25-156"><a href="#cb25-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-157"><a href="#cb25-157" aria-hidden="true" tabindex="-1"></a><span class="fu">## Part 4: Test Characteristic Curve and Information Functions</span></span>
+<span id="cb25-158"><a href="#cb25-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-159"><a href="#cb25-159" aria-hidden="true" tabindex="-1"></a><span class="fu">### Test Characteristic Curve (TCC)</span></span>
+<span id="cb25-160"><a href="#cb25-160" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-161"><a href="#cb25-161" aria-hidden="true" tabindex="-1"></a>The TCC shows the expected number of correct answers (out of 15) at each ability level.</span>
+<span id="cb25-162"><a href="#cb25-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-163"><a href="#cb25-163" aria-hidden="true" tabindex="-1"></a><span class="in">```{r tcc, fig.width=8, fig.height=5}</span></span>
+<span id="cb25-164"><a href="#cb25-164" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mirt_2pl,<span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>))</span>
+<span id="cb25-165"><a href="#cb25-165" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-166"><a href="#cb25-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-167"><a href="#cb25-167" aria-hidden="true" tabindex="-1"></a><span class="fu">### Item Information Functions</span></span>
+<span id="cb25-168"><a href="#cb25-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-169"><a href="#cb25-169" aria-hidden="true" tabindex="-1"></a>Each item provides a certain amount of "information" about ability at different points on the theta scale.</span>
+<span id="cb25-170"><a href="#cb25-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-171"><a href="#cb25-171" aria-hidden="true" tabindex="-1"></a><span class="in">```{r item-info, fig.width=10, fig.height=4}</span></span>
+<span id="cb25-172"><a href="#cb25-172" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mirt_2pl, <span class="at">type =</span> <span class="st">'infotrace'</span>, <span class="at">which.items =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>),<span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>))</span>
+<span id="cb25-173"><a href="#cb25-173" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-174"><a href="#cb25-174" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-175"><a href="#cb25-175" aria-hidden="true" tabindex="-1"></a><span class="fu">### Test Information Function</span></span>
+<span id="cb25-176"><a href="#cb25-176" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-177"><a href="#cb25-177" aria-hidden="true" tabindex="-1"></a>The test information function is the sum of all item information functions.</span>
+<span id="cb25-178"><a href="#cb25-178" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-179"><a href="#cb25-179" aria-hidden="true" tabindex="-1"></a><span class="in">```{r test-info, fig.width=8, fig.height=5}</span></span>
+<span id="cb25-180"><a href="#cb25-180" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mirt_2pl, <span class="at">type =</span> <span class="st">'info'</span>,<span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>))</span>
+<span id="cb25-181"><a href="#cb25-181" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-182"><a href="#cb25-182" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-183"><a href="#cb25-183" aria-hidden="true" tabindex="-1"></a><span class="fu">### Test Information and Standard Error of Measurement</span></span>
+<span id="cb25-184"><a href="#cb25-184" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-185"><a href="#cb25-185" aria-hidden="true" tabindex="-1"></a>This combined plot shows both the test information function and the SEM on the same graph. The SEM is the inverse of the square root of the information: $SEM(\theta) = 1/\sqrt{I(\theta)}$.</span>
+<span id="cb25-186"><a href="#cb25-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-187"><a href="#cb25-187" aria-hidden="true" tabindex="-1"></a><span class="in">```{r info-sem, fig.width=8, fig.height=5}</span></span>
+<span id="cb25-188"><a href="#cb25-188" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mirt_2pl, <span class="at">type =</span> <span class="st">'infoSE'</span>, <span class="at">theta_lim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>))</span>
+<span id="cb25-189"><a href="#cb25-189" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-190"><a href="#cb25-190" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-191"><a href="#cb25-191" aria-hidden="true" tabindex="-1"></a><span class="fu">### Comparing Custom Test Information Functions</span></span>
+<span id="cb25-192"><a href="#cb25-192" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-193"><a href="#cb25-193" aria-hidden="true" tabindex="-1"></a>Say we create two test forms, form A with items 1-7, and form B with items 8-14. Let's compare test info by form</span>
+<span id="cb25-194"><a href="#cb25-194" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-195"><a href="#cb25-195" aria-hidden="true" tabindex="-1"></a><span class="in">```{r custom-info, fig.width=8, fig.height=5}</span></span>
+<span id="cb25-196"><a href="#cb25-196" aria-hidden="true" tabindex="-1"></a>A<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>)</span>
+<span id="cb25-197"><a href="#cb25-197" aria-hidden="true" tabindex="-1"></a>B<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="dv">8</span><span class="sc">:</span><span class="dv">14</span>)</span>
+<span id="cb25-198"><a href="#cb25-198" aria-hidden="true" tabindex="-1"></a>A.info <span class="ot">&lt;-</span> <span class="fu">testinfo</span>(mirt_2pl, <span class="at">which.items =</span> A, <span class="at">Theta =</span> <span class="fu">matrix</span>(<span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>,<span class="dv">3</span>,<span class="at">by=</span><span class="fl">0.1</span>)))</span>
+<span id="cb25-199"><a href="#cb25-199" aria-hidden="true" tabindex="-1"></a>B.info <span class="ot">&lt;-</span> <span class="fu">testinfo</span>(mirt_2pl, <span class="at">which.items =</span> B, <span class="at">Theta =</span> <span class="fu">matrix</span>(<span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>,<span class="dv">3</span>,<span class="at">by=</span><span class="fl">0.1</span>)))</span>
+<span id="cb25-200"><a href="#cb25-200" aria-hidden="true" tabindex="-1"></a>ymax <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">max</span>(<span class="fu">max</span>(A.info), <span class="fu">max</span>(B.info)), <span class="dv">0</span>) <span class="sc">+</span> <span class="dv">1</span>  <span class="co"># Top end of y-axis</span></span>
+<span id="cb25-201"><a href="#cb25-201" aria-hidden="true" tabindex="-1"></a><span class="co"># Plotting information without using the mirt plot function</span></span>
+<span id="cb25-202"><a href="#cb25-202" aria-hidden="true" tabindex="-1"></a>Theta <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>, <span class="at">by =</span> <span class="fl">0.1</span>)</span>
+<span id="cb25-203"><a href="#cb25-203" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(Theta, A.info, <span class="at">type =</span> <span class="st">"l"</span>, <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, ymax), <span class="at">col =</span> <span class="st">"blue"</span>,</span>
+<span id="cb25-204"><a href="#cb25-204" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"Information"</span>, <span class="at">main =</span> <span class="st">"Blue = Form A, Black = Form B"</span>)</span>
+<span id="cb25-205"><a href="#cb25-205" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(Theta, B.info, <span class="at">col =</span> <span class="st">"black"</span>)</span>
+<span id="cb25-206"><a href="#cb25-206" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-207"><a href="#cb25-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-208"><a href="#cb25-208" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb25-209"><a href="#cb25-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-210"><a href="#cb25-210" aria-hidden="true" tabindex="-1"></a><span class="fu">## Quick Reference Summary</span></span>
+<span id="cb25-211"><a href="#cb25-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-212"><a href="#cb25-212" aria-hidden="true" tabindex="-1"></a><span class="fu">### Classical Item Analysis</span></span>
+<span id="cb25-213"><a href="#cb25-213" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-214"><a href="#cb25-214" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Task <span class="pp">|</span> Command <span class="pp">|</span></span>
+<span id="cb25-215"><a href="#cb25-215" aria-hidden="true" tabindex="-1"></a><span class="pp">|:-----|:--------|</span></span>
+<span id="cb25-216"><a href="#cb25-216" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Classical item stats <span class="pp">|</span> <span class="in">`itemstats(data)`</span> <span class="pp">|</span></span>
+<span id="cb25-217"><a href="#cb25-217" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-218"><a href="#cb25-218" aria-hidden="true" tabindex="-1"></a><span class="fu">### Model Fitting</span></span>
+<span id="cb25-219"><a href="#cb25-219" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-220"><a href="#cb25-220" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Task <span class="pp">|</span> Command <span class="pp">|</span></span>
+<span id="cb25-221"><a href="#cb25-221" aria-hidden="true" tabindex="-1"></a><span class="pp">|:-----|:--------|</span></span>
+<span id="cb25-222"><a href="#cb25-222" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Fit Rasch model <span class="pp">|</span> <span class="in">`mirt(data, 1, itemtype = "Rasch")`</span> <span class="pp">|</span></span>
+<span id="cb25-223"><a href="#cb25-223" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Fit 2PL model <span class="pp">|</span> <span class="in">`mirt(data, 1, itemtype = "2PL")`</span> <span class="pp">|</span></span>
+<span id="cb25-224"><a href="#cb25-224" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Fit 3PL model <span class="pp">|</span> <span class="in">`mirt(data, 1, itemtype = "3PL")`</span> <span class="pp">|</span></span>
+<span id="cb25-225"><a href="#cb25-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-226"><a href="#cb25-226" aria-hidden="true" tabindex="-1"></a><span class="fu">### Extracting Parameters</span></span>
+<span id="cb25-227"><a href="#cb25-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-228"><a href="#cb25-228" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Task <span class="pp">|</span> Command <span class="pp">|</span></span>
+<span id="cb25-229"><a href="#cb25-229" aria-hidden="true" tabindex="-1"></a><span class="pp">|:-----|:--------|</span></span>
+<span id="cb25-230"><a href="#cb25-230" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Get IRT parameters <span class="pp">|</span> <span class="in">`coef(mod, simplify = TRUE, IRTpars = TRUE)`</span> <span class="pp">|</span></span>
+<span id="cb25-231"><a href="#cb25-231" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Get slope-intercept form <span class="pp">|</span> <span class="in">`coef(mod, simplify = TRUE)`</span> <span class="pp">|</span></span>
+<span id="cb25-232"><a href="#cb25-232" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> EAP ability estimates <span class="pp">|</span> <span class="in">`fscores(mod, method = "EAP")`</span> <span class="pp">|</span></span>
+<span id="cb25-233"><a href="#cb25-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-234"><a href="#cb25-234" aria-hidden="true" tabindex="-1"></a><span class="fu">### Plotting</span></span>
+<span id="cb25-235"><a href="#cb25-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-236"><a href="#cb25-236" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Task <span class="pp">|</span> Command <span class="pp">|</span></span>
+<span id="cb25-237"><a href="#cb25-237" aria-hidden="true" tabindex="-1"></a><span class="pp">|:-----|:--------|</span></span>
+<span id="cb25-238"><a href="#cb25-238" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Plot all ICCs (faceted) <span class="pp">|</span> <span class="in">`plot(mod, type = 'trace', theta_lim = c(-3, 3))`</span> <span class="pp">|</span></span>
+<span id="cb25-239"><a href="#cb25-239" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Plot specific item ICCs <span class="pp">|</span> <span class="in">`plot(mod, which.items = c(1, 3), type = 'trace', theta_lim = c(-3, 3))`</span> <span class="pp">|</span></span>
+<span id="cb25-240"><a href="#cb25-240" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Overlay ICCs on one plot <span class="pp">|</span> <span class="in">`plot(mod, which.items = c(1, 3), type = 'trace', facet_items = FALSE)`</span> <span class="pp">|</span></span>
+<span id="cb25-241"><a href="#cb25-241" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Plot TCC <span class="pp">|</span> <span class="in">`plot(mod, theta_lim = c(-3, 3))`</span> <span class="pp">|</span></span>
+<span id="cb25-242"><a href="#cb25-242" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Plot item information <span class="pp">|</span> <span class="in">`plot(mod, type = 'infotrace', which.items = 1:3, theta_lim = c(-3, 3))`</span> <span class="pp">|</span></span>
+<span id="cb25-243"><a href="#cb25-243" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Plot test information <span class="pp">|</span> <span class="in">`plot(mod, type = 'info', theta_lim = c(-3, 3))`</span> <span class="pp">|</span></span>
+<span id="cb25-244"><a href="#cb25-244" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Plot info + SEM <span class="pp">|</span> <span class="in">`plot(mod, type = 'infoSE', theta_lim = c(-3, 3))`</span> <span class="pp">|</span></span>
+<span id="cb25-245"><a href="#cb25-245" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Custom test info by form <span class="pp">|</span> <span class="in">`testinfo(mod, which.items = c(1:7), Theta = matrix(seq(-3, 3, by = 0.1)))`</span> <span class="pp">|</span></span>
+<span id="cb25-246"><a href="#cb25-246" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Check item fit <span class="pp">|</span> <span class="in">`itemfit(mod, group.bins = 15, empirical.plot = 1, theta_lim = c(-3, 3))`</span> <span class="pp">|</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
