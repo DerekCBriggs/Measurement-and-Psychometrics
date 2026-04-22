@@ -8,7 +8,7 @@
 
 <meta name="author" content="Derek C. Briggs and Claude Code (Opus 4.6 &amp; 4.7)">
 
-<title>8&nbsp; Basic mirt Commands: A Reference Guide – Psychometric Modeling with IRT</title>
+<title>7&nbsp; Basic mirt Commands: A Reference Guide – Psychometric Modeling with IRT</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -67,7 +67,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
 <link href="../chapters/09-rasch-paradigm.html" rel="next">
-<link href="../chapters/07-normal-ogive.html" rel="prev">
+<link href="../chapters/06-assumptions-properties.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
@@ -148,7 +148,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/08-mirt-commands.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Basic mirt Commands: A Reference Guide</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/08-mirt-commands.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Basic mirt Commands: A Reference Guide</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -229,30 +229,24 @@ window.Quarto = {
  <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Assumptions and Properties of IRT Models</span></span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/07-normal-ogive.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The Normal Ogive</span></span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/08-mirt-commands.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Basic mirt Commands: A Reference Guide</span></span></a>
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Basic mirt Commands: A Reference Guide</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/09-rasch-paradigm.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">The Rasch Model Paradigm</span></span></a>
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The Rasch Model Paradigm</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/10-scale-constraints.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">IRT Scale Constraints Using the mirt Package</span></span></a>
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">IRT Scale Constraints Using the mirt Package</span></span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -267,19 +261,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/11-person-estimation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Person Parameter Estimation in IRT</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Person Parameter Estimation in IRT</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/12-jmle.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Item Parameter Estimation via JMLE</span></span></a>
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Item Parameter Estimation via JMLE</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/13-mmle.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Item Parameter Estimation via MMLE/EM</span></span></a>
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Item Parameter Estimation via MMLE/EM</span></span></a>
   </div>
 </li>
       </ul>
@@ -287,13 +281,13 @@ window.Quarto = {
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/14-model-fit.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Evaluating IRT Model Fit</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Evaluating IRT Model Fit</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/15-polytomous.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">IRT Models for Polytomously Scored Items</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">IRT Models for Polytomously Scored Items</span></span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -308,37 +302,37 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/16-fixing-params.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Fixing Item Parameters in mirt</span></span></a>
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Fixing Item Parameters in mirt</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/17-linking-equating.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">IRT Equating using mirt</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">IRT Equating using mirt</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/18-dif.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Differential Item Functioning</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Differential Item Functioning</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/19-vertical-scaling.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Vertical Scaling and Growth Using mirt</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Vertical Scaling and Growth Using mirt</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/20-cat.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Computerized Adaptive Testing with mirtCAT</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Computerized Adaptive Testing with mirtCAT</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/21-mirt.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">An Introduction to Multidimensional IRT with mirt</span></span></a>
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">An Introduction to Multidimensional IRT with mirt</span></span></a>
   </div>
 </li>
       </ul>
@@ -359,41 +353,41 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction"><span class="header-section-number">8.1</span> Introduction</a>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction"><span class="header-section-number">7.1</span> Introduction</a>
   <ul class="collapse">
-  <li><a href="#required-packages" id="toc-required-packages" class="nav-link" data-scroll-target="#required-packages"><span class="header-section-number">8.1.1</span> Required Packages</a></li>
-  <li><a href="#loading-data" id="toc-loading-data" class="nav-link" data-scroll-target="#loading-data"><span class="header-section-number">8.1.2</span> Loading Data</a></li>
+  <li><a href="#required-packages" id="toc-required-packages" class="nav-link" data-scroll-target="#required-packages"><span class="header-section-number">7.1.1</span> Required Packages</a></li>
+  <li><a href="#loading-data" id="toc-loading-data" class="nav-link" data-scroll-target="#loading-data"><span class="header-section-number">7.1.2</span> Loading Data</a></li>
   </ul></li>
-  <li><a href="#part-1-classical-item-analysis" id="toc-part-1-classical-item-analysis" class="nav-link" data-scroll-target="#part-1-classical-item-analysis"><span class="header-section-number">8.2</span> Part 1: Classical Item Analysis</a>
+  <li><a href="#part-1-classical-item-analysis" id="toc-part-1-classical-item-analysis" class="nav-link" data-scroll-target="#part-1-classical-item-analysis"><span class="header-section-number">7.2</span> Part 1: Classical Item Analysis</a>
   <ul class="collapse">
-  <li><a href="#item-statistics-using-mirtitemstats" id="toc-item-statistics-using-mirtitemstats" class="nav-link" data-scroll-target="#item-statistics-using-mirtitemstats"><span class="header-section-number">8.2.1</span> Item Statistics using <code>mirt:itemstats</code></a></li>
+  <li><a href="#item-statistics-using-mirtitemstats" id="toc-item-statistics-using-mirtitemstats" class="nav-link" data-scroll-target="#item-statistics-using-mirtitemstats"><span class="header-section-number">7.2.1</span> Item Statistics using <code>mirt:itemstats</code></a></li>
   </ul></li>
-  <li><a href="#part-2-fitting-irt-models-with-mirt" id="toc-part-2-fitting-irt-models-with-mirt" class="nav-link" data-scroll-target="#part-2-fitting-irt-models-with-mirt"><span class="header-section-number">8.3</span> Part 2: Fitting IRT Models with <code>mirt</code></a>
+  <li><a href="#part-2-fitting-irt-models-with-mirt" id="toc-part-2-fitting-irt-models-with-mirt" class="nav-link" data-scroll-target="#part-2-fitting-irt-models-with-mirt"><span class="header-section-number">7.3</span> Part 2: Fitting IRT Models with <code>mirt</code></a>
   <ul class="collapse">
-  <li><a href="#estimating-the-1pl-2pl-and-3pl-models" id="toc-estimating-the-1pl-2pl-and-3pl-models" class="nav-link" data-scroll-target="#estimating-the-1pl-2pl-and-3pl-models"><span class="header-section-number">8.3.1</span> Estimating the 1PL, 2PL, and 3PL Models</a></li>
-  <li><a href="#extracting-item-parameter-estimates" id="toc-extracting-item-parameter-estimates" class="nav-link" data-scroll-target="#extracting-item-parameter-estimates"><span class="header-section-number">8.3.2</span> Extracting Item Parameter Estimates</a></li>
-  <li><a href="#saving-and-working-with-parameter-estimates" id="toc-saving-and-working-with-parameter-estimates" class="nav-link" data-scroll-target="#saving-and-working-with-parameter-estimates"><span class="header-section-number">8.3.3</span> Saving and Working with Parameter Estimates</a></li>
-  <li><a href="#comparing-parameters-across-models" id="toc-comparing-parameters-across-models" class="nav-link" data-scroll-target="#comparing-parameters-across-models"><span class="header-section-number">8.3.4</span> Comparing Parameters Across Models</a></li>
+  <li><a href="#estimating-the-1pl-2pl-and-3pl-models" id="toc-estimating-the-1pl-2pl-and-3pl-models" class="nav-link" data-scroll-target="#estimating-the-1pl-2pl-and-3pl-models"><span class="header-section-number">7.3.1</span> Estimating the 1PL, 2PL, and 3PL Models</a></li>
+  <li><a href="#extracting-item-parameter-estimates" id="toc-extracting-item-parameter-estimates" class="nav-link" data-scroll-target="#extracting-item-parameter-estimates"><span class="header-section-number">7.3.2</span> Extracting Item Parameter Estimates</a></li>
+  <li><a href="#saving-and-working-with-parameter-estimates" id="toc-saving-and-working-with-parameter-estimates" class="nav-link" data-scroll-target="#saving-and-working-with-parameter-estimates"><span class="header-section-number">7.3.3</span> Saving and Working with Parameter Estimates</a></li>
+  <li><a href="#comparing-parameters-across-models" id="toc-comparing-parameters-across-models" class="nav-link" data-scroll-target="#comparing-parameters-across-models"><span class="header-section-number">7.3.4</span> Comparing Parameters Across Models</a></li>
   </ul></li>
-  <li><a href="#part-3-plotting-with-mirt" id="toc-part-3-plotting-with-mirt" class="nav-link" data-scroll-target="#part-3-plotting-with-mirt"><span class="header-section-number">8.4</span> Part 3: Plotting with <code>mirt</code></a>
+  <li><a href="#part-3-plotting-with-mirt" id="toc-part-3-plotting-with-mirt" class="nav-link" data-scroll-target="#part-3-plotting-with-mirt"><span class="header-section-number">7.4</span> Part 3: Plotting with <code>mirt</code></a>
   <ul class="collapse">
-  <li><a href="#item-response-functions-iccs" id="toc-item-response-functions-iccs" class="nav-link" data-scroll-target="#item-response-functions-iccs"><span class="header-section-number">8.4.1</span> Item Response Functions (ICCs)</a></li>
-  <li><a href="#observed-vs.-predicted-item-fit" id="toc-observed-vs.-predicted-item-fit" class="nav-link" data-scroll-target="#observed-vs.-predicted-item-fit"><span class="header-section-number">8.4.2</span> Observed vs.&nbsp;Predicted (Item Fit)</a></li>
+  <li><a href="#item-response-functions-iccs" id="toc-item-response-functions-iccs" class="nav-link" data-scroll-target="#item-response-functions-iccs"><span class="header-section-number">7.4.1</span> Item Response Functions (ICCs)</a></li>
+  <li><a href="#observed-vs.-predicted-item-fit" id="toc-observed-vs.-predicted-item-fit" class="nav-link" data-scroll-target="#observed-vs.-predicted-item-fit"><span class="header-section-number">7.4.2</span> Observed vs.&nbsp;Predicted (Item Fit)</a></li>
   </ul></li>
-  <li><a href="#part-4-test-characteristic-curve-and-information-functions" id="toc-part-4-test-characteristic-curve-and-information-functions" class="nav-link" data-scroll-target="#part-4-test-characteristic-curve-and-information-functions"><span class="header-section-number">8.5</span> Part 4: Test Characteristic Curve and Information Functions</a>
+  <li><a href="#part-4-test-characteristic-curve-and-information-functions" id="toc-part-4-test-characteristic-curve-and-information-functions" class="nav-link" data-scroll-target="#part-4-test-characteristic-curve-and-information-functions"><span class="header-section-number">7.5</span> Part 4: Test Characteristic Curve and Information Functions</a>
   <ul class="collapse">
-  <li><a href="#test-characteristic-curve-tcc" id="toc-test-characteristic-curve-tcc" class="nav-link" data-scroll-target="#test-characteristic-curve-tcc"><span class="header-section-number">8.5.1</span> Test Characteristic Curve (TCC)</a></li>
-  <li><a href="#item-information-functions" id="toc-item-information-functions" class="nav-link" data-scroll-target="#item-information-functions"><span class="header-section-number">8.5.2</span> Item Information Functions</a></li>
-  <li><a href="#test-information-function" id="toc-test-information-function" class="nav-link" data-scroll-target="#test-information-function"><span class="header-section-number">8.5.3</span> Test Information Function</a></li>
-  <li><a href="#test-information-and-standard-error-of-measurement" id="toc-test-information-and-standard-error-of-measurement" class="nav-link" data-scroll-target="#test-information-and-standard-error-of-measurement"><span class="header-section-number">8.5.4</span> Test Information and Standard Error of Measurement</a></li>
-  <li><a href="#comparing-custom-test-information-functions" id="toc-comparing-custom-test-information-functions" class="nav-link" data-scroll-target="#comparing-custom-test-information-functions"><span class="header-section-number">8.5.5</span> Comparing Custom Test Information Functions</a></li>
+  <li><a href="#test-characteristic-curve-tcc" id="toc-test-characteristic-curve-tcc" class="nav-link" data-scroll-target="#test-characteristic-curve-tcc"><span class="header-section-number">7.5.1</span> Test Characteristic Curve (TCC)</a></li>
+  <li><a href="#item-information-functions" id="toc-item-information-functions" class="nav-link" data-scroll-target="#item-information-functions"><span class="header-section-number">7.5.2</span> Item Information Functions</a></li>
+  <li><a href="#test-information-function" id="toc-test-information-function" class="nav-link" data-scroll-target="#test-information-function"><span class="header-section-number">7.5.3</span> Test Information Function</a></li>
+  <li><a href="#test-information-and-standard-error-of-measurement" id="toc-test-information-and-standard-error-of-measurement" class="nav-link" data-scroll-target="#test-information-and-standard-error-of-measurement"><span class="header-section-number">7.5.4</span> Test Information and Standard Error of Measurement</a></li>
+  <li><a href="#comparing-custom-test-information-functions" id="toc-comparing-custom-test-information-functions" class="nav-link" data-scroll-target="#comparing-custom-test-information-functions"><span class="header-section-number">7.5.5</span> Comparing Custom Test Information Functions</a></li>
   </ul></li>
-  <li><a href="#quick-reference-summary" id="toc-quick-reference-summary" class="nav-link" data-scroll-target="#quick-reference-summary"><span class="header-section-number">8.6</span> Quick Reference Summary</a>
+  <li><a href="#quick-reference-summary" id="toc-quick-reference-summary" class="nav-link" data-scroll-target="#quick-reference-summary"><span class="header-section-number">7.6</span> Quick Reference Summary</a>
   <ul class="collapse">
-  <li><a href="#classical-item-analysis" id="toc-classical-item-analysis" class="nav-link" data-scroll-target="#classical-item-analysis"><span class="header-section-number">8.6.1</span> Classical Item Analysis</a></li>
-  <li><a href="#model-fitting" id="toc-model-fitting" class="nav-link" data-scroll-target="#model-fitting"><span class="header-section-number">8.6.2</span> Model Fitting</a></li>
-  <li><a href="#extracting-parameters" id="toc-extracting-parameters" class="nav-link" data-scroll-target="#extracting-parameters"><span class="header-section-number">8.6.3</span> Extracting Parameters</a></li>
-  <li><a href="#plotting" id="toc-plotting" class="nav-link" data-scroll-target="#plotting"><span class="header-section-number">8.6.4</span> Plotting</a></li>
+  <li><a href="#classical-item-analysis" id="toc-classical-item-analysis" class="nav-link" data-scroll-target="#classical-item-analysis"><span class="header-section-number">7.6.1</span> Classical Item Analysis</a></li>
+  <li><a href="#model-fitting" id="toc-model-fitting" class="nav-link" data-scroll-target="#model-fitting"><span class="header-section-number">7.6.2</span> Model Fitting</a></li>
+  <li><a href="#extracting-parameters" id="toc-extracting-parameters" class="nav-link" data-scroll-target="#extracting-parameters"><span class="header-section-number">7.6.3</span> Extracting Parameters</a></li>
+  <li><a href="#plotting" id="toc-plotting" class="nav-link" data-scroll-target="#plotting"><span class="header-section-number">7.6.4</span> Plotting</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -403,7 +397,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Basic mirt Commands: A Reference Guide</span></h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Basic mirt Commands: A Reference Guide</span></h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
 </div>
 
 
@@ -426,11 +420,11 @@ window.Quarto = {
 </header>
 
 
-<section id="introduction" class="level2" data-number="8.1">
-<h2 data-number="8.1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">8.1</span> Introduction</h2>
+<section id="introduction" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">7.1</span> Introduction</h2>
 <p>This document is a reference guide for using the <code>mirt</code> package in R to fit IRT models to dichotomously scored item response data. It covers the essential workflow from classical item analysis through model fitting, parameter extraction, and plotting. Use this as a resource when working with different data sets to complete class assignments.</p>
-<section id="required-packages" class="level3" data-number="8.1.1">
-<h3 data-number="8.1.1" class="anchored" data-anchor-id="required-packages"><span class="header-section-number">8.1.1</span> Required Packages</h3>
+<section id="required-packages" class="level3" data-number="7.1.1">
+<h3 data-number="7.1.1" class="anchored" data-anchor-id="required-packages"><span class="header-section-number">7.1.1</span> Required Packages</h3>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -438,8 +432,8 @@ window.Quarto = {
 </details>
 </div>
 </section>
-<section id="loading-data" class="level3" data-number="8.1.2">
-<h3 data-number="8.1.2" class="anchored" data-anchor-id="loading-data"><span class="header-section-number">8.1.2</span> Loading Data</h3>
+<section id="loading-data" class="level3" data-number="7.1.2">
+<h3 data-number="7.1.2" class="anchored" data-anchor-id="loading-data"><span class="header-section-number">7.1.2</span> Loading Data</h3>
 <p>For this guide we use a 15-item data set (<code>pset1_formA.csv</code>). When working with your own data, update the file path accordingly.</p>
 <div class="cell">
 <details open="" class="code-fold">
@@ -462,11 +456,11 @@ window.Quarto = {
 <hr>
 </section>
 </section>
-<section id="part-1-classical-item-analysis" class="level2" data-number="8.2">
-<h2 data-number="8.2" class="anchored" data-anchor-id="part-1-classical-item-analysis"><span class="header-section-number">8.2</span> Part 1: Classical Item Analysis</h2>
+<section id="part-1-classical-item-analysis" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="part-1-classical-item-analysis"><span class="header-section-number">7.2</span> Part 1: Classical Item Analysis</h2>
 <p>Always start with descriptive statistics before doing anything fancy. In this context, descriptive stats are classical item statistics.</p>
-<section id="item-statistics-using-mirtitemstats" class="level3" data-number="8.2.1">
-<h3 data-number="8.2.1" class="anchored" data-anchor-id="item-statistics-using-mirtitemstats"><span class="header-section-number">8.2.1</span> Item Statistics using <code>mirt:itemstats</code></h3>
+<section id="item-statistics-using-mirtitemstats" class="level3" data-number="7.2.1">
+<h3 data-number="7.2.1" class="anchored" data-anchor-id="item-statistics-using-mirtitemstats"><span class="header-section-number">7.2.1</span> Item Statistics using <code>mirt:itemstats</code></h3>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -516,10 +510,10 @@ V15 0.560 0.440</code></pre>
 </div>
 </section>
 </section>
-<section id="part-2-fitting-irt-models-with-mirt" class="level2" data-number="8.3">
-<h2 data-number="8.3" class="anchored" data-anchor-id="part-2-fitting-irt-models-with-mirt"><span class="header-section-number">8.3</span> Part 2: Fitting IRT Models with <code>mirt</code></h2>
-<section id="estimating-the-1pl-2pl-and-3pl-models" class="level3" data-number="8.3.1">
-<h3 data-number="8.3.1" class="anchored" data-anchor-id="estimating-the-1pl-2pl-and-3pl-models"><span class="header-section-number">8.3.1</span> Estimating the 1PL, 2PL, and 3PL Models</h3>
+<section id="part-2-fitting-irt-models-with-mirt" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="part-2-fitting-irt-models-with-mirt"><span class="header-section-number">7.3</span> Part 2: Fitting IRT Models with <code>mirt</code></h2>
+<section id="estimating-the-1pl-2pl-and-3pl-models" class="level3" data-number="7.3.1">
+<h3 data-number="7.3.1" class="anchored" data-anchor-id="estimating-the-1pl-2pl-and-3pl-models"><span class="header-section-number">7.3.1</span> Estimating the 1PL, 2PL, and 3PL Models</h3>
 <p>The <code>mirt</code> function is used to fit unidimensional IRT models. The key arguments are:</p>
 <ul>
 <li><code>model = 1</code> specifies a unidimensional model</li>
@@ -535,8 +529,8 @@ V15 0.560 0.440</code></pre>
 </details>
 </div>
 </section>
-<section id="extracting-item-parameter-estimates" class="level3" data-number="8.3.2">
-<h3 data-number="8.3.2" class="anchored" data-anchor-id="extracting-item-parameter-estimates"><span class="header-section-number">8.3.2</span> Extracting Item Parameter Estimates</h3>
+<section id="extracting-item-parameter-estimates" class="level3" data-number="7.3.2">
+<h3 data-number="7.3.2" class="anchored" data-anchor-id="extracting-item-parameter-estimates"><span class="header-section-number">7.3.2</span> Extracting Item Parameter Estimates</h3>
 <p>By default, <code>mirt</code> parameterizes models in <strong>slope-intercept form</strong>: <span class="math inline">\(a_i(\theta_p + d_i)\)</span>. To get the traditional IRT parameterization <span class="math inline">\(a_i(\theta_p - b_i)\)</span>, use <code>IRTpars = TRUE</code>.</p>
 <div class="cell">
 <details open="" class="code-fold">
@@ -608,8 +602,8 @@ F1  1</code></pre>
 </div>
 <p>Note the relationship between the two parameterizations: <span class="math inline">\(b = -d/a\)</span>.</p>
 </section>
-<section id="saving-and-working-with-parameter-estimates" class="level3" data-number="8.3.3">
-<h3 data-number="8.3.3" class="anchored" data-anchor-id="saving-and-working-with-parameter-estimates"><span class="header-section-number">8.3.3</span> Saving and Working with Parameter Estimates</h3>
+<section id="saving-and-working-with-parameter-estimates" class="level3" data-number="7.3.3">
+<h3 data-number="7.3.3" class="anchored" data-anchor-id="saving-and-working-with-parameter-estimates"><span class="header-section-number">7.3.3</span> Saving and Working with Parameter Estimates</h3>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -641,8 +635,8 @@ V15 1.4678540  0.25067126</code></pre>
 </div>
 <p>The <code>g</code> and <code>u</code> columns in the output represent the lower asymptote (guessing) and upper asymptote parameters. These are only estimated in the 3PL (and a hypothetical 4PL) model.</p>
 </section>
-<section id="comparing-parameters-across-models" class="level3" data-number="8.3.4">
-<h3 data-number="8.3.4" class="anchored" data-anchor-id="comparing-parameters-across-models"><span class="header-section-number">8.3.4</span> Comparing Parameters Across Models</h3>
+<section id="comparing-parameters-across-models" class="level3" data-number="7.3.4">
+<h3 data-number="7.3.4" class="anchored" data-anchor-id="comparing-parameters-across-models"><span class="header-section-number">7.3.4</span> Comparing Parameters Across Models</h3>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -691,11 +685,11 @@ V15 1  0.398 1.468  0.251  1.412  0.310 0.000</code></pre>
 <hr>
 </section>
 </section>
-<section id="part-3-plotting-with-mirt" class="level2" data-number="8.4">
-<h2 data-number="8.4" class="anchored" data-anchor-id="part-3-plotting-with-mirt"><span class="header-section-number">8.4</span> Part 3: Plotting with <code>mirt</code></h2>
+<section id="part-3-plotting-with-mirt" class="level2" data-number="7.4">
+<h2 data-number="7.4" class="anchored" data-anchor-id="part-3-plotting-with-mirt"><span class="header-section-number">7.4</span> Part 3: Plotting with <code>mirt</code></h2>
 <p>The <code>mirt</code> package has a powerful built-in <code>plot</code> function with many options. Use <code>help('plot-method')</code> to see all available plot types.</p>
-<section id="item-response-functions-iccs" class="level3" data-number="8.4.1">
-<h3 data-number="8.4.1" class="anchored" data-anchor-id="item-response-functions-iccs"><span class="header-section-number">8.4.1</span> Item Response Functions (ICCs)</h3>
+<section id="item-response-functions-iccs" class="level3" data-number="7.4.1">
+<h3 data-number="7.4.1" class="anchored" data-anchor-id="item-response-functions-iccs"><span class="header-section-number">7.4.1</span> Item Response Functions (ICCs)</h3>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -743,8 +737,8 @@ V15 1  0.398 1.468  0.251  1.412  0.310 0.000</code></pre>
 </div>
 </div>
 </section>
-<section id="observed-vs.-predicted-item-fit" class="level3" data-number="8.4.2">
-<h3 data-number="8.4.2" class="anchored" data-anchor-id="observed-vs.-predicted-item-fit"><span class="header-section-number">8.4.2</span> Observed vs.&nbsp;Predicted (Item Fit)</h3>
+<section id="observed-vs.-predicted-item-fit" class="level3" data-number="7.4.2">
+<h3 data-number="7.4.2" class="anchored" data-anchor-id="observed-vs.-predicted-item-fit"><span class="header-section-number">7.4.2</span> Observed vs.&nbsp;Predicted (Item Fit)</h3>
 <p>The <code>itemfit</code> function with <code>empirical.plot</code> overlays observed response proportions on the model-implied ICC. This is useful for diagnosing item misfit.</p>
 <div class="cell">
 <details open="" class="code-fold">
@@ -762,10 +756,10 @@ V15 1  0.398 1.468  0.251  1.412  0.310 0.000</code></pre>
 <hr>
 </section>
 </section>
-<section id="part-4-test-characteristic-curve-and-information-functions" class="level2" data-number="8.5">
-<h2 data-number="8.5" class="anchored" data-anchor-id="part-4-test-characteristic-curve-and-information-functions"><span class="header-section-number">8.5</span> Part 4: Test Characteristic Curve and Information Functions</h2>
-<section id="test-characteristic-curve-tcc" class="level3" data-number="8.5.1">
-<h3 data-number="8.5.1" class="anchored" data-anchor-id="test-characteristic-curve-tcc"><span class="header-section-number">8.5.1</span> Test Characteristic Curve (TCC)</h3>
+<section id="part-4-test-characteristic-curve-and-information-functions" class="level2" data-number="7.5">
+<h2 data-number="7.5" class="anchored" data-anchor-id="part-4-test-characteristic-curve-and-information-functions"><span class="header-section-number">7.5</span> Part 4: Test Characteristic Curve and Information Functions</h2>
+<section id="test-characteristic-curve-tcc" class="level3" data-number="7.5.1">
+<h3 data-number="7.5.1" class="anchored" data-anchor-id="test-characteristic-curve-tcc"><span class="header-section-number">7.5.1</span> Test Characteristic Curve (TCC)</h3>
 <p>The TCC shows the expected number of correct answers (out of 15) at each ability level.</p>
 <div class="cell">
 <details open="" class="code-fold">
@@ -781,8 +775,8 @@ V15 1  0.398 1.468  0.251  1.412  0.310 0.000</code></pre>
 </div>
 </div>
 </section>
-<section id="item-information-functions" class="level3" data-number="8.5.2">
-<h3 data-number="8.5.2" class="anchored" data-anchor-id="item-information-functions"><span class="header-section-number">8.5.2</span> Item Information Functions</h3>
+<section id="item-information-functions" class="level3" data-number="7.5.2">
+<h3 data-number="7.5.2" class="anchored" data-anchor-id="item-information-functions"><span class="header-section-number">7.5.2</span> Item Information Functions</h3>
 <p>Each item provides a certain amount of “information” about ability at different points on the theta scale.</p>
 <div class="cell">
 <details open="" class="code-fold">
@@ -798,8 +792,8 @@ V15 1  0.398 1.468  0.251  1.412  0.310 0.000</code></pre>
 </div>
 </div>
 </section>
-<section id="test-information-function" class="level3" data-number="8.5.3">
-<h3 data-number="8.5.3" class="anchored" data-anchor-id="test-information-function"><span class="header-section-number">8.5.3</span> Test Information Function</h3>
+<section id="test-information-function" class="level3" data-number="7.5.3">
+<h3 data-number="7.5.3" class="anchored" data-anchor-id="test-information-function"><span class="header-section-number">7.5.3</span> Test Information Function</h3>
 <p>The test information function is the sum of all item information functions.</p>
 <div class="cell">
 <details open="" class="code-fold">
@@ -815,8 +809,8 @@ V15 1  0.398 1.468  0.251  1.412  0.310 0.000</code></pre>
 </div>
 </div>
 </section>
-<section id="test-information-and-standard-error-of-measurement" class="level3" data-number="8.5.4">
-<h3 data-number="8.5.4" class="anchored" data-anchor-id="test-information-and-standard-error-of-measurement"><span class="header-section-number">8.5.4</span> Test Information and Standard Error of Measurement</h3>
+<section id="test-information-and-standard-error-of-measurement" class="level3" data-number="7.5.4">
+<h3 data-number="7.5.4" class="anchored" data-anchor-id="test-information-and-standard-error-of-measurement"><span class="header-section-number">7.5.4</span> Test Information and Standard Error of Measurement</h3>
 <p>This combined plot shows both the test information function and the SEM on the same graph. The SEM is the inverse of the square root of the information: <span class="math inline">\(SEM(\theta) = 1/\sqrt{I(\theta)}\)</span>.</p>
 <div class="cell">
 <details open="" class="code-fold">
@@ -832,8 +826,8 @@ V15 1  0.398 1.468  0.251  1.412  0.310 0.000</code></pre>
 </div>
 </div>
 </section>
-<section id="comparing-custom-test-information-functions" class="level3" data-number="8.5.5">
-<h3 data-number="8.5.5" class="anchored" data-anchor-id="comparing-custom-test-information-functions"><span class="header-section-number">8.5.5</span> Comparing Custom Test Information Functions</h3>
+<section id="comparing-custom-test-information-functions" class="level3" data-number="7.5.5">
+<h3 data-number="7.5.5" class="anchored" data-anchor-id="comparing-custom-test-information-functions"><span class="header-section-number">7.5.5</span> Comparing Custom Test Information Functions</h3>
 <p>Say we create two test forms, form A with items 1-7, and form B with items 8-14. Let’s compare test info by form</p>
 <div class="cell">
 <details open="" class="code-fold">
@@ -860,10 +854,10 @@ V15 1  0.398 1.468  0.251  1.412  0.310 0.000</code></pre>
 <hr>
 </section>
 </section>
-<section id="quick-reference-summary" class="level2" data-number="8.6">
-<h2 data-number="8.6" class="anchored" data-anchor-id="quick-reference-summary"><span class="header-section-number">8.6</span> Quick Reference Summary</h2>
-<section id="classical-item-analysis" class="level3" data-number="8.6.1">
-<h3 data-number="8.6.1" class="anchored" data-anchor-id="classical-item-analysis"><span class="header-section-number">8.6.1</span> Classical Item Analysis</h3>
+<section id="quick-reference-summary" class="level2" data-number="7.6">
+<h2 data-number="7.6" class="anchored" data-anchor-id="quick-reference-summary"><span class="header-section-number">7.6</span> Quick Reference Summary</h2>
+<section id="classical-item-analysis" class="level3" data-number="7.6.1">
+<h3 data-number="7.6.1" class="anchored" data-anchor-id="classical-item-analysis"><span class="header-section-number">7.6.1</span> Classical Item Analysis</h3>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -879,8 +873,8 @@ V15 1  0.398 1.468  0.251  1.412  0.310 0.000</code></pre>
 </tbody>
 </table>
 </section>
-<section id="model-fitting" class="level3" data-number="8.6.2">
-<h3 data-number="8.6.2" class="anchored" data-anchor-id="model-fitting"><span class="header-section-number">8.6.2</span> Model Fitting</h3>
+<section id="model-fitting" class="level3" data-number="7.6.2">
+<h3 data-number="7.6.2" class="anchored" data-anchor-id="model-fitting"><span class="header-section-number">7.6.2</span> Model Fitting</h3>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -904,8 +898,8 @@ V15 1  0.398 1.468  0.251  1.412  0.310 0.000</code></pre>
 </tbody>
 </table>
 </section>
-<section id="extracting-parameters" class="level3" data-number="8.6.3">
-<h3 data-number="8.6.3" class="anchored" data-anchor-id="extracting-parameters"><span class="header-section-number">8.6.3</span> Extracting Parameters</h3>
+<section id="extracting-parameters" class="level3" data-number="7.6.3">
+<h3 data-number="7.6.3" class="anchored" data-anchor-id="extracting-parameters"><span class="header-section-number">7.6.3</span> Extracting Parameters</h3>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -929,8 +923,8 @@ V15 1  0.398 1.468  0.251  1.412  0.310 0.000</code></pre>
 </tbody>
 </table>
 </section>
-<section id="plotting" class="level3" data-number="8.6.4">
-<h3 data-number="8.6.4" class="anchored" data-anchor-id="plotting"><span class="header-section-number">8.6.4</span> Plotting</h3>
+<section id="plotting" class="level3" data-number="7.6.4">
+<h3 data-number="7.6.4" class="anchored" data-anchor-id="plotting"><span class="header-section-number">7.6.4</span> Plotting</h3>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 40%">
@@ -1442,13 +1436,13 @@ V15 1  0.398 1.468  0.251  1.412  0.310 0.000</code></pre>
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../chapters/07-normal-ogive.html" class="pagination-link" aria-label="The Normal Ogive">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The Normal Ogive</span></span>
+      <a href="../chapters/06-assumptions-properties.html" class="pagination-link" aria-label="Assumptions and Properties of IRT Models">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Assumptions and Properties of IRT Models</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
       <a href="../chapters/09-rasch-paradigm.html" class="pagination-link" aria-label="The Rasch Model Paradigm">
-        <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">The Rasch Model Paradigm</span></span> <i class="bi bi-arrow-right-short"></i>
+        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The Rasch Model Paradigm</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
