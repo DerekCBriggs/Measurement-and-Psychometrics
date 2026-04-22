@@ -26,7 +26,7 @@ Nor is this a substitute for class discussion, office hours, or the oral exam. T
 The chapters follow the arc of the semester rather than strict dependency order, but the progression is cumulative:
 
 - **Chapters 1–2** revisit the **classical test theory** foundation from EDUC 8710 and introduce classical item analysis, which is the diagnostic work that should precede any IRT fit.
-- **Chapters 3–7** develop the **basics of IRT** for dichotomously scored items: deriving the item characteristic curve (ICC), interpreting it, building up the test characteristic curve (TCC) and information functions, stating and checking the assumptions of the model, and (optionally) the connection between the normal-ogive and logistic forms.
+- **Chapters 3–6** develop the **basics of IRT** for dichotomously scored items: deriving the item characteristic curve (ICC), interpreting it, building up the test characteristic curve (TCC) and information functions, and stating and checking the assumptions of the model.
 - **Chapter 8** is a practical guide to the `mirt` package syntax that the remaining chapters rely on.
 - **Chapter 9** presents the **Rasch model** and the *Rasch model paradigm** as a distinct approach in the way it positions IRT as a model for measurement.
 - **Chapter 10** clarifies the **scale constraints** that identify the IRT metric in `mirt`.

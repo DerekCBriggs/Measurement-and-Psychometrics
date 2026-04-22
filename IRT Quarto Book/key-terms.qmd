@@ -136,7 +136,7 @@ This alphabetized glossary covers the terms a student should be comfortable with
 
 [**Nominal Response Model (NRM)**](chapters/15-polytomous.Rmd). Bock's polytomous IRT model for unordered response categories.
 
-[**Normal ogive**](chapters/07-normal-ogive.Rmd). The CDF of a standard normal; an alternative to the logistic as the IRF link function.
+[**Normal ogive**](chapters/03-deriving-icc.Rmd). The CDF of a standard normal; an alternative to the logistic as the IRF link function.
 
 [**Non-uniform DIF**](chapters/18-dif.Rmd#uniform-vs.-non-uniform-dif). A DIF pattern in which the two groups' ICCs cross — the item favors different groups at different $\theta$ levels.
 

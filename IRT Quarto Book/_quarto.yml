@@ -20,7 +20,6 @@ book:
         - chapters/04-interpreting-iccs.Rmd
         - chapters/05-tcc-info-sem.Rmd
         - chapters/06-assumptions-properties.Rmd
-        - chapters/07-normal-ogive.Rmd
     - chapters/08-mirt-commands.Rmd
     - chapters/09-rasch-paradigm.Rmd
     - chapters/10-scale-constraints.Rmd
