@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Derek C. Briggs">
-<meta name="dcterms.date" content="2026-04-19">
+<meta name="dcterms.date" content="2026-04-22">
 
 <title>Psychometric Modeling with IRT</title>
 <style>
@@ -393,7 +393,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">April 19, 2026</p>
+      <p class="date">April 22, 2026</p>
     </div>
   </div>
   
@@ -407,7 +407,7 @@ window.Quarto = {
 
 <section id="preface" class="level1 unnumbered">
 <h1 class="unnumbered">Preface</h1>
-<p>This book is a hands-on companion to <strong>EDUC 8720: Psychometric Modeling: IRT</strong>, a doctoral seminar at the University of Colorado Boulder. It collects, in one place, the R Markdown tutorials that we developed across the Spring 2026 semester so that students have a single searchable reference for the ideas, derivations, and computational workflows that the course asks them to internalize.</p>
+<p>This book is a hands-on companion to <strong>EDUC 8720: Psychometric Modeling: IRT</strong>, a doctoral seminar at the University of Colorado Boulder. It collects, in one place, the R Markdown tutorials that I developed with the help of Claude Code across the Spring 2026 semester so that students have a single searchable reference for the concepts and ideas about psychometric modeling that they are expected to be learning.</p>
 <section id="what-the-course-is-about" class="level2">
 <h2 class="anchored" data-anchor-id="what-the-course-is-about">What the Course is About</h2>
 <p>EDUC 8720 focuses on <strong>item response theory (IRT)</strong> and its applications in educational and psychological testing. IRT models express the probability that a person responds in a higher category of a test or survey item as a function of item parameters (difficulty, discrimination, and sometimes guessing or upper-asymptote parameters) and a person parameter (typically denoted <span class="math inline">\(\theta\)</span>, representing the latent attribute being measured). The course covers the core features of IRT—<strong>model specification and interpretation, parameter estimation, and evaluation of model fit</strong>—before turning to extensions for <strong>polytomously scored items</strong> and models that relax unidimensionality (<strong>multidimensional IRT</strong>). In the second half of the course we examine the practical uses to which IRT is put:</p>
@@ -418,7 +418,7 @@ window.Quarto = {
 <li>evaluating whether items function fairly across groups (<strong>differential item functioning</strong>).</li>
 </ul>
 <p>Students approach these topics from <strong>two distinct traditions</strong>—the <strong>Rasch tradition</strong>, which emphasizes parameter separation and invariance as prerequisites for fundamental measurement, and the <strong>Lord/Birnbaum tradition</strong>, which treats IRT primarily as a flexible toolbox for efficient test construction. Both traditions receive attention here.</p>
-<p>All computation uses the <strong>R</strong> language, primarily through the <strong><code>mirt</code></strong> package. Additional packages (<code>ltm</code>, <code>lordif</code>, <code>mirtCAT</code>, <code>equateIRT</code>) appear where appropriate.</p>
+<p>All computation uses the <strong>R</strong> language, primarily through the <strong><code>mirt</code></strong> package. A few additional packages (e.g.&nbsp;<code>lordif</code>, <code>mirtCAT</code>, <code>psych</code>) appear where appropriate.</p>
 </section>
 <section id="what-this-book-is-not" class="level2">
 <h2 class="anchored" data-anchor-id="what-this-book-is-not">What This Book Is Not</h2>
@@ -432,7 +432,7 @@ window.Quarto = {
 <li><strong>Chapters 1–2</strong> revisit the <strong>classical test theory</strong> foundation from EDUC 8710 and introduce classical item analysis, which is the diagnostic work that should precede any IRT fit.</li>
 <li><strong>Chapters 3–7</strong> develop the <strong>basics of IRT</strong> for dichotomously scored items: deriving the item characteristic curve (ICC), interpreting it, building up the test characteristic curve (TCC) and information functions, stating and checking the assumptions of the model, and (optionally) the connection between the normal-ogive and logistic forms.</li>
 <li><strong>Chapter 8</strong> is a practical guide to the <code>mirt</code> package syntax that the remaining chapters rely on.</li>
-<li><strong>Chapter 9</strong> presents the <strong>Rasch model paradigm</strong> as a distinct philosophical and statistical position.</li>
+<li><strong>Chapter 9</strong> presents the <strong>Rasch model</strong> and the *Rasch model paradigm** as a distinct approach in the way it positions IRT as a model for measurement.</li>
 <li><strong>Chapter 10</strong> clarifies the <strong>scale constraints</strong> that identify the IRT metric in <code>mirt</code>.</li>
 <li><strong>Chapters 11–13</strong> work through <strong>parameter estimation</strong> from the person side (EAP, MAP, MLE) and the item side (JMLE and MMLE with EM).</li>
 <li><strong>Chapter 14</strong> addresses <strong>model fit</strong>.</li>
@@ -444,7 +444,7 @@ window.Quarto = {
 </section>
 <section id="on-the-use-of-ai" class="level2">
 <h2 class="anchored" data-anchor-id="on-the-use-of-ai">On the Use of AI</h2>
-<p>This compilation was co-authored by the instructor with <strong>Claude</strong> (Anthropic’s conversational AI assistant), using the Claude Code environment. The syllabus discusses at some length what responsible student use of AI looks like in this course. I will say here only what I tell students: AI is a legitimate tool for <em>checking</em> and <em>extending</em> your understanding, provided you have already done the work of establishing that understanding yourself. Every chapter in this book was drafted through a back-and-forth process in which I specified the pedagogical structure, the order of topics, and the interpretive framing, while Claude handled the heavy lifting of consistent R code, visual presentation, and prose scaffolding. I edited every chapter for accuracy and emphasis. Errors that remain are my own.</p>
+<p>This compilation was co-authored by the instructor with <strong>Claude</strong> (Anthropic’s conversational AI assistant), using the Claude Code environment with (primarily) Opus 4.6. The syllabus discusses at some length what responsible student use of AI looks like in this course. I will say here only what I tell students: AI is a legitimate tool for <em>checking</em> and <em>extending</em> your understanding, provided you have already done the work of establishing that understanding yourself. Every chapter in this book was drafted through a back-and-forth process in which I specified the pedagogical structure, the order of topics, and the interpretive framing, while Claude handled the heavy lifting of consistent R code, visual presentation, and prose scaffolding. I edited every chapter for accuracy and emphasis. Errors that remain are my own.</p>
 </section>
 <section id="how-to-use-this-book" class="level2">
 <h2 class="anchored" data-anchor-id="how-to-use-this-book">How to Use This Book</h2>
@@ -925,7 +925,7 @@ window.Quarto = {
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Preface {.unnumbered}</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>This book is a hands-on companion to **EDUC 8720: Psychometric Modeling: IRT**, a doctoral seminar at the University of Colorado Boulder. It collects, in one place, the R Markdown tutorials that we developed across the Spring 2026 semester so that students have a single searchable reference for the ideas, derivations, and computational workflows that the course asks them to internalize.</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>This book is a hands-on companion to **EDUC 8720: Psychometric Modeling: IRT**, a doctoral seminar at the University of Colorado Boulder. It collects, in one place, the R Markdown tutorials that I developed with the help of Claude Code across the Spring 2026 semester so that students have a single searchable reference for the concepts and ideas about psychometric modeling that they are expected to be learning.</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">## What the Course is About</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
@@ -938,7 +938,7 @@ window.Quarto = {
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>Students approach these topics from **two distinct traditions**—the **Rasch tradition**, which emphasizes parameter separation and invariance as prerequisites for fundamental measurement, and the **Lord/Birnbaum tradition**, which treats IRT primarily as a flexible toolbox for efficient test construction. Both traditions receive attention here.</span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>All computation uses the **R** language, primarily through the **`mirt`** package. Additional packages (<span class="in">`ltm`</span>, <span class="in">`lordif`</span>, <span class="in">`mirtCAT`</span>, <span class="in">`equateIRT`</span>) appear where appropriate.</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>All computation uses the **R** language, primarily through the **`mirt`** package. A few additional packages (e.g. <span class="in">`lordif`</span>, <span class="in">`mirtCAT`</span>, <span class="in">`psych`</span>) appear where appropriate.</span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">## What This Book Is Not</span></span>
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
@@ -953,7 +953,7 @@ window.Quarto = {
 <span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Chapters 1–2** revisit the **classical test theory** foundation from EDUC 8710 and introduce classical item analysis, which is the diagnostic work that should precede any IRT fit.</span>
 <span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Chapters 3–7** develop the **basics of IRT** for dichotomously scored items: deriving the item characteristic curve (ICC), interpreting it, building up the test characteristic curve (TCC) and information functions, stating and checking the assumptions of the model, and (optionally) the connection between the normal-ogive and logistic forms.</span>
 <span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Chapter 8** is a practical guide to the <span class="in">`mirt`</span> package syntax that the remaining chapters rely on.</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Chapter 9** presents the **Rasch model paradigm** as a distinct philosophical and statistical position.</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Chapter 9** presents the **Rasch model** and the *Rasch model paradigm** as a distinct approach in the way it positions IRT as a model for measurement.</span>
 <span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Chapter 10** clarifies the **scale constraints** that identify the IRT metric in <span class="in">`mirt`</span>.</span>
 <span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Chapters 11–13** work through **parameter estimation** from the person side (EAP, MAP, MLE) and the item side (JMLE and MMLE with EM).</span>
 <span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Chapter 14** addresses **model fit**.</span>
@@ -965,7 +965,7 @@ window.Quarto = {
 <span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="fu">## On the Use of AI</span></span>
 <span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>This compilation was co-authored by the instructor with **Claude** (Anthropic's conversational AI assistant), using the Claude Code environment. The syllabus discusses at some length what responsible student use of AI looks like in this course. I will say here only what I tell students: AI is a legitimate tool for *checking* and *extending* your understanding, provided you have already done the work of establishing that understanding yourself. Every chapter in this book was drafted through a back-and-forth process in which I specified the pedagogical structure, the order of topics, and the interpretive framing, while Claude handled the heavy lifting of consistent R code, visual presentation, and prose scaffolding. I edited every chapter for accuracy and emphasis. Errors that remain are my own.</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>This compilation was co-authored by the instructor with **Claude** (Anthropic's conversational AI assistant), using the Claude Code environment with (primarily) Opus 4.6. The syllabus discusses at some length what responsible student use of AI looks like in this course. I will say here only what I tell students: AI is a legitimate tool for *checking* and *extending* your understanding, provided you have already done the work of establishing that understanding yourself. Every chapter in this book was drafted through a back-and-forth process in which I specified the pedagogical structure, the order of topics, and the interpretive framing, while Claude handled the heavy lifting of consistent R code, visual presentation, and prose scaffolding. I edited every chapter for accuracy and emphasis. Errors that remain are my own.</span>
 <span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="fu">## How to Use This Book</span></span>
 <span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
