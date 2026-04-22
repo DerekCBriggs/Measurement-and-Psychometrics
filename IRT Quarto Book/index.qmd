@@ -1,6 +1,6 @@
 # Preface {.unnumbered}
 
-This book is a hands-on companion to **EDUC 8720: Psychometric Modeling: IRT**, a doctoral seminar at the University of Colorado Boulder. It collects, in one place, the R Markdown tutorials that we developed across the Spring 2026 semester so that students have a single searchable reference for the ideas, derivations, and computational workflows that the course asks them to internalize.
+This book is a hands-on companion to **EDUC 8720: Psychometric Modeling: IRT**, a doctoral seminar at the University of Colorado Boulder. It collects, in one place, the R Markdown tutorials that I developed with the help of Claude Code across the Spring 2026 semester so that students have a single searchable reference for the concepts and ideas about psychometric modeling that they are expected to be learning.
 
 ## What the Course is About
 
@@ -13,7 +13,7 @@ EDUC 8720 focuses on **item response theory (IRT)** and its applications in educ
 
 Students approach these topics from **two distinct traditions**—the **Rasch tradition**, which emphasizes parameter separation and invariance as prerequisites for fundamental measurement, and the **Lord/Birnbaum tradition**, which treats IRT primarily as a flexible toolbox for efficient test construction. Both traditions receive attention here.
 
-All computation uses the **R** language, primarily through the **`mirt`** package. Additional packages (`ltm`, `lordif`, `mirtCAT`, `equateIRT`) appear where appropriate.
+All computation uses the **R** language, primarily through the **`mirt`** package. A few additional packages (e.g. `lordif`, `mirtCAT`, `psych`) appear where appropriate.
 
 ## What This Book Is Not
 
@@ -28,7 +28,7 @@ The chapters follow the arc of the semester rather than strict dependency order,
 - **Chapters 1–2** revisit the **classical test theory** foundation from EDUC 8710 and introduce classical item analysis, which is the diagnostic work that should precede any IRT fit.
 - **Chapters 3–7** develop the **basics of IRT** for dichotomously scored items: deriving the item characteristic curve (ICC), interpreting it, building up the test characteristic curve (TCC) and information functions, stating and checking the assumptions of the model, and (optionally) the connection between the normal-ogive and logistic forms.
 - **Chapter 8** is a practical guide to the `mirt` package syntax that the remaining chapters rely on.
-- **Chapter 9** presents the **Rasch model paradigm** as a distinct philosophical and statistical position.
+- **Chapter 9** presents the **Rasch model** and the *Rasch model paradigm** as a distinct approach in the way it positions IRT as a model for measurement.
 - **Chapter 10** clarifies the **scale constraints** that identify the IRT metric in `mirt`.
 - **Chapters 11–13** work through **parameter estimation** from the person side (EAP, MAP, MLE) and the item side (JMLE and MMLE with EM).
 - **Chapter 14** addresses **model fit**.
@@ -40,7 +40,7 @@ Chapters vary in depth. Some are short enough to read in one sitting; others (es
 
 ## On the Use of AI
 
-This compilation was co-authored by the instructor with **Claude** (Anthropic's conversational AI assistant), using the Claude Code environment. The syllabus discusses at some length what responsible student use of AI looks like in this course. I will say here only what I tell students: AI is a legitimate tool for *checking* and *extending* your understanding, provided you have already done the work of establishing that understanding yourself. Every chapter in this book was drafted through a back-and-forth process in which I specified the pedagogical structure, the order of topics, and the interpretive framing, while Claude handled the heavy lifting of consistent R code, visual presentation, and prose scaffolding. I edited every chapter for accuracy and emphasis. Errors that remain are my own.
+This compilation was co-authored by the instructor with **Claude** (Anthropic's conversational AI assistant), using the Claude Code environment with (primarily) Opus 4.6. The syllabus discusses at some length what responsible student use of AI looks like in this course. I will say here only what I tell students: AI is a legitimate tool for *checking* and *extending* your understanding, provided you have already done the work of establishing that understanding yourself. Every chapter in this book was drafted through a back-and-forth process in which I specified the pedagogical structure, the order of topics, and the interpretive framing, while Claude handled the heavy lifting of consistent R code, visual presentation, and prose scaffolding. I edited every chapter for accuracy and emphasis. Errors that remain are my own.
 
 ## How to Use This Book
 
@@ -51,4 +51,4 @@ This compilation was co-authored by the instructor with **Claude** (Anthropic's 
 
 Derek C. Briggs
 University of Colorado Boulder
-Spring 2026
+April 19, 2026

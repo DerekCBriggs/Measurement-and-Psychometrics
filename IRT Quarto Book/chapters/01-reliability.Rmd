@@ -1,7 +1,6 @@
 ---
 title: 'A Guide to Reliability: Avoiding Misconceptions'
-author: "Derek Briggs"
-date: "1/23/2022"
+author: "Derek C. Briggs and Claude Code (Opus 4.6 & 4.7)"
 output:
   html_document:
     code_folding: hide

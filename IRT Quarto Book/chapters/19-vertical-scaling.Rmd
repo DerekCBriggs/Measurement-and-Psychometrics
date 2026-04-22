@@ -1,7 +1,6 @@
 ---
 title: "Vertical Scaling and Growth Using mirt"
-author: "Derek Briggs with Claude Code (Opus 4.6)"
-date: "`r Sys.Date()`"
+author: "Derek C. Briggs and Claude Code (Opus 4.6 & 4.7)"
 output:
   html_document:
     toc: true

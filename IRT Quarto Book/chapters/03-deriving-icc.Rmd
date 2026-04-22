@@ -1,7 +1,6 @@
 ---
 title: "Deriving and Conceptualizing an Item Characteristic Curve"
-author: "Derek Briggs"
-date: "EDUC 8720"
+author: "Derek C. Briggs and Claude Code (Opus 4.6 & 4.7)"
 output:
   html_document:
     toc: true

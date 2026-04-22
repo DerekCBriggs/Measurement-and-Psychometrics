@@ -1,8 +1,7 @@
 ---
 title: "Interpreting Item Characteristic Curves"
 subtitle: "1PL, 2PL, and 3PL Models"
-author: "Derek Briggs"
-date: "EDUC 8720"
+author: "Derek C. Briggs and Claude Code (Opus 4.6 & 4.7)"
 output:
   html_document:
     toc: true

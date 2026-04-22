@@ -1,7 +1,6 @@
 ---
 title: "Fixing Item Parameters in mirt"
-author: "Derek Briggs"
-date: "`r Sys.Date()`"
+author: "Derek C. Briggs and Claude Code (Opus 4.6 & 4.7)"
 output: html_document
 ---
 

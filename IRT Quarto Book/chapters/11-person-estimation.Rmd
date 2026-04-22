@@ -1,8 +1,7 @@
 ---
 title: "Person Parameter Estimation in IRT"
 subtitle: "Scoring with MLE, MAP, and EAP"
-author: "Derek Briggs and Claude Code (Opus 4.6)"
-date: "`r Sys.Date()`"
+author: "Derek C. Briggs and Claude Code (Opus 4.6 & 4.7)"
 output:
   html_document:
     toc: true
