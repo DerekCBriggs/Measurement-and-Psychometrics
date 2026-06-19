@@ -1,0 +1,624 @@
+---
+title: "The Verification Frontier"
+subtitle: "Where (if anywhere) can we measure critical AI literacy?"
+author: "Derek C. Briggs --- SSM 2026 (working simulation)"
+date: "`r format(Sys.Date())`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    code_folding: show
+    theme: readable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      fig.width = 6, fig.height = 4.2, dpi = 130)
+```
+
+> **How to read this document.** It is deliberately built to be *audited*, not
+> trusted. Critical AI literacy is the ability to catch a plausible-but-wrong
+> artifact you cannot verify at a glance --- which is exactly the position you
+> are in reading machine-generated code. So every modeling decision below is
+> tagged **[CHOICE]**, and Sections 4.2--4.3 *check the math empirically* so you
+> are not relying on my algebra being correct. If a claim is load-bearing, it is
+> stated as something you can falsify.
+
+# The question
+
+An LLM held at a fixed prompt has its variability set by a dial (temperature);
+across the handful of frontier models that variability is being engineered
+toward zero. So the durable human variance is not in the model. We conjecture it
+lives in **critical AI literacy** (`theta`): the capacity to detect and repair an
+output that is wrong but *plausible*.
+
+This document asks a measurement question, not a philosophical one:
+
+> Given a model with capability `c` and "seductiveness" `s`, **how much
+> information does a single task carry about a person's `theta`?** Equivalently:
+> how many tasks would we need to measure `theta` reliably, and does that number
+> grow or shrink as models improve?
+
+# The measurement model
+
+One task = one Bernoulli outcome: *did the final answer come out correct after
+the human--AI interaction?* We model the success probability for a person with
+critical literacy `theta` as
+
+$$
+P(\text{success}\mid\theta) \;=\; \underbrace{c}_{\text{AI right unaided}}
+\;+\;(1-c)\,\underbrace{g(\theta)}_{\text{user catches \& fixes a wrong answer}}.
+$$
+
+The two terms are the only two ways the final answer succeeds: either the AI was
+right on its own (probability `c`), or it fell short (probability `1-c`) and the
+user **over-rode** it.
+
+**What "catch" means across domains.** In a *cheaply verifiable* domain (code,
+math) "catching" is literal error-detection against an objective check. In a
+domain where verification is *expensive or deferred* (the dinner-party story)
+there is no such check at hand, so "catch" means **appraisal**: correctly judging
+that a fluent, joke-shaped output will actually fall flat for the audience, and
+not being captured by its polish. The criterion is then a *deferred, social*
+verdict (does the room laugh?) rather than a unit test. So read `g(theta)` as
+**the probability the user correctly over-rides a plausible-but-inadequate
+answer** --- by detection where a check is cheap, by appraisal where it is not.
+
+The catch-and-repair probability is a standard 2-parameter logistic (IRT) item:
+
+$$
+g(\theta) \;=\; \mathrm{logistic}\!\big(a\,(\theta - \delta(s))\big),
+\qquad \mathrm{logistic}(x)=\frac{1}{1+e^{-x}} .
+$$
+
+- **`theta`** --- the person's critical literacy. **[CHOICE]** population
+  distribution `theta ~ N(0,1)`.
+- **`a`** --- discrimination of the catch process. **[CHOICE]** `a = 1.5`.
+- **`delta(s)`** --- *difficulty of over-riding* a plausible-but-inadequate
+  answer, driven by model **seductiveness** `s`: how strongly surface fluency
+  masks the (possibly deferred) verdict. More fluent duds are harder to over-ride,
+  so `delta` increases in `s`. **[CHOICE]** linear map `s in [0,1] -> delta in [-3, 3]`.
+- **`c`** --- model **capability**, the probability the AI is right with no
+  human intervention.
+
+> **[CHOICE that you should attack]** Here `theta` is operationalized *narrowly*
+> as the ability to over-ride a plausible-but-inadequate answer --- error-detection
+> where verification is cheap, appraisal where it is not. Your blog series frames
+> critical AI literacy more broadly (calibrated trust, knowing *when* to invoke AI,
+> interrogating framing). This model captures one facet. Decide whether that facet
+> is the right stand-in for the talk, or whether the construct needs additional
+> items of a different kind.
+
+```{r model}
+A_DISC <- 1.5                 # [CHOICE] discrimination of the catch process
+DELTA_MIN <- -3; DELTA_MAX <- 3   # [CHOICE] seductiveness -> catch-difficulty
+
+logistic <- function(x) 1 / (1 + exp(-x))
+
+# seductiveness s -> difficulty of catching a wrong answer
+delta_of_s <- function(s) DELTA_MIN + (DELTA_MAX - DELTA_MIN) * s
+
+# P(final answer correct | theta, c, s)
+P_success <- function(theta, c, s) {
+  g <- logistic(A_DISC * (theta - delta_of_s(s)))
+  c + (1 - c) * g
+}
+```
+
+## Reading the parameters: an item characteristic curve
+
+Plotting `P(success | theta)` against `theta` for a single item makes `c` and
+`delta(s)` concrete. `c` is the **floor** --- the success rate of a person with
+no critical literacy, which rises with model capability. `delta(s)` is the
+**location**: the critical-literacy level at which success is halfway between the
+floor and 1. A more seductive item (higher `s`) has a larger `delta(s)` and
+shifts the curve **right** --- harder to over-ride.
+
+```{r icc, fig.width=7, fig.height=4.4}
+th <- seq(-4, 4, length.out = 300)
+cc <- 0.40                          # lower asymptote (model capability)
+s1 <- 0.50; s2 <- 0.75              # two seductiveness levels
+d1 <- delta_of_s(s1); d2 <- delta_of_s(s2)   # -> delta = 0 and 1.5
+mid <- (cc + 1) / 2                 # halfway between floor and ceiling
+
+plot(th, P_success(th, cc, s1), type = "l", lwd = 3, col = "#1f77b4", ylim = c(0, 1),
+     xlab = expression(paste("critical literacy  ", theta)),
+     ylab = expression(paste("P(success | ", theta, ")")),
+     main = "A hypothetical item characteristic curve")
+lines(th, P_success(th, cc, s2), lwd = 3, lty = 2, col = "#d62728")
+
+abline(h = cc, col = "gray55", lty = 3); abline(h = 1, col = "gray80", lty = 3)
+text(-3.9, cc - 0.06, paste0("c = ", cc, "  (floor = model capability)"),
+     pos = 4, cex = 0.8, col = "gray30")
+
+# delta(s) = theta where the curve passes the halfway point
+segments(d1, 0, d1, mid, col = "#1f77b4", lty = 3)
+points(d1, mid, pch = 19, col = "#1f77b4"); points(d2, mid, pch = 19, col = "#d62728")
+text(d1, mid + 0.05, expression(delta(s)), col = "#1f77b4", pos = 2, cex = 1.0)
+arrows(d1 + 0.1, 0.27, d2 - 0.1, 0.27, length = 0.08, col = "#d62728")
+text(d2 + 0.1, 0.27, "more seductive", col = "#d62728", pos = 4, cex = 0.78)
+
+legend("bottomright", bty = "n", cex = 0.85, lwd = 3, lty = c(1, 2),
+       col = c("#1f77b4", "#d62728"),
+       legend = c(paste0("s = ", s1, "  (delta = ", d1, ")"),
+                  paste0("s = ", s2, "  (delta = ", d2, ")")))
+```
+
+## Two domains: where capability can and cannot rise {#domains}
+
+The single most important refinement: **`c` does not mean the same thing in
+every domain.** The axis that matters is not a clean verifiable/unverifiable
+binary but the **cost and latency of verification** --- how cheaply, quickly, and
+objectively the quality of an output can be checked. Write `v in [0,1]` for the
+*cheapness of verification*:
+
+- **Cheaply verifiable** (`v = 1`: code compiles, the theorem checks, the
+  arithmetic ties out). An objective signal is available at once, so training can
+  push capability close to 1. As `c -> ~0.96` the opportunity term `(1-c) -> 0`,
+  and by Check 3 the information about `theta` collapses. Critical literacy decays
+  to "did you bother to run the test."
+- **Expensively / deferredly verifiable** (`v = 0`: is this joke funny for *my*
+  dinner party? is this framing wise? is this prose any good?). A verifier still
+  exists --- the room laughs or it doesn't --- but it is **deferred, noisy, and
+  audience-specific**. Two consequences: (i) training cannot cleanly optimize
+  against so sparse and after-the-fact a signal, so capability **plateaus below
+  1** at `c_cap` --- the model floor-raises *fluency*, not *quality*; and (ii)
+  that same deferred verdict is the only scoring key for the human's judgment, so
+  critical literacy here is **appraisal** (seeing past fluency to anticipate the
+  verdict) and remains the main thing between the user and a confident,
+  plausible dud.
+
+(*Genuinely* unverifiable output --- pure preference with no convergent verdict
+even in principle --- would have no scoring key at all, so critical literacy there
+would be **unmeasurable**, not merely expensive to measure. The interesting,
+measurable zone is real-quality-but-expensively-verified.)
+
+We trace one model-progress path per domain. Generation `g in [0,1]` runs early
+-> frontier. Capability rises to a domain-dependent ceiling; seductiveness rises
+with fluency, **shared** across domains (a deliberate simplification --- see
+caveats). The two roads start at the *same* early model and fork only because
+cheaply-verifiable capability can keep climbing while expensively-verifiable
+capability cannot.
+
+```{r domains}
+C0     <- 0.50   # [CHOICE] early capability, both domains
+C_CEIL <- 0.96   # [CHOICE] verifiable capability ceiling (objective signal -> ~1)
+C_CAP  <- 0.55   # [CHOICE] unverifiable capability ceiling (no signal -> plateau)
+S0     <- 0.45   # [CHOICE] early seductiveness
+S_MAX  <- 0.62   # [CHOICE] frontier seductiveness (fluency rises with scale)
+
+cmax_of_v <- function(v) C_CAP + (C_CEIL - C_CAP) * v   # capability ceiling by domain
+c_traj <- function(g, v) C0 + (cmax_of_v(v) - C0) * g   # capability over generations
+s_traj <- function(g)    S0 + (S_MAX - S0) * g          # seductiveness over generations
+```
+
+# Why this model encodes the thesis (claims to verify)
+
+These are predictions you can check against the code, not assertions to accept:
+
+1. **Capability erases the construct.** As `c -> 1`, `P -> 1` for *every*
+   `theta`, so the curve flattens and information about `theta` must go to 0.
+   A strong model on a checkable task leaves nothing to measure.
+2. **A verification frontier exists.** For a population centered at `theta = 0`,
+   a task is most informative when the catch-difficulty is matched to the
+   population, `delta(s) ~ 0`, i.e. at an *intermediate* seductiveness. Too-easy
+   errors (everyone catches) and too-hard errors (nobody catches) are both
+   uninformative.
+
+# Fisher information: the per-task "measurement value"
+
+For a single Bernoulli item with success probability `P(theta)`, the Fisher
+information a response carries about `theta` is
+
+$$
+I(\theta) \;=\; \frac{\big(P'(\theta)\big)^2}{P(\theta)\,\big(1-P(\theta)\big)},
+\qquad P'(\theta)=\frac{dP}{d\theta}.
+$$
+
+Differentiating our `P`:
+
+$$
+P'(\theta) = (1-c)\,a\,g(\theta)\big(1-g(\theta)\big).
+$$
+
+We report the **population-expected information**
+$\mathrm{E}_\theta[\,I(\theta)\,]$ over `theta ~ N(0,1)`: how much one task
+tells us about a randomly drawn person --- i.e. the per-item value of the task
+as a measurement instrument.
+
+```{r info-functions}
+# grid quadrature for theta ~ N(0,1)
+THETA <- seq(-4, 4, length.out = 401)
+W <- dnorm(THETA); W <- W / sum(W)         # normalized N(0,1) weights
+
+# analytic dP/dtheta
+dP_dtheta <- function(theta, c, s) {
+  g <- logistic(A_DISC * (theta - delta_of_s(s)))
+  (1 - c) * A_DISC * g * (1 - g)
+}
+
+# Fisher information at a single theta
+info_point <- function(theta, c, s) {
+  P  <- P_success(theta, c, s)
+  dP <- dP_dtheta(theta, c, s)
+  denom <- pmax(P * (1 - P), 1e-9)
+  dP^2 / denom
+}
+
+# population-expected information for one task
+expected_information <- function(c, s) sum(W * info_point(THETA, c, s))
+```
+
+## Check 1 --- is `dP/dtheta` actually the derivative of `P`?
+
+Before trusting the information formula, verify the analytic derivative against a
+finite-difference approximation. If my calculus is wrong, this fails loudly.
+
+```{r check-derivative}
+set.seed(1)
+eps <- 1e-6
+ok <- TRUE
+for (i in 1:200) {
+  th <- runif(1, -3, 3); c <- runif(1, .1, .95); s <- runif(1, .05, .95)
+  num <- (P_success(th + eps, c, s) - P_success(th - eps, c, s)) / (2 * eps)
+  ana <- dP_dtheta(th, c, s)
+  if (abs(num - ana) > 1e-5) ok <- FALSE
+}
+stopifnot(ok)
+cat("PASS: analytic dP/dtheta matches finite differences.\n")
+```
+
+## Check 2 --- is the Fisher-information *formula* right?
+
+The Fisher information equals the variance of the score
+$\partial_\theta \log P(Y\mid\theta)$. For a Bernoulli outcome the score is
+$(Y-P)\,P' / [P(1-P)]$. We simulate outcomes at a fixed `theta` and confirm the
+empirical score variance matches `info_point()`.
+
+```{r check-fisher}
+mc_information <- function(theta, c, s, n = 2e6) {
+  P  <- P_success(theta, c, s)
+  dP <- dP_dtheta(theta, c, s)
+  Y  <- rbinom(n, 1, P)
+  score <- (Y - P) * dP / (P * (1 - P))   # d/dtheta log-likelihood
+  var(score)
+}
+set.seed(7)
+for (case in list(c(0.3, 0.5, 0.4), c(0.6, 0.9, 0.55), c(-0.5, 0.7, 0.3))) {
+  th <- case[1]; c <- case[2]; s <- case[3]
+  cat(sprintf("theta=%+.1f c=%.2f s=%.2f  analytic=%.4f  monte-carlo=%.4f\n",
+              th, c, s, info_point(th, c, s), mc_information(th, c, s)))
+}
+```
+
+The Monte-Carlo column should track the analytic column to ~2 decimals. If it
+does, the per-task information function is trustworthy.
+
+## Check 3 --- does information collapse as `c -> 1`? (Claim 1)
+
+```{r check-collapse}
+sapply(c(0.3, 0.6, 0.9, 0.99, 0.999),
+       function(c) expected_information(c, s = 0.5))
+```
+
+These should march monotonically toward 0 --- confirming that a more capable
+model on a fixed task carries *less* information about critical literacy.
+
+# Panel A: where the trait is measurable
+
+```{r surface, fig.width=6.5, fig.height=5}
+cs <- seq(0.05, 0.98, length.out = 120)
+ss <- seq(0.02, 0.98, length.out = 120)
+INFO <- outer(cs, ss, Vectorize(expected_information))   # rows=c, cols=s
+
+# verification-frontier ridge: best s for each c
+ridge_s <- ss[apply(INFO, 1, which.max)]
+
+# two roads across the same map, forked by verifiability
+GEN <- seq(0, 1, length.out = 6)                 # early -> frontier
+ver_c <- c_traj(GEN, 1); ver_s <- s_traj(GEN)    # verifiable domain (v=1)
+unv_c <- c_traj(GEN, 0); unv_s <- s_traj(GEN)    # unverifiable domain (v=0)
+
+filled.contour(
+  x = cs, y = ss, z = INFO, color.palette = function(n) hcl.colors(n, "viridis"),
+  xlab = "model capability  c  (P right unaided)",
+  ylab = "model seductiveness  s  (subtlety of errors)",
+  main = "A. Two roads across the same map",
+  key.title = title(main = "info", cex.main = 0.8),
+  plot.axes = {
+    axis(1); axis(2)
+    lines(cs, ridge_s, col = "white", lwd = 2, lty = 2)           # verification frontier
+    lines(ver_c, ver_s, col = "white", lwd = 2)
+    points(ver_c, ver_s, pch = 21, bg = "#1f77b4", col = "white", cex = 1.1)
+    lines(unv_c, unv_s, col = "white", lwd = 2)
+    points(unv_c, unv_s, pch = 21, bg = "#d62728", col = "white", cex = 1.1)
+    # mark the shared start and the two frontiers (short, interior labels)
+    points(ver_c[1], ver_s[1], pch = 21, bg = "white", col = "black", cex = 1.3)
+    legend("topleft", bty = "n", text.col = "white", cex = 0.8,
+           legend = c("verification frontier (ridge)",
+                      "verifiable road (stats / code)",
+                      "unverifiable road (the joke)",
+                      "shared early model"),
+           lty = c(2, 1, 1, NA), pch = c(NA, 21, 21, 21), lwd = c(2, 2, 2, NA),
+           col = "white", pt.bg = c(NA, "#1f77b4", "#d62728", "white"))
+  })
+```
+
+White dashed line = the verification frontier (most-informative `s` per `c`);
+white solid line with red points = the model-progress path.
+
+# Panel B: the window narrows for verifiable tasks, not unverifiable ones
+
+The info-vs-`s` curve is a function of `c` and `s` only --- the surface is the
+same map for any domain. What `v` controls is *which* `c` a domain can reach. So
+we slice the map at the three capabilities the two roads actually occupy: the
+shared early model, the unverifiable frontier (`C_CAP`), and the verifiable
+frontier (`C_CEIL`).
+
+```{r panelB}
+infoB_early <- sapply(ss, function(s) expected_information(C0,     s))  # 0.50, both domains, early
+infoB_unv   <- sapply(ss, function(s) expected_information(C_CAP,  s))  # 0.55, unverifiable frontier
+infoB_ver   <- sapply(ss, function(s) expected_information(C_CEIL, s))  # 0.96, verifiable frontier
+
+plot(ss, infoB_early, type = "l", lwd = 2.4, col = "#444444",
+     ylim = c(0, max(infoB_early)),
+     xlab = "model seductiveness  s",
+     ylab = "info about critical literacy (per task)",
+     main = "B. The window narrows for verifiable tasks, not unverifiable ones")
+lines(ss, infoB_unv, lwd = 2.8, col = "#d62728")
+lines(ss, infoB_ver, lwd = 2.8, col = "#1f77b4")
+legend("topright", bty = "n", cex = 1.0, lwd = 2.4,
+       legend = c("c = 0.50", "c = 0.55", "c = 0.96"),
+       col = c("#444444", "#d62728", "#1f77b4"))
+```
+
+The unverifiable frontier (red) sits almost on top of the early model (grey): in
+deferredly-verified domains the measurement window barely narrows. Only the
+verifiable frontier (blue) collapses --- the same `v`-contrast as Panel A, now
+sliced along `s`.
+
+# Panel C: is AI literacy a transient construct?
+
+Translate information into a tangible cost. For a trait with variance 1, total
+information `I_tot` gives reliability `rho = I_tot / (I_tot + 1)`, so reaching
+`rho = 0.80` needs `I_tot = 4`. The number of trap-items required is
+`4 / E[info per item]`.
+
+```{r panelC}
+RHO <- 0.80
+I_NEED <- RHO / (1 - RHO)                     # = 4
+items_for_reliability <- function(c, s) {
+  e <- expected_information(c, s)
+  if (e <= 1e-6) Inf else I_NEED / e
+}
+
+ver_info <- mapply(expected_information, ver_c, ver_s)   # verifiable road
+unv_info <- mapply(expected_information, unv_c, unv_s)   # unverifiable road
+gens <- seq_along(GEN)
+
+plot(gens, unv_info, type = "b", pch = 19, col = "#d62728", lwd = 2.3,
+     ylim = c(0, max(unv_info, ver_info)),
+     xlab = "model generation  (early -> frontier)",
+     ylab = "info per task about critical literacy",
+     main = "C. Verifiable literacy decays; unverifiable persists")
+lines(gens, ver_info, type = "b", pch = 17, col = "#1f77b4", lwd = 2.3)
+legend("right", c("unverifiable (the joke)", "verifiable (stats / code)"),
+       col = c("#d62728", "#1f77b4"), pch = c(19, 17), lwd = 2.3, bty = "n", cex = 0.85)
+```
+
+## The headline table
+
+```{r table}
+tab <- data.frame(
+  point = c("shared early model", "verifiable frontier (stats/code)",
+            "unverifiable frontier (the joke)"),
+  c = c(ver_c[1], ver_c[6], unv_c[6]),
+  s = c(ver_s[1], ver_s[6], unv_s[6]),
+  info_per_item = c(expected_information(ver_c[1], ver_s[1]),
+                    expected_information(ver_c[6], ver_s[6]),
+                    expected_information(unv_c[6], unv_s[6])),
+  items_for_rho_.80 = c(items_for_reliability(ver_c[1], ver_s[1]),
+                        items_for_reliability(ver_c[6], ver_s[6]),
+                        items_for_reliability(unv_c[6], unv_s[6]))
+)
+knitr::kable(tab, digits = c(0, 2, 2, 4, 0))
+
+prog <- data.frame(generation = gens,
+                   ver_c = ver_c, ver_info = ver_info,
+                   unv_c = unv_c, unv_info = unv_info,
+                   ver_items = round(mapply(items_for_reliability, ver_c, ver_s)),
+                   unv_items = round(mapply(items_for_reliability, unv_c, unv_s)))
+knitr::kable(prog, digits = c(0, 2, 4, 2, 4, 0, 0))
+```
+
+# An item-bank version: seductiveness vs. item difficulty {#bank}
+
+The model so far uses a *single* over-ride difficulty per generation,
+`delta_of_s(s)` --- a one-item caricature. A real design has a **bank** of
+prompts whose errors vary in how seductive they are. So we **promote
+`delta_of_s(s)` from "the difficulty" to the _mean_ of an item-difficulty
+distribution**, and draw a bank around it:
+
+$$
+\delta_i \sim \mathrm{N}\big(\delta(s),\; \sigma_\delta\big),
+\qquad i = 1, \dots, N_\mathrm{items} .
+$$
+
+Capability `c` stays fixed per generation (your call this round). A key
+consequence: because seductiveness `s` is shared across the two domains, **they
+draw from the _same_ difficulty bank** and differ only in the model that scores
+it (`c = C_CAP` vs `c = C_CEIL`).
+
+```{r bank-setup}
+SIGMA_DELTA <- 1.0     # [CHOICE] spread of item difficulties (logits) around the mean
+N_ITEMS     <- 200     # [CHOICE] prompts in the bank
+BANK_SEED   <- 2026
+
+# per-item info as a function of difficulty delta DIRECTLY (theta ~ N(0,1))
+info_point_delta <- function(theta, c, delta) {
+  g  <- logistic(A_DISC * (theta - delta))
+  P  <- c + (1 - c) * g
+  dP <- (1 - c) * A_DISC * g * (1 - g)
+  dP^2 / pmax(P * (1 - P), 1e-9)
+}
+ei_delta <- function(c, delta) sum(W * info_point_delta(THETA, c, delta))
+
+# consistency: the representative-item model is just the single-item case
+stopifnot(abs(ei_delta(0.55, delta_of_s(0.62)) -
+              expected_information(0.55, 0.62)) < 1e-9)
+cat("PASS: ei_delta reproduces the representative-item information.\n")
+```
+
+```{r bank-functions}
+# exact bank expectation: average per-item info over delta ~ N(delta_of_s(s), sigma)
+DELTA_GRID <- seq(-7, 7, length.out = 281)
+bank_info_exact <- function(c, s, sigma = SIGMA_DELTA) {
+  wd <- dnorm(DELTA_GRID, delta_of_s(s), sigma); wd <- wd / sum(wd)
+  sum(wd * sapply(DELTA_GRID, function(d) ei_delta(c, d)))
+}
+
+# a concrete RANDOM bank of N_ITEMS prompts
+draw_bank <- function(c, s, sigma = SIGMA_DELTA, n = N_ITEMS, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  delta_i <- rnorm(n, delta_of_s(s), sigma)
+  list(delta = delta_i,
+       info  = sapply(delta_i, function(d) ei_delta(c, d)))
+}
+```
+
+## Same bank, two capabilities
+
+The same trap-items are highly informative scored through a weak model and
+nearly useless scored through a strong one --- the divergence is entirely in the
+lower asymptote, not the difficulties.
+
+```{r bank-illustrate, fig.width=7, fig.height=3.4}
+s_front <- S_MAX                              # shared frontier seductiveness (= 0.62)
+set.seed(BANK_SEED)
+delta_i  <- rnorm(N_ITEMS, delta_of_s(s_front), SIGMA_DELTA)
+info_unv <- sapply(delta_i, function(d) ei_delta(C_CAP,  d))   # c = 0.55 (unverifiable)
+info_ver <- sapply(delta_i, function(d) ei_delta(C_CEIL, d))   # c = 0.96 (verifiable)
+
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+hist(delta_i, breaks = 20, col = "gray70", border = "white",
+     main = "Shared item bank", xlab = "delta_i  (logits; 0 = population mean)")
+abline(v = 0, lty = 2)
+boxplot(list(unverifiable = info_unv, verifiable = info_ver),
+        col = c("#d62728", "#1f77b4"), ylab = "per-item info about theta",
+        main = "Same bank, two models")
+par(mfrow = c(1, 1))
+
+cat(sprintf("random bank  : unverifiable mean=%.4f (items=%.0f) | verifiable mean=%.4f (items=%.0f)\n",
+            mean(info_unv), 4/mean(info_unv), mean(info_ver), 4/mean(info_ver)))
+cat(sprintf("exact bank   : unverifiable     =%.4f             | verifiable     =%.4f\n",
+            bank_info_exact(C_CAP, s_front), bank_info_exact(C_CEIL, s_front)))
+```
+
+## The divergence survives a real bank
+
+```{r bank-panelC}
+ver_info_bank <- sapply(seq_along(GEN), function(i) bank_info_exact(ver_c[i], ver_s[i]))
+unv_info_bank <- sapply(seq_along(GEN), function(i) bank_info_exact(unv_c[i], unv_s[i]))
+
+plot(gens, unv_info_bank, type = "b", pch = 19, col = "#d62728", lwd = 2.3,
+     ylim = c(0, max(unv_info_bank, unv_info)),
+     xlab = "model generation  (early -> frontier)",
+     ylab = "bank-average info per task",
+     main = "C'. Item-bank version: the divergence survives")
+lines(gens, ver_info_bank, type = "b", pch = 17, col = "#1f77b4", lwd = 2.3)
+lines(gens, unv_info, lty = 3, col = "#d62728")     # representative-item, for comparison
+lines(gens, ver_info, lty = 3, col = "#1f77b4")
+legend("topright", bty = "n", cex = 0.8,
+       legend = c("unverifiable (bank)", "verifiable (bank)", "representative item (dotted)"),
+       col = c("#d62728", "#1f77b4", "gray40"), pch = c(19, 17, NA),
+       lty = c(1, 1, 3), lwd = 2)
+```
+
+Bank-average information is **lower** than the representative-item value (the
+bank includes off-target prompts), so items-needed rises modestly --- the joke
+goes from ~50 to ~55, the verifiable frontier from ~719 to ~769 --- but the
+verifiable-vs-unverifiable gap is unchanged.
+
+## Sampling variability of a random bank
+
+Because the bank is drawn at random, the items-needed estimate has its own
+uncertainty. This is honest measurement bookkeeping --- and a reminder that
+"50 items" is itself an estimate.
+
+```{r bank-variability}
+set.seed(BANK_SEED)
+reps <- replicate(300, {
+  d <- rnorm(N_ITEMS, delta_of_s(s_front), SIGMA_DELTA)
+  4 / mean(sapply(d, function(x) ei_delta(C_CAP, x)))
+})
+cat(sprintf("Unverifiable frontier, items-needed across 300 random banks of %d prompts:\n  median=%.0f   90%% interval [%.0f, %.0f]\n",
+            N_ITEMS, median(reps), quantile(reps, .05), quantile(reps, .95)))
+```
+
+Wider `SIGMA_DELTA` scatters prompts further from the informative region,
+lowering average information and raising items-needed: that is the design lever
+for *how tightly the prompt bank should target the population.* The "moving
+frontier" becomes concrete here --- as `s` drifts up across generations, you
+must re-center `delta_of_s(s)` and re-cover the population, or the bank decays.
+
+# Honest caveats (the places to push)
+
+1. **The verifiable/unverifiable split is now *in* the model** (Section
+   \@ref(domains)), via a capability ceiling `c_cap` for unverifiable domains.
+   The remaining simplification is that seductiveness `s` is *shared* across
+   domains. A fuller model would also let verification *suppress effective
+   seductiveness* in verifiable domains (you can catch any error if you run the
+   check), which would push the verifiable road off the ridge even faster. The
+   capability ceiling alone already produces the divergence, so I kept `s` shared
+   to isolate one mechanism. **Attack the ceilings:** `C_CAP = 0.55` is a guess --- change it
+   in the Section \@ref(domains) chunk and re-knit to move the unverifiable
+   plateau; the `sensitivity()` block below varies `a` and the seductiveness range.
+2. **`delta(s)` linear, `a` constant, `theta ~ N(0,1)`** are all conveniences.
+   Re-run the sliders below to see whether conclusions survive.
+3. **Independence and unidimensionality.** Items are treated as conditionally
+   independent given a single `theta`. If catching errors is multidimensional
+   (domain priors vs. tool fluency --- the Chollet confound), this overstates
+   information.
+4. **`theta` = over-riding a plausible-but-inadequate answer** (detection where
+   verification is cheap, appraisal where it is deferred). See the construct
+   caveat in Section 2. Note the scoring-key dependence: measuring `theta` in an
+   expensively-verified domain needs the *deferred* verdict (e.g. the audience)
+   as a criterion --- so "50 items" understates the real cost, and a domain with
+   no convergent verdict at all would make `theta` unmeasurable, not just costly.
+
+```{r sliders}
+# Re-run the whole story under your own assumptions.
+# NOTE: this temporarily sets the global parameters, then RESTORES them on exit,
+# so calling it leaves no side effects (an earlier version leaked global state --
+# see the lesson in the prose above).
+sensitivity <- function(a = 1.5, dmin = -3, dmax = 3, rho = 0.80) {
+  old <- list(A_DISC, DELTA_MIN, DELTA_MAX)
+  on.exit({ A_DISC <<- old[[1]]; DELTA_MIN <<- old[[2]]; DELTA_MAX <<- old[[3]] })
+  A_DISC <<- a; DELTA_MIN <<- dmin; DELTA_MAX <<- dmax
+  data.frame(
+    verifiable_frontier = (rho/(1-rho)) / expected_information(0.96, 0.62),
+    unverifiable_frontier = (rho/(1-rho)) / expected_information(0.55, 0.62),
+    shared_early = (rho/(1-rho)) / expected_information(0.50, 0.45)
+  )
+}
+sensitivity()                       # defaults (delta -3..3, a=1.5)
+sensitivity(a = 1.0)                # less discriminating catch process
+sensitivity(dmin = -2, dmax = 2)    # narrower seductiveness range
+```
+
+# What to take to the talk
+
+- **Two roads, one map.** The same model progress that drives critical literacy
+  *off* the measurable ridge in verifiable domains (code/stats) keeps it *on* the
+  ridge in unverifiable ones (the joke) --- because capability can climb toward 1
+  only where there is a ground-truth signal to climb. See the headline table for
+  the trap-items each road needs.
+- **The construct is most measurable exactly where the model can help least.**
+  Critical AI literacy is durable in domains where the AI cannot verify itself ---
+  judgment, taste, framing, wisdom --- which is both why it matters and why it is
+  hard to certify.
+- **A live empirical question, not a settled one.** Whether unverifiable-domain
+  literacy truly persists, or eventually erodes as fluency outruns human
+  detection (`s` past the catchable band), is the design that a future study
+  would test. That is Chollet's generalization frontier relocated onto the human.
