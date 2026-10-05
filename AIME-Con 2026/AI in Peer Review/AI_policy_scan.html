@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Journal AI Policies</title>
+<meta name="description" content="Generative AI policies for authors, reviewers, and editors at 14 educational measurement journals, with cross-cutting bodies and evidence. Accessed 4 October 2026.">
+<style>
+:root {
+  --bg: #fbfaf7;
+  --surface: #ffffff;
+  --text: #1d1d1b;
+  --muted: #5f5e5a;
+  --rule: #dedbd3;
+  --accent: #23477a;
+  --no-bg: #fbe3df;    --no-fg: #8a2416;
+  --lim-bg: #fdf0d2;   --lim-fg: #7a5200;
+  --yes-bg: #dff0e0;   --yes-fg: #1f5e2a;
+  --sil-bg: #ebeae6;   --sil-fg: #55534d;
+  --callout: #eef2f8;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161615; --surface: #1f1f1d; --text: #ecebe6; --muted: #a8a69f; --rule: #3a3935;
+    --accent: #8fb3e8;
+    --no-bg: #4a221c; --no-fg: #f6b9ad;
+    --lim-bg: #4a3a14; --lim-fg: #f2d38c;
+    --yes-bg: #1f3d24; --yes-fg: #a9dcb0;
+    --sil-bg: #2e2d2a; --sil-fg: #c2c0b8;
+    --callout: #1d2633;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161615; --surface: #1f1f1d; --text: #ecebe6; --muted: #a8a69f; --rule: #3a3935;
+  --accent: #8fb3e8;
+  --no-bg: #4a221c; --no-fg: #f6b9ad;
+  --lim-bg: #4a3a14; --lim-fg: #f2d38c;
+  --yes-bg: #1f3d24; --yes-fg: #a9dcb0;
+  --sil-bg: #2e2d2a; --sil-fg: #c2c0b8;
+  --callout: #1d2633;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+main { max-width: 1120px; margin: 0 auto; padding: 40px 16px 80px; }
+.prose { max-width: 760px; }
+h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.01em; }
+h2 { font-size: 1.35rem; margin: 48px 0 12px; padding-top: 12px; border-top: 1px solid var(--rule); }
+h3 { font-size: 1.08rem; margin: 28px 0 8px; }
+p, li { margin: 0 0 10px; }
+ul, ol { padding-left: 1.3em; }
+a { color: var(--accent); overflow-wrap: anywhere; }
+.meta { color: var(--muted); font-size: 0.95rem; margin-bottom: 20px; }
+.result {
+  background: var(--callout); border-left: 4px solid var(--accent);
+  padding: 14px 18px; border-radius: 4px; font-size: 1.08rem; margin: 20px 0 8px;
+}
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); margin: 12px 0 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; vertical-align: top; padding: 9px 10px; border-bottom: 1px solid var(--rule); }
+th { background: var(--surface); font-weight: 600; position: sticky; top: 0; }
+tr:last-child td { border-bottom: none; }
+td.n { color: var(--muted); width: 2em; }
+.matrix { min-width: 980px; }
+.cross { min-width: 900px; }
+.chip { display: inline-block; padding: 1px 7px; border-radius: 10px; font-weight: 600; font-size: 0.82rem; margin-bottom: 3px; white-space: nowrap; }
+.no  { background: var(--no-bg);  color: var(--no-fg); }
+.lim { background: var(--lim-bg); color: var(--lim-fg); }
+.yes { background: var(--yes-bg); color: var(--yes-fg); }
+.sil { background: var(--sil-bg); color: var(--sil-fg); }
+.sub { display: block; color: var(--muted); font-size: 0.84rem; }
+.legend { font-size: 0.88rem; color: var(--muted); margin: 6px 0 0; }
+.legend .chip { margin-right: 4px; }
+.note { font-size: 0.88rem; color: var(--muted); }
+.findings li { margin-bottom: 12px; }
+.uses { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 12px; }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 18px; }
+.card h3 { margin-top: 0; }
+.sources li { font-size: 0.9rem; }
+@media (max-width: 600px) {
+  h1 { font-size: 1.55rem; }
+  main { padding-top: 24px; }
+}
+</style>
+</head>
+<body>
+<main>
+
+<div class="prose">
+<h1>Generative AI Policies at Educational Measurement Journals</h1>
+<p class="meta">Scan of 14 journals and 7 cross-cutting bodies. Sources accessed 4 October 2026. Prepared for AIME-Con 2026, session "Educational Measurement as an AI-Native Profession," 7 October 2026.</p>
+
+<p class="result"><strong>Result:</strong> No journal in our field sets its own rules for reviewers or editors. Twelve of 14 inherit them from seven publishers, and those rules rest mainly on confidentiality, not on the quality of AI judgment. Two journals (CEJEME, JEBS) have none.</p>
+
+<h2>Key findings</h2>
+<ol class="findings">
+  <li><strong>The policy comes from the publisher, not the journal.</strong> The only journal-level text on AI is an author-disclosure pointer or a line that AI cannot be an author. Seven publishers write the reviewer and editor rules: Wiley, Taylor &amp; Francis, Sage, Cambridge University Press, Springer Nature, Elsevier, and the American Psychological Association (APA). No society in the field (NCME, the Psychometric Society, ITC, IEA, AERA, ASA) has a peer-review AI policy for its journals. The charge for NCME's 2026–27 Presidential AI Task Force (posted June 2026) does not mention publishing or peer review.</li>
+  <li><strong>Author policies agree.</strong> 13 of 14 journals require authors to disclose generative AI use, and all that address it bar AI authorship. They differ on where to disclose (Methods, Acknowledgments, or a separate declaration) and on whether grammar tools are exempt. JEBS is silent.</li>
+  <li><strong>Reviewer policies agree on one rule.</strong> 12 of 14 journals have a <em>no-upload rule</em>: the reviewer may not put any part of the manuscript into a generative AI tool (at Springer Nature, only into public or unsecured tools). CEJEME and JEBS are silent. The stated reason is confidentiality.</li>
+  <li><strong>Reviewer policies differ on everything else.</strong> Most publishers (Wiley, Taylor &amp; Francis, Sage, Elsevier, Springer Nature) let reviewers use generative AI to polish the text of their own review, usually with disclosure. Cambridge (Psychometrika) allows only non-generative help such as spell-check. Springer Nature (LSAE) is the only one whose rule bars just public or unsecured tools, so a secure, approved tool may process the manuscript.</li>
+  <li><strong>Editor policies keep the decision human, and almost none address AI reading the reviews.</strong> Sage forbids editors to use generative AI to summarize reviews or write decision letters. Cambridge forbids reviewers to share their review with an AI tool. No other policy says whether reviews may go into an AI tool.</li>
+  <li><strong>Publishers already run AI on submissions.</strong> Springer Nature, Elsevier, Taylor &amp; Francis, and Wiley each describe in-house AI screening of manuscripts (integrity checks, scope checks, reviewer matching, and at Springer Nature an editor tool for judging soundness). The same publishers bar reviewers and editors from putting those manuscripts into AI tools.</li>
+  <li><strong>Practice has outrun policy.</strong> About half of reviewers report using AI for review tasks (Frontiers survey, 2025), up from 29% the year before. Conferences now catch rule-breakers with detectors and hidden prompts.</li>
+</ol>
+</div>
+
+<h2>Summary table</h2>
+<p class="legend">
+  <span class="chip no">No</span> forbidden &nbsp;
+  <span class="chip lim">Limited</span> allowed with narrow limits &nbsp;
+  <span class="chip yes">Yes</span> allowed, usually with disclosure &nbsp;
+  <span class="chip sil">Silent</span> no rule found.
+  "No-upload" means the person may not put manuscript content into a generative AI tool.
+</p>
+<div class="table-wrap">
+<table class="matrix">
+<thead>
+<tr><th>#</th><th>Journal</th><th>Publisher (policy source)</th><th>Authors</th><th>Reviewers: manuscript into AI?</th><th>Reviewers: AI help with own review text?</th><th>Editors</th></tr>
+</thead>
+<tbody>
+<tr><td class="n">1</td><td>Educational Measurement: Issues and Practice (NCME)</td><td>Wiley</td>
+  <td><span class="chip yes">Disclose</span><span class="sub">Journal says in Methods</span></td>
+  <td><span class="chip no">No</span></td>
+  <td><span class="chip yes">Yes</span><span class="sub">Disclose to editor</span></td>
+  <td><span class="chip no">No-upload</span><span class="sub">May polish own feedback</span></td></tr>
+<tr><td class="n">2</td><td>Journal of Educational Measurement (NCME)</td><td>Wiley</td>
+  <td><span class="chip yes">Disclose</span><span class="sub">Journal points to Wiley</span></td>
+  <td><span class="chip no">No</span></td>
+  <td><span class="chip yes">Yes</span><span class="sub">Disclose to editor</span></td>
+  <td><span class="chip no">No-upload</span><span class="sub">May polish own feedback</span></td></tr>
+<tr><td class="n">3</td><td>Chinese/English J. of Educational Measurement and Evaluation (NCME)</td><td>NCME and Beijing Normal Univ.<span class="sub">Adopts Wiley for authors only</span></td>
+  <td><span class="chip yes">Disclose</span></td>
+  <td><span class="chip sil">Silent</span></td>
+  <td><span class="chip sil">Silent</span></td>
+  <td><span class="chip sil">Silent</span></td></tr>
+<tr><td class="n">4</td><td>Applied Measurement in Education</td><td>Taylor &amp; Francis</td>
+  <td><span class="chip lim">Disclose + limits</span><span class="sub">No AI first drafts; declaration required even if "not used"</span></td>
+  <td><span class="chip no">No</span></td>
+  <td><span class="chip lim">Language only</span><span class="sub">Finished review; disclose tool and version; keep original</span></td>
+  <td><span class="chip no">No-upload</span><span class="sub">Other uses need publisher approval</span></td></tr>
+<tr><td class="n">5</td><td>Measurement (IMEKO; outside-field comparison)</td><td>Elsevier</td>
+  <td><span class="chip lim">Disclose + limits</span></td>
+  <td><span class="chip no">No</span><span class="sub">Not even to private tools</span></td>
+  <td><span class="chip lim">Private tools only</span><span class="sub">Language or literature search; disclose</span></td>
+  <td><span class="chip no">No-upload</span><span class="sub">Private tools for letter language</span></td></tr>
+<tr><td class="n">6</td><td>Measurement: Interdisciplinary Research and Perspectives</td><td>Taylor &amp; Francis</td>
+  <td><span class="chip lim">Disclose + limits</span><span class="sub">As row 4</span></td>
+  <td><span class="chip no">No</span></td>
+  <td><span class="chip lim">Language only</span><span class="sub">As row 4</span></td>
+  <td><span class="chip no">No-upload</span><span class="sub">As row 4</span></td></tr>
+<tr><td class="n">7</td><td>Applied Psychological Measurement</td><td>Sage</td>
+  <td><span class="chip yes">Disclose</span><span class="sub">Generative use only; assistive tools exempt</span></td>
+  <td><span class="chip no">No</span></td>
+  <td><span class="chip yes">Yes</span><span class="sub">No disclosure stated</span></td>
+  <td><span class="chip lim">Restricted</span><span class="sub">No generative AI for decision letters, triage, or summarizing reviews</span></td></tr>
+<tr><td class="n">8</td><td>Psychometrika</td><td>Cambridge University Press</td>
+  <td><span class="chip yes">Disclose</span><span class="sub">Minimal uses exempt</span></td>
+  <td><span class="chip no">No</span><span class="sub">The review itself may not be shared either</span></td>
+  <td><span class="chip no">Non-generative only</span><span class="sub">Spell-check</span></td>
+  <td><span class="chip lim">Allowed</span><span class="sub">AI in editorial process; human decides</span></td></tr>
+<tr><td class="n">9</td><td>Journal of Educational and Behavioral Statistics</td><td>AERA (owner); hosted by Sage</td>
+  <td><span class="chip sil">Silent</span></td>
+  <td><span class="chip sil">Silent</span></td>
+  <td><span class="chip sil">Silent</span></td>
+  <td><span class="chip sil">Silent</span></td></tr>
+<tr><td class="n">10</td><td>Large-scale Assessments in Education</td><td>Springer Nature</td>
+  <td><span class="chip lim">Disclose + tiers</span></td>
+  <td><span class="chip lim">Not to public tools</span><span class="sub">Secure, approved tools contemplated</span></td>
+  <td><span class="chip yes">Yes</span><span class="sub">Disclose; AI may not write the report</span></td>
+  <td><span class="chip lim">Allowed</span><span class="sub">Not public tools; human decides</span></td></tr>
+<tr><td class="n">11</td><td>International Journal of Testing (ITC)</td><td>Taylor &amp; Francis</td>
+  <td><span class="chip lim">Disclose + limits</span><span class="sub">As row 4</span></td>
+  <td><span class="chip no">No</span></td>
+  <td><span class="chip lim">Language only</span><span class="sub">As row 4</span></td>
+  <td><span class="chip no">No-upload</span><span class="sub">As row 4</span></td></tr>
+<tr><td class="n">12</td><td>Educational and Psychological Measurement</td><td>Sage</td>
+  <td><span class="chip yes">Disclose</span><span class="sub">As row 7</span></td>
+  <td><span class="chip no">No</span></td>
+  <td><span class="chip yes">Yes</span><span class="sub">As row 7</span></td>
+  <td><span class="chip lim">Restricted</span><span class="sub">As row 7</span></td></tr>
+<tr><td class="n">13</td><td>Educational Assessment</td><td>Taylor &amp; Francis</td>
+  <td><span class="chip lim">Disclose + limits</span><span class="sub">As row 4</span></td>
+  <td><span class="chip no">No</span></td>
+  <td><span class="chip lim">Language only</span><span class="sub">As row 4</span></td>
+  <td><span class="chip no">No-upload</span><span class="sub">As row 4</span></td></tr>
+<tr><td class="n">14</td><td>Psychological Methods (comparison; discussant is editor)</td><td>APA</td>
+  <td><span class="chip yes">Disclose</span><span class="sub">Grammar tools exempt</span></td>
+  <td><span class="chip no">No*</span></td>
+  <td><span class="chip sil">Not stated*</span></td>
+  <td><span class="chip no">No-upload*</span></td></tr>
+</tbody>
+</table>
+</div>
+<p class="note">* APA reviewer and editor rules come from search-engine excerpts of APA guidance pages that blocked automated access. The APA Publishing Policies page, read directly, says no submitted content may be entered into generative AI tools but does not name roles.</p>
+
+<h3>Counts across the 14 journals</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Role</th><th>Has a rule</th><th>Silent</th></tr></thead>
+<tbody>
+<tr><td>Authors</td><td>13 (all require disclosure)</td><td>1 (JEBS)</td></tr>
+<tr><td>Reviewers</td><td>12 (all include a no-upload rule; Springer Nature's covers only public or unsecured tools)</td><td>2 (CEJEME, JEBS)</td></tr>
+<tr><td>Editors</td><td>12 (all keep the decision human or restrict confidential input)</td><td>2 (CEJEME, JEBS)</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="prose">
+<h2>Policy by publisher</h2>
+
+<h3>Wiley: EMIP, JEM (and CEJEME for authors)</h3>
+<ul>
+  <li><strong>Authors:</strong> Disclose substantial generative AI use (Acknowledgments for drafting or translation; Methods for analysis; captions for images). Grammar, spelling, and citation formatting are exempt. AI use alone is not grounds for rejection. EMIP's own page asks for a detailed description in Methods and lists no exemptions, which conflicts slightly with Wiley's text.</li>
+  <li><strong>Reviewers:</strong> No upload of the manuscript "whether in full or in part." Reviewers may use AI to organize their thoughts, improve the clarity or tone of their own review, translate it, or ask general methods questions that contain no manuscript details. They must disclose the tool, version, date, and purpose to the handling editor and must not delegate the review.</li>
+  <li><strong>Editors:</strong> The no-upload rule names editors. Editors may polish their own feedback; no disclosure rule is stated for editors.</li>
+  <li><strong>Publisher AI in workflow:</strong> Wiley's Research Exchange platform (used by EMIP and JEM) applies AI to reviewer matching, integrity screening, and scope checks. Wiley says it is exploring AI review help inside secure editorial systems and tools that flag reviews lacking substantive engagement; these are not live.</li>
+  <li class="note">Sources: Wiley, "Using AI tools in your research" (dated 28 Oct 2025 by press release); Wiley Best Practice Guidelines on Research Integrity and Publishing Ethics (last updated July 2026).</li>
+</ul>
+
+<h3>Taylor &amp; Francis: AME, MIRP, IJT, Educational Assessment</h3>
+<ul>
+  <li><strong>Authors:</strong> Generative AI is allowed for language editing, brainstorming, code help, literature search, and checked translation. It may not write a first draft of a manuscript or any section, build the argument, or produce full literature reviews or reference lists. Every manuscript needs a declaration, including "not used."</li>
+  <li><strong>Reviewers:</strong> No upload. No AI to generate the report or to analyze or summarize the submission. AI may improve the language of the finished review only; the reviewer keeps the original and tells the editor the tool and version.</li>
+  <li><strong>Editors:</strong> No upload. Any other generative AI use needs approval from the Taylor &amp; Francis contact unless the tool is already approved.</li>
+  <li><strong>Publisher AI in workflow:</strong> EditorialPilot (wider rollout announced July 2026) runs more than 100 automated checks and gives each submission a quality score before peer review. Paperpal Preflight and a reviewer-finder tool are also offered.</li>
+  <li>No journal-specific additions or AI editorials at any of the four journals. ITC has no AI statement on publishing.</li>
+</ul>
+
+<h3>Sage: APM, EPM (JEBS is hosted by Sage but owned by AERA)</h3>
+<ul>
+  <li><strong>Authors:</strong> Three tiers. "Assistive" AI (grammar, structure) needs no disclosure; "generative" AI that affects methods, analysis, results, or conclusions must be disclosed; a list of uses (fabricated data or references, AI "participants," generated research images) is prohibited. APM and EPM add that AI chatbots cannot be authors.</li>
+  <li><strong>Reviewers:</strong> No upload. Reviewers may use generative AI to help write and format their own report; no disclosure rule is stated. The prohibited list also bans using generative AI "to conduct peer-review," which leaves the boundary unclear.</li>
+  <li><strong>Editors:</strong> No generative AI for decision letters or summaries of unpublished research. The Sage editor guide also bans using AI to triage manuscripts or summarize reviews, citing confidentiality and copyright. It allows AI tools for finding reviewers.</li>
+  <li><strong>JEBS:</strong> The AERA-written guidelines contain no AI text and do not link to Sage's policy. AERA's AI Guidelines (file dated May 2026) cover "AERA programs and activities," strongly discourage reviewer use of generative AI, and do not name journals. Which policy governs JEBS is unresolved. ASA has no adopted policy.</li>
+</ul>
+
+<h3>Cambridge University Press: Psychometrika</h3>
+<ul>
+  <li><strong>Authors:</strong> Disclose AI that generates text or images or analyzes data (tool, version, dates, purpose). Spell-check and formatting are exempt. AI cannot be an author.</li>
+  <li><strong>Reviewers:</strong> Neither the manuscript nor the review may be shared with any public platform or AI tool. Content, structure, and recommendation must be the reviewer's own; AI help is limited to minimal, non-generative uses. This is Cambridge template text, not a Psychometrika rule.</li>
+  <li><strong>Editors:</strong> AI tools may be used in the editorial process, but a human makes every decision.</li>
+  <li><strong>Journal note:</strong> The editor-in-chief's inaugural remarks (Sinharay, <em>Psychometrika</em> 89(1)) committed to developing LLM-use policies with the Editorial Council. No journal-specific policy has appeared.</li>
+</ul>
+
+<h3>Springer Nature: Large-scale Assessments in Education</h3>
+<ul>
+  <li><strong>Authors:</strong> Green/amber/red tiers. Language editing and summarizing one's own text are allowed with disclosure; AI cannot be an author or the source of claimed results.</li>
+  <li><strong>Reviewers:</strong> No upload to unsecured or public tools; secure or approved tools are contemplated. AI may improve the clarity or structure of comments but may not write the full report. Disclose in the report.</li>
+  <li><strong>Editors:</strong> May use AI to assist evaluation, but not through public tools. A human decides.</li>
+  <li><strong>Publisher AI in workflow:</strong> Nearly 60 AI tools in use in 2025, including an editor tool used on about 500,000 manuscripts to help judge soundness and a reviewer recommender (press release, 12 Mar 2026).</li>
+</ul>
+
+<h3>Elsevier: Measurement (IMEKO)</h3>
+<ul>
+  <li><strong>Authors:</strong> Allowed for literature synthesis, organization, and language under human oversight; declare before the references. Spelling and grammar checks and reference managers are exempt.</li>
+  <li><strong>Reviewers:</strong> No upload to any AI tool, including private ones. Private tools (no retention or training) may be used for the language of the report or a background literature search, with disclosure.</li>
+  <li><strong>Editors:</strong> Same no-upload rule; private tools for decision-letter language.</li>
+  <li><strong>Publisher AI in workflow:</strong> In-house AI for reviewer finding, duplicate detection, technical and integrity checks, and copyediting.</li>
+  <li>The journal's own ScienceDirect pages blocked access; the publisher policy was read in full.</li>
+</ul>
+
+<h3>APA: Psychological Methods</h3>
+<ul>
+  <li><strong>Authors:</strong> Disclose generative AI used in drafting and cite it; verify output and citations. Grammar checkers and citation software are exempt. AI cannot be an author (APA Publishing Policies, last updated October 2025).</li>
+  <li><strong>Reviewers and editors:</strong> No submitted content may be entered into generative AI tools. Search excerpts of the blocked guidance pages indicate that reviews should not be written by generative AI. Whether reviewers may polish their own text was not confirmed.</li>
+</ul>
+</div>
+
+<h2>Cross-cutting bodies</h2>
+<div class="table-wrap">
+<table class="cross">
+<thead><tr><th>Body</th><th>Authors</th><th>Reviewers</th><th>Editors</th><th>Rationale</th></tr></thead>
+<tbody>
+<tr><td>COPE: "Authorship and AI tools" (2023); Ethical Guidelines for Peer Reviewers (Version 2, Sept 2017)</td><td>Disclose tool and use in Methods; fully responsible; AI cannot be an author</td><td>No AI text (guidelines predate generative AI). General rule: involve no one else in a review without the journal's permission, and name anyone who helped</td><td>Not verified (2021 discussion document not accessible; COPE says discussion documents are not policy)</td><td>Accountability; confidentiality</td></tr>
+<tr><td>ICMJE Recommendations (updated Jan 2026)</td><td>Disclose in cover letter and paper; AI not an author</td><td>Follow journal policy or ask permission; no upload to tools that cannot guarantee confidentiality unless the journal permits; disclose and verify</td><td>No upload without authors' permission; journals must publish an AI policy</td><td>Confidentiality, accountability, accuracy</td></tr>
+<tr><td>NIH, NOT-OD-23-149 (June 2023)</td><td>Not addressed (NOT-OD-25-132, July 2025: applications "substantially developed by AI" are not original)</td><td>Prohibited from using generative AI to analyze applications or write critiques</td><td>n/a</td><td>Confidentiality only</td></tr>
+<tr><td>NSF merit-review notice (Dec 2023; updated May 2026)</td><td>Encouraged to disclose</td><td>No upload to "non-approved" generative AI tools</td><td>n/a</td><td>Confidentiality</td></tr>
+<tr><td>NCME Annual Meeting call, "Use of AI" (July 2026)</td><td>Disclose when AI was fundamental; verify; AI not an author</td><td>No upload; AI only to clarify concepts or polish an independently written review; no AI-generated "substantive evaluative content"</td><td>Program Committee may use AI for screening and reviewer matching; human judgment required</td><td>Confidentiality, integrity</td></tr>
+<tr><td>NCME Publications Guidelines (2022)</td><td>No AI text</td><td>Keep manuscripts confidential; a reviewer who consults another person must tell the editor who</td><td>No AI text</td><td>Confidentiality</td></tr>
+<tr><td>NCME Presidential AI Task Force charge (2026–27)</td><td>Publishing not mentioned</td><td>Publishing not mentioned</td><td>Publishing not mentioned</td><td>n/a</td></tr>
+<tr><td>AERA AI Guidelines (2026)</td><td>Disclose generative AI</td><td>Strongly discouraged; uploading strongly discouraged</td><td>Not addressed</td><td>Confidentiality, intellectual property</td></tr>
+<tr><td>Leiden Declaration on AI and Mathematics (June 2026; endorsed by IMU)</td><td>Disclose tools in a dedicated section; credit and responsibility stay with humans</td><td>Asks authors to make review easier through disclosure and verifiable arguments</td><td>Asks organizations to set disclosure, attribution, and rigor standards for AI-assisted results</td><td>Verifiability, attribution</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="prose">
+<p><strong>The rationale pattern.</strong> NIH and NSF ban reviewer AI use on confidentiality grounds alone. ICMJE adds accountability and accuracy. No verified source bans reviewer AI because AI critique is poor. NSF ("non-approved" tools), ICMJE ("unless the journal permits"), and Springer Nature ("public or unsecured" tools) all leave room for a secure tool supplied by the journal or funder.</p>
+<p><strong>The human-helper analog.</strong> NCME's Publications Guidelines (2022) and COPE's Ethical Guidelines for Peer Reviewers (2017) already handle a parallel case. A reviewer may bring in another person if the journal permits it and the helper is named. That is a permission-and-disclosure rule for outside input, not a ban. COPE's guidelines also tell reviewers to "use the tools supplied by the journal" when a format or rubric is required.</p>
+
+<h2>Practice and evidence</h2>
+<p>From Brainard, "Ready for the robot reviewers?", <em>Science</em> 393(6815), 963–967 (3 Sep 2026), and the primary sources it and the research agents identified:</p>
+<ul>
+  <li><strong>Scale of the problem.</strong> Scientific publications doubled in five years, to more than 8 million in 2025. Editors sent an average of 4.5 invitations per completed review in 2025, double the 2018 figure (Silverchair report, cited in <em>Science</em>).</li>
+  <li><strong>Reviewer AI use.</strong> 53% of 1,645 researchers reported using AI for review tasks in 2025 (Frontiers survey); <em>Science</em> reports this was up from 29% the year before. An estimated 6.5% to 16.9% of review text at four 2023–2024 machine-learning conferences was substantially LLM-modified (Liang et al., ICML 2024). A commercial detector flagged about 21% of ICLR 2026 reviews as fully AI-generated (Pangram Labs; contested).</li>
+  <li><strong>Enforcement.</strong> ICML 2026 used hidden prompts in submission PDFs to catch 795 reviews that broke its no-LLM option; 497 papers were desk-rejected and 51 reviewers removed.</li>
+  <li><strong>Reviewer reads AI feedback, then revises (closest test of Use 1).</strong> In a randomized trial at ICLR 2025, an LLM gave optional feedback on more than 20,000 human reviews. 27% of reviewers who received feedback revised their reviews, incorporating more than 12,000 AI suggestions. A separate panel judged about two-thirds of the revised reviews better than the originals (Zou and colleagues, <em>Nature Machine Intelligence</em>, Feb 2026, per <em>Science</em>).</li>
+  <li><strong>AI review alongside human reviews at scale.</strong> AAAI-26 gave every main-track paper (22,977) one labeled GPT-5 review with no score or recommendation, in under 24 hours at about $1 per paper. In a survey of 5,834 participants, AI reviews were rated better on 6 of 9 criteria; they were weakest on novelty and significance, and 49.4% said they missed points a human would catch.</li>
+  <li><strong>What AI checks well.</strong> GPT-5 found at least one consequential error in about one-third of 2,500 accepted machine-learning papers, and humans confirmed 83% of those errors (Zou and colleagues, Dec 2025 preprint). In a comparison on 82 Nature-family papers, about one-quarter of AI criticisms were non-trivial points no human reviewer raised, and AI was more diligent at running submitted code (Kim and colleagues, 2026 preprint).</li>
+  <li><strong>Where AI falls short.</strong> Lower correctness than humans overall; misses discipline-specific conventions; tends toward higher scores (sycophancy); can be gamed by rewriting a paper for the AI ("paper laundering," Baumann and colleagues); shows prestige bias (Howell and colleagues, 2025); produces more homogeneous reviews. In one study, net time saved for reviewers using AI was a few minutes per hour-long review and not statistically significant.</li>
+  <li><strong>Editor uses AI with human reviews (closest to Use 2).</strong> NEJM AI runs a fast track in which editors debate human and AI reviews side by side before deciding. The <em>Science</em> workflow graphic lists "agreement or discordance among human-written reviews" as a candidate AI check at the editorial stage.</li>
+  <li><strong>The comparator question.</strong> Stephen Turner (UVA), quoted in <em>Science</em>, argues the relevant comparison is the "inconsistent, fatigue-influenced, mood-dependent median review," not the best human review. This matches the session's guiding question 4: what would count as improvement over the relevant alternative?</li>
+</ul>
+</div>
+
+<h2>What the policies imply for the two proposed uses</h2>
+<div class="uses">
+  <div class="card">
+    <h3>Use 1: a reviewer reads an AI-generated review before submitting their own</h3>
+    <ul>
+      <li>A reviewer cannot generate that AI review under any of the 12 journal policies with a no-upload rule.</li>
+      <li>The journal could generate it on secure infrastructure and give it to the reviewer. No policy in the scan addresses a journal-supplied AI review. Springer Nature's rule permits it in principle; Wiley says it is exploring it.</li>
+      <li>The ICLR 2025 trial is the best existing evidence that reviewers revise, and improve, after seeing AI feedback.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Use 2: an editor asks AI to assess the coherence of the human reviews</h3>
+    <ul>
+      <li>Sage (APM, EPM) forbids editors to use generative AI to summarize reviews. Cambridge (Psychometrika) forbids reviewers to share their review with AI tools.</li>
+      <li>All other policies are silent on whether reviews, as distinct from manuscripts, may go into an AI tool.</li>
+      <li>Every policy that addresses editors keeps the decision with a human, which Use 2 does.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="prose">
+<h2>Caveats</h2>
+<ol>
+  <li>Publishers revised these policies repeatedly in 2024–2026. Check any policy you quote on 7 October.</li>
+  <li>APA reviewer and editor rules are from search excerpts, not full pages.</li>
+  <li>COPE's current guidance for reviewers (2017) does not mention AI. COPE's editor-level position on AI was not verified; its 2021 discussion document was not accessible.</li>
+  <li>Elsevier <em>Measurement</em>'s own journal pages were not readable; the Elsevier policy was.</li>
+  <li>The search for journal editorials on AI matched titles in Crossref; an editor's note with a generic title could be missed.</li>
+  <li>All pilot evidence (ICLR, AAAI, ICML) comes from computer-science conferences. None comes from education or measurement journals.</li>
+</ol>
+
+<h2>Sources</h2>
+<h3>Journal and publisher pages</h3>
+<ul class="sources">
+  <li><a href="https://www.wiley.com/en-us/publish/article/ai-guidelines/">Wiley, Using AI tools in your research</a></li>
+  <li><a href="https://authorservices.wiley.com/ethics-guidelines/index.html">Wiley, Best Practice Guidelines on Research Integrity and Publishing Ethics</a></li>
+  <li><a href="https://onlinelibrary.wiley.com/page/journal/17453992/homepage/forauthors.html">EMIP author guidelines</a></li>
+  <li><a href="https://onlinelibrary.wiley.com/page/journal/17453984/homepage/forauthors.html">JEM author guidelines</a></li>
+  <li><a href="https://www.ce-jeme.org/journal/publication_ethics.html">CEJEME publication ethics</a></li>
+  <li><a href="https://taylorandfrancis.com/our-policies/ai-policy/">Taylor &amp; Francis AI policy</a></li>
+  <li><a href="https://authorservices.taylorandfrancis.com/editorial-policies/using-ai-in-your-research-and-manuscript-preparations/">Taylor &amp; Francis, AI in manuscript preparation</a></li>
+  <li><a href="https://editorresources.taylorandfrancis.com/reviewer-guidelines/">Taylor &amp; Francis reviewer guidelines</a></li>
+  <li><a href="https://editorresources.taylorandfrancis.com/welcome-to-tf/policies-guidelines/editor-code-of-conduct/">Taylor &amp; Francis editor code of conduct</a></li>
+  <li><a href="https://www.sagepub.com/journals/publication-ethics-policies/artificial-intelligence-policy">Sage AI policy</a></li>
+  <li><a href="https://www.sagepub.com/journals/information-for-reviewers/peer-review-ethics">Sage peer review ethics</a></li>
+  <li><a href="https://www.sagepub.com/journals/information-for-editors/editor-guide-to-sage-editorial-publishing-policies">Sage editor guide</a></li>
+  <li><a href="https://www.aera.net/Portals/38/AERA%20AI%20Policy.pdf">AERA AI Guidelines</a></li>
+  <li><a href="https://www.cambridge.org/core/journals/psychometrika/information/author-instructions/preparing-your-materials">Psychometrika author instructions</a></li>
+  <li><a href="https://www.cambridge.org/core/journals/psychometrika/information/peer-review-information/instructions-for-peer-reviewers">Psychometrika reviewer instructions</a></li>
+  <li><a href="https://www.cambridge.org/core/services/publishing-ethics/core-editorial-policies-journals">Cambridge core editorial policies</a></li>
+  <li><a href="https://www.springernature.com/gp/policies/editorial-policies/ai-manuscript-preparation">Springer Nature, AI in manuscript preparation</a></li>
+  <li><a href="https://www.springernature.com/gp/policies/editorial-policies/using-ai-in-peer-review">Springer Nature, AI in peer review</a></li>
+  <li><a href="https://www.springernature.com/gp/policies/editorial-policies/ai-editor-guidance">Springer Nature, AI editor guidance</a></li>
+  <li><a href="https://www.elsevier.com/about/policies-and-standards/generative-ai-policies-for-journals">Elsevier generative AI policies</a></li>
+  <li><a href="https://www.apa.org/pubs/journals/resources/publishing-policies">APA Publishing Policies</a></li>
+</ul>
+<h3>Cross-cutting</h3>
+<ul class="sources">
+  <li><a href="https://publicationethics.org/cope-position-statements/ai-author">COPE, Authorship and AI tools</a></li>
+  <li><a href="https://doi.org/10.24318/cope.2019.1.9">COPE Council, Ethical Guidelines for Peer Reviewers, Version 2 (Sept 2017)</a></li>
+  <li><a href="https://www.icmje.org/icmje-recommendations.pdf">ICMJE Recommendations</a></li>
+  <li><a href="https://grants.nih.gov/grants/guide/notice-files/NOT-OD-23-149.html">NIH NOT-OD-23-149</a></li>
+  <li><a href="https://grants.nih.gov/grants/guide/notice-files/NOT-OD-25-132.html">NIH NOT-OD-25-132</a></li>
+  <li><a href="https://www.nsf.gov/policies/ai/merit-review">NSF merit review notice</a></li>
+  <li><a href="https://ncme.org/wp-content/uploads/2026/07/Use_of_AI_CFP_section.pdf">NCME Annual Meeting "Use of AI" section</a></li>
+  <li><a href="https://ncme.org/wp-content/uploads/2025/04/NCME_Publications_Guidelines_2022_v2-1.pdf">NCME Publications Guidelines</a></li>
+  <li><a href="https://leidendeclaration.ai/">Leiden Declaration</a></li>
+</ul>
+<h3>Evidence</h3>
+<ul class="sources">
+  <li>Brainard, J. (2026). Ready for the robot reviewers? <em>Science</em>, 393(6815), 963–967. <a href="https://doi.org/10.1126/science.aem0443">doi:10.1126/science.aem0443</a></li>
+  <li><a href="https://www.frontiersin.org/news/2025/12/15/most-peer-reviewers-now-use-ai-and-publishing-policy-must-keep-pace">Frontiers reviewer survey (Dec 2025)</a></li>
+  <li><a href="https://proceedings.mlr.press/v235/liang24b.html">Liang et al. (2024), ICML</a></li>
+  <li><a href="https://arxiv.org/abs/2504.09737">Thakkar et al. (2025), Can LLM feedback enhance review quality? A randomized study of 20K reviews at ICLR 2025</a></li>
+  <li><a href="https://arxiv.org/abs/2604.13940">AAAI-26 AI Review Pilot</a></li>
+  <li><a href="https://arxiv.org/abs/2605.03202">Baumann et al. (2026), Stop automating peer review without rigorous evaluation</a></li>
+  <li><a href="https://group.springernature.com/br/group/media/press-releases/ai-tools-support-less-friction-and-increased-author-satisfaction/27849346">Springer Nature AI tools press release (Mar 2026)</a></li>
+</ul>
+</div>
+
+</main>
+</body>
+</html>
